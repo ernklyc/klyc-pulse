@@ -26,7 +26,7 @@ public static class SelfTest
 {
     private sealed record Row(string Name, string Status, string Detail);
 
-    public static async Task RunAsync(bool includeGpuTune)
+    public static async Task RunAsync(bool includeGpuTune, bool includeHeat = false)
     {
         var win = await Application.Current.Dispatcher.InvokeAsync(() => { var w = new SelfTestWindow(); w.Show(); return w; });
         var rows = new List<Row>();
@@ -217,6 +217,23 @@ public static class SelfTest
                 var table = string.Join(" | ", res.Steps.Select(s => $"+{s.Core}/{s.Mem}: {s.Fps:0.0} kare/sn {s.CoreMhz:0} MHz {s.MaxTempC:0}°C {(s.Stable ? "kararlı" : "KARARSIZ " + s.Note)}"));
                 return (res.Steps.Count > 0 && (end is null || end is { CoreMhz: 0, MemMhz: 0 }), $"{table} => {res.Summary} (bitişte ofset {end?.CoreMhz}/{end?.MemMhz})");
             }, 240);
+        }
+
+        if (includeHeat)
+        {
+            await Step("Hız sınırı ısıyı düşürüyor mu? (gerçek yük, ~6 dk, işlemci tam yüklenir)", async () =>
+            {
+                var ladder = AppServices.GameLadder();
+                var caps = new List<int?> { null };
+                caps.AddRange(ladder.Skip(2).Take(2));                                   // ikinci ve üçüncü kademe (örn. ~3500 ve ~3200 MHz)
+                using var keeper = AppServices.Keeper.Pause();
+                using var heat = AppServices.Heat.Pause();
+                using var cool = AppServices.Cooling.Pause();
+                var phases = await Task.Run(() => HeatBenchmark.Run(caps, restSec: 40, loadSec: 80, new Progress<string>(m => win.Running("Isı denemesi: " + m))));
+                var summary = HeatBenchmark.Summarize(phases);
+                var hasTemps = phases.All(p => p.AvgTempC is not null);
+                return (phases.Count == caps.Count && hasTemps, summary + (hasTemps ? "" : " (Sıcaklık okunamadı: Pulse yönetici olarak çalışmıyor ya da bu bilgisayar sıcaklık sunmuyor.)"));
+            }, 600);
         }
 
         // Test sırasında günlüğe düşen hatalar

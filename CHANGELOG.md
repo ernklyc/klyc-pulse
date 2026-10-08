@@ -2,6 +2,15 @@
 
 Biçim [Keep a Changelog](https://keepachangelog.com/tr/) esaslıdır; sürümleme [SemVer](https://semver.org/lang/tr/).
 
+## [1.6.0] — 2026-10-09
+
+### Eklenenler
+- **Oyunda yumuşak acil fren:** Oyun sırasında sıcaklık **95 °C üstünde 10 sn** kalırsa işlemci hızı ~300 MHz'lik küçük adımlarla kısılır (hedef ~92 °C), serinleyince kademeler tek tek geri verilir. Donanımın ~100 °C'deki ani ve sert kısmasından önce, FPS'i pürüzsüz tutmak için. Normal sıcaklıkta oyunda hiçbir şeye dokunmaz; ani Sessiz mod geçişi yok. Kullanıldıysa oyun raporu bunu söyler.
+- **Isı denemesi** (`--selftest=heat`, masaüstündeki "Isı Denemesi" kısayolu): İşlemci hız sınırının sıcaklığı bu bilgisayarda gerçekten ne kadar düşürdüğünü ve hızı ne kadar azalttığını ölçer (sınırsız / iki kademe, her biri 80 sn tam yük, ~6 dk). Sonuç `%USERPROFILE%\KLYC-Pulse-selftest.txt` dosyasına yazılır.
+
+### Değişenler
+- Bildirimlerin varsayılan köşesi **sağ üst** oldu (Ayarlar'dan değiştirilir; kendin seçtiysen seçimin korunur).
+
 ## [1.5.0] — 2026-10-09
 
 ### Eklenenler

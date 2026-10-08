@@ -56,7 +56,7 @@ public partial class SettingsViewModel : ObservableObject, IDisposable
     [RelayCommand]
     private void SetNoticeCorner(ChoiceVm c)
     {
-        Save(s => s.NoticeCorner = c.Value);
+        Save(s => { s.NoticeCorner = c.Value; s.NoticeCornerChosen = true; });
         foreach (var x in NoticeCorners) x.IsActive = x.Value == c.Value;
         NoticeChip.Show("Bildirimler artık burada çıkacak.", false);
     }

@@ -131,7 +131,7 @@ public partial class App : Application
             _ = Task.Run(async () =>
             {
                 await Task.Delay(5000);   // servislerin ayağa kalkması için
-                try { await SelfTest.RunAsync(selfTest.Contains("gpu", StringComparison.OrdinalIgnoreCase)); }
+                try { await SelfTest.RunAsync(selfTest.Contains("gpu", StringComparison.OrdinalIgnoreCase), selfTest.Contains("heat", StringComparison.OrdinalIgnoreCase)); }
                 catch (Exception ex) { Pulse.Core.Diagnostics.Journal.Write("Kendini sınama çöktü: " + ex); }
                 Dispatcher.Invoke(ExitApp);
             });

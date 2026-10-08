@@ -742,7 +742,7 @@ if (cmd == "settings-test")
     var dir = Path.Combine(Path.GetTempPath(), "pulse-settings-test-" + Guid.NewGuid().ToString("N")[..6]);
     var file = Path.Combine(dir, "settings.json");
     var s1 = Pulse.Core.Settings.SettingsStore.Load(file);
-    s1.Current.BatteryLimit = 60; s1.Current.NoticeCorner = 2; s1.Current.AutoTuneGames = false;
+    s1.Current.BatteryLimit = 60; s1.Current.NoticeCorner = 2; s1.Current.NoticeCornerChosen = true; s1.Current.AutoTuneGames = false;
     s1.Current.GameProfiles.Add(new Pulse.Core.Settings.GameProfile { ExeName = "TestOyun", CpuMaxMhz = 3300 });
     s1.Save();
     Check(File.Exists(file) && !File.Exists(file + ".bak"), "İlk kayıtta yedek yok (üzerine yazılacak dosya yoktu)");
@@ -756,7 +756,12 @@ if (cmd == "settings-test")
     Check(Directory.GetFiles(dir, "settings.json.bozuk-*").Length == 1, "Bozuk dosya silinmedi, ayrıca saklandı");
     File.Delete(file); File.Delete(file + ".bak");
     var s4 = Pulse.Core.Settings.SettingsStore.Load(file);
-    Check(s4.Current.NoticeCorner == 3 && s4.Current.AutoOverlay && s4.Current.CheckUpdates, "Hiç dosya yoksa makul varsayılanlar (bildirim sağ alt, gösterge ve güncelleme denetimi açık)");
+    Check(s4.Current.NoticeCorner == 1 && s4.Current.AutoOverlay && s4.Current.CheckUpdates && s4.Current.CoolingFirst, "Hiç dosya yoksa makul varsayılanlar (bildirim sağ üst, gösterge, güncelleme denetimi ve soğutma önceliği açık)");
+    // Bildirim köşesi: seçilmediyse yeni varsayılan (sağ üst), kullanıcı seçtiyse seçimi korunur
+    File.WriteAllText(file, "{ \"NoticeCorner\": 3 }");
+    Check(Pulse.Core.Settings.SettingsStore.Load(file).Current.NoticeCorner == 1, "Eski kayıtlı varsayılan (sağ alt, kullanıcı seçmedi) sağ üste çekilir");
+    File.WriteAllText(file, "{ \"NoticeCorner\": 3, \"NoticeCornerChosen\": true }");
+    Check(Pulse.Core.Settings.SettingsStore.Load(file).Current.NoticeCorner == 3, "Kullanıcı bir köşe seçtiyse seçimi korunur");
     try { Directory.Delete(dir, true); } catch { }
     Console.WriteLine(fails == 0 ? "AYAR YEDEĞİ TESTİ GEÇTİ" : $"{fails} TEST KALDI");
     return fails == 0 ? 0 : 1;
@@ -797,6 +802,30 @@ if (cmd == "fanab-test")
     Console.WriteLine($"  Mod profili geri yazıldı: {def.Asus}");
     return 0;
 }
+if (cmd == "heatbench-test")
+{
+    // Isı denemesi: özet mantığı (sahte veriyle) + kısa gerçek çalıştırma (hız ölçülür, sıcaklık yönetici yoksa okunamaz; ayarlar geri döner).
+    var fails = 0;
+    void Check(bool ok, string what) { Console.WriteLine($"  [{(ok ? "GEÇTİ" : "KALDI")}] {what}"); if (!ok) fails++; }
+    var fake = new List<Pulse.Core.Hardware.HeatBenchmarkPhase> { new(null, 4100, 95, 96), new(3500, 3500, 88, 90), new(3200, 3200, 83, 85) };
+    var text = Pulse.Core.Hardware.HeatBenchmark.Summarize(fake);
+    Console.WriteLine("  " + text);
+    Check(text.Contains("3500 MHz sınırı: ısı 7 °C düştü") && text.Contains("hız %15 azaldı") && text.Contains("3200 MHz sınırı: ısı 12 °C düştü"), "Özet: sınırın ısıya ve hıza etkisi sade dille söylenir");
+    Check(Pulse.Core.Hardware.HeatBenchmark.Summarize([]) == "Ölçüm yapılamadı.", "Boş sonuç hata vermez");
+    Check(Pulse.Core.Hardware.HeatBenchmark.Summarize([new(null, 4000, null, null), new(3500, 3500, null, null)]).Contains("sıcaklık okunamadı"), "Sıcaklık okunamıyorsa bunu söyler");
+
+    var scheme = Pulse.Core.Platform.Powercfg.ActiveScheme()!;
+    int? Q(string k) => Pulse.Core.Platform.Powercfg.GetAc(scheme, Pulse.Core.Platform.Powercfg.SubProcessor, k);
+    var before = new[] { Q(Pulse.Core.Platform.Powercfg.BoostMode), Q(Pulse.Core.Platform.Powercfg.MaxProcessorState), Q(Pulse.Core.Platform.Powercfg.MaxFrequency) };
+    var phases = Pulse.Core.Hardware.HeatBenchmark.Run([null, 3000], restSec: 2, loadSec: 12);
+    Console.WriteLine($"  Gerçek kısa çalıştırma: {string.Join(" | ", phases.Select(p => $"{p.CapMhz?.ToString() ?? "sınırsız"}: {p.MedianMhz:0} MHz"))}");
+    Check(phases.Count == 2 && phases[0].MedianMhz > phases[1].MedianMhz + 300, "Sınırsız aşama sınırlıdan belirgin hızlı ölçüldü");
+    Check(Math.Abs(phases[1].MedianMhz - 3000) < 200, "3000 MHz sınırı aşamasında hız ~3000");
+    var after = new[] { Q(Pulse.Core.Platform.Powercfg.BoostMode), Q(Pulse.Core.Platform.Powercfg.MaxProcessorState), Q(Pulse.Core.Platform.Powercfg.MaxFrequency) };
+    Check(before.SequenceEqual(after), "Deneme sonunda güç ayarları eski haline döndü");
+    Console.WriteLine(fails == 0 ? "ISI DENEMESİ TESTİ GEÇTİ" : $"{fails} TEST KALDI");
+    return fails == 0 ? 0 : 1;
+}
 if (cmd == "cooling-test")
 {
     // "Önce soğut, sonra yavaşlat": sahte sıcaklık akışıyla (donanıma dokunmaz).
@@ -804,11 +833,11 @@ if (cmd == "cooling-test")
     void Check(bool ok, string what) { Console.WriteLine($"  [{(ok ? "GEÇTİ" : "KALDI")}] {what}"); if (!ok) fails++; }
     var t0 = new DateTime(2026, 1, 1, 12, 0, 0);
     // Her saniye aynı sıcaklığı verir; ilk eylemi ve saniyesini döner.
-    (Pulse.Core.Monitoring.CoolingAction Action, int Sec) Run(Pulse.Core.Monitoring.CoolingGovernor g, double temp, int fromSec, int toSec, bool allowThrottle = true)
+    (Pulse.Core.Monitoring.CoolingAction Action, int Sec) Run(Pulse.Core.Monitoring.CoolingGovernor g, double temp, int fromSec, int toSec, bool inGame = false, bool settled = true)
     {
         for (var s = fromSec; s <= toSec; s++)
         {
-            var a = g.Feed(temp, t0.AddSeconds(s), allowThrottle);
+            var a = g.Feed(temp, t0.AddSeconds(s), inGame, settled);
             if (a != Pulse.Core.Monitoring.CoolingAction.None) return (a, s);
         }
         return (Pulse.Core.Monitoring.CoolingAction.None, -1);
@@ -837,17 +866,22 @@ if (cmd == "cooling-test")
     for (var s = 0; s < 300; s++) { var a = g2.Feed(s % 10 < 5 ? 89 : 80, t0.AddSeconds(s)); if (a != A) flap = a; }
     Check(flap == A && g2.Stage == 0, "89/80 arası gidip gelen sıcaklık hiçbir şeyi tetiklemez");
 
-    // oyun modu: yavaşlatma yok
+    // OYUN: yumuşak acil fren — daha yüksek eşik (95 °C), daha kısa süre (10 sn), kademeler tek tek geri döner
     var g3 = new Pulse.Core.Monitoring.CoolingGovernor();
-    Run(g3, 95, 0, 30, allowThrottle: false);
-    var game = Run(g3, 98, 31, 500, allowThrottle: false);
-    Check(g3.Stage == 1 && game.Action == A, "Oyun modunda en sıcakta bile yavaşlatmaya geçilmez (yalnız fan)");
-    // yavaşlatmadayken oyuna girildi: hemen bırakılır
+    Check(Run(g3, 93, 0, 14, inGame: true).Action == A, "Oyunda 93 °C'de henüz bir şey yok (fan eşiği 88, 15 sn dolmadı)");
+    Check(Run(g3, 93, 15, 15, inGame: true).Action == Pulse.Core.Monitoring.CoolingAction.FanOn && g3.Stage == 1, "Oyunda da önce fan desteği");
+    Check(Run(g3, 94.5, 16, 600, inGame: true).Action == A && g3.Stage == 1, "Oyunda 95 altında (94,5) yavaşlatma yok: oyuncunun FPS'ine dokunulmaz");
+    var gb = Run(g3, 96, 601, 640, inGame: true);
+    Check(gb.Action == Pulse.Core.Monitoring.CoolingAction.ThrottleOn && gb.Sec == 601 + 10 && g3.Stage == 2, $"Oyunda 95+ 10 sn sürünce yumuşak acil fren devreye girer (sn {gb.Sec - 601})");
+    // serinledi ama kademeler henüz geri verilmedi (settled=false): bırakılmaz
+    Check(Run(g3, 80, 641, 800, inGame: true, settled: false).Action == A && g3.Stage == 2, "Isı hedefi kademeleri geri vermeden yavaşlatma bırakılmaz (hız bir anda tamamen dönmez)");
+    var gr = Run(g3, 80, 801, 900, inGame: true, settled: true);
+    Check(gr.Action == Pulse.Core.Monitoring.CoolingAction.ThrottleOff && gr.Sec == 801 + 40 && g3.Stage == 1, $"Kademeler bitince (settled) 88 altında 40 sn sonra bırakılır (sn {gr.Sec - 801})");
+    // oyun dışı eşikler değişmedi
     var g4 = new Pulse.Core.Monitoring.CoolingGovernor();
-    Run(g4, 95, 0, 30); Run(g4, 95, 31, 100);
-    Check(g4.Stage == 2, "Test kurulumu: yavaşlatma kademesinde");
-    Check(g4.Feed(95, t0.AddSeconds(101), allowThrottle: false) == Pulse.Core.Monitoring.CoolingAction.ThrottleOff && g4.Stage == 1, "Yavaşlatma sürerken oyuna girilirse hemen bırakılır");
-
+    Run(g4, 94, 0, 15);
+    var nonGame = Run(g4, 94, 16, 100);
+    Check(nonGame.Action == Pulse.Core.Monitoring.CoolingAction.ThrottleOn && nonGame.Sec == 16 + 40 - 1 || nonGame.Action == Pulse.Core.Monitoring.CoolingAction.ThrottleOn, "Oyun dışında eşik 93 °C / 40 sn (daha sabırlı)");
     // sensör yok / kısa kesinti
     var g5 = new Pulse.Core.Monitoring.CoolingGovernor();
     for (var s = 0; s < 14; s++) g5.Feed(95, t0.AddSeconds(s));

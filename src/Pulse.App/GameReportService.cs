@@ -70,6 +70,10 @@ public sealed class GameReportService : IDisposable
             // Yük altı tepe hızı öğren (sınırsız oturumlardan): kademeler bu bilgisayarın gerçek hızına göre kurulur
             if (cap is null && report.CpuMhzPeak is { } pk && pk > s.CpuPeakMhz) { s.CpuPeakMhz = pk; settings.Save(); }
 
+            // Oyun sırasında Soğutma önceliğinin yumuşak acil freni devreye girdiyse raporda söyle
+            if (AppServices.Cooling.TakeGameThrottles() is > 0 and var brakes)
+                report.Findings.Add($"Oyun sırasında sıcaklık 95 °C'yi aştığı için işlemci hızı {brakes} kez küçük adımlarla kısıldı (donanımın ani kısmasını önlemek için). Bu, FPS'i hafifçe düşürmüş olabilir.");
+
             if (auto && profile is not null) RunAutoTune(profile, report, previous, cap);
 
             Publish(report);

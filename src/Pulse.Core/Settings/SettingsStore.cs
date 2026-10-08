@@ -15,7 +15,10 @@ public sealed class AppSettings
     public bool CoolingFirst { get; set; } = true;
 
     /// <summary>Bildirimlerin köşesi: 0 sol üst, 1 sağ üst, 2 sol alt, 3 sağ alt.</summary>
-    public int NoticeCorner { get; set; } = 3;
+    public int NoticeCorner { get; set; } = 1;
+
+    /// <summary>Kullanıcı bildirim köşesini kendisi seçti mi? Seçmediyse varsayılan (sağ üst) uygulanır.</summary>
+    public bool NoticeCornerChosen { get; set; }
 
     /// <summary>Oyun açılınca FPS/ısı göstergesini kendiliğinden aç, oyun kapanınca kapat.</summary>
     public bool AutoOverlay { get; set; } = true;
@@ -121,6 +124,7 @@ public sealed class SettingsStore
         {
             if (File.Exists(store._filePath))
                 store.Current = JsonSerializer.Deserialize<AppSettings>(File.ReadAllText(store._filePath)) ?? new();
+            if (!store.Current.NoticeCornerChosen) store.Current.NoticeCorner = 1;        // eski varsayılan (sağ alt) yerine sağ üst
         }
         catch (Exception ex)
         {
