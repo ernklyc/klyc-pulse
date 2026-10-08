@@ -34,6 +34,9 @@ public sealed class AppSettings
 
     /// <summary>Öğrenilen yük altı en yüksek işlemci hızı (MHz). Sınır kademeleri buna göre bu bilgisayara uyarlanır. 0 = bilinmiyor.</summary>
     public double CpuPeakMhz { get; set; }
+
+    /// <summary>Öğrenilen SÜREKLİ yük altı işlemci hızı (MHz): ısıl/güç sınırında gerçekte oturduğu hız. Kademeler buna göre kurulur (kısa süreli tepe hızın üstündeki kademeler hiçbir şey yapmaz). 0 = bilinmiyor.</summary>
+    public double CpuSustainedMhz { get; set; }
     public bool AutoQuietOnBattery { get; set; } = false;
     public bool CloseConflictingApps { get; set; } = false;
     public bool MinimizeToTray { get; set; } = true;

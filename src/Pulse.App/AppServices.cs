@@ -26,7 +26,9 @@ public static class AppServices
     public static int?[] CpuLadderFor(double[] factors)
     {
         var baseMhz = Pulse.Core.Monitoring.SensorHub.ReadBaseMhz();
-        return Pulse.Core.Hardware.CpuLadder.Build(Pulse.Core.Hardware.CpuLadder.EffectivePeak(Settings.Current.CpuPeakMhz, baseMhz), baseMhz, factors);
+        // Sürekli hız biliniyorsa onu, yoksa kısa süreli tepe hızı esas al
+        var learned = Settings.Current.CpuSustainedMhz > 0 ? Settings.Current.CpuSustainedMhz : Settings.Current.CpuPeakMhz;
+        return Pulse.Core.Hardware.CpuLadder.Build(Pulse.Core.Hardware.CpuLadder.EffectivePeak(learned, baseMhz), baseMhz, factors);
     }
 
     public static int?[] GameLadder() => CpuLadderFor(Pulse.Core.Hardware.CpuLadder.GameFactors);

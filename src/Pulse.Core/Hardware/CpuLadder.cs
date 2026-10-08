@@ -11,7 +11,7 @@ public static class CpuLadder
     public static readonly double[] GameFactors = [0.92, 0.85, 0.78, 0.70];
 
     /// <summary>Sıcaklık sınırı kademeleri (daha ince).</summary>
-    public static readonly double[] HeatFactors = [0.94, 0.88, 0.82, 0.76, 0.70, 0.64];
+    public static readonly double[] HeatFactors = [0.92, 0.86, 0.80, 0.74, 0.68, 0.62];     // ilk adım ~%8: bu bilgisayarda ölçüldü, ısının büyük kısmı burada düşer
 
     /// <summary>Bilinen yük altı tepe hız yoksa taban hızın bir katı kullanılır (turbo'lu işlemcilerde tipik oran).</summary>
     public static double EffectivePeak(double learnedPeakMhz, double baseMhz) =>

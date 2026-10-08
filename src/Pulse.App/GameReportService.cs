@@ -64,14 +64,22 @@ public sealed class GameReportService : IDisposable
             var profile = settings.FindProfile(rec.Game);
             var auto = s.AutoTuneGames && profile is { AutoTune: true, Enabled: true };
             var report = rec.Build(AppServices.Sensors.BaseMhz, displayHz: hz, cpuCapMhz: cap, previous: previous, suggestCap: !auto,
-                storage: DriveKindDetector.Detect(profile?.ExePath), suggestMhz: AppServices.GameLadder() is { Length: > 2 } lad ? lad[2] : null);
+                storage: DriveKindDetector.Detect(profile?.ExePath), suggestMhz: AppServices.GameLadder() is { Length: > 1 } lad ? lad[1] : null);
             if (report is null) { Journal.Write($"Oyun raporu: oturum çok kısa ({rec.Count} sn), rapor yok."); return; }
 
             // Yük altı tepe hızı öğren (sınırsız oturumlardan): kademeler bu bilgisayarın gerçek hızına göre kurulur
             if (cap is null && report.CpuMhzPeak is { } pk && pk > s.CpuPeakMhz) { s.CpuPeakMhz = pk; settings.Save(); }
 
+            var brakeCount = AppServices.Cooling.TakeGameThrottles();
+            // Sürekli yük altı hızı öğren (sınırsız ve fren kullanılmamış oturumlardan): kademeler bu hıza göre kurulur
+            if (cap is null && brakeCount == 0 && report.CpuMhzLoadedAvg is { } sus && sus > 0)
+            {
+                s.CpuSustainedMhz = s.CpuSustainedMhz > 0 ? Math.Round(0.7 * s.CpuSustainedMhz + 0.3 * sus) : sus;
+                settings.Save();
+            }
+
             // Oyun sırasında Soğutma önceliğinin yumuşak acil freni devreye girdiyse raporda söyle
-            if (AppServices.Cooling.TakeGameThrottles() is > 0 and var brakes)
+            if (brakeCount is > 0 and var brakes)
                 report.Findings.Add($"Oyun sırasında sıcaklık 95 °C'yi aştığı için işlemci hızı {brakes} kez küçük adımlarla kısıldı (donanımın ani kısmasını önlemek için). Bu, FPS'i hafifçe düşürmüş olabilir.");
 
             if (auto && profile is not null) RunAutoTune(profile, report, previous, cap);

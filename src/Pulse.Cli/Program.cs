@@ -966,7 +966,7 @@ if (cmd == "autotune-test")
     // 1) İlk oturum: sıcak + ekran kartı sınırlıyor -> 3500
     var s1 = R("gpu", 88, 40, 60, 97, 93, null);
     var d1 = D(null, false, s1);
-    Check(d1.Changed && d1.CapMhz == 3500 && !d1.Locked, $"İlk sıcak oturum (ekran kartı sınırlıyor): 3500 MHz denenir ({d1.CapMhz})");
+    Check(d1.Changed && d1.CapMhz == 3800 && !d1.Locked, $"İlk sıcak oturum (ekran kartı sınırlıyor): en hafif anlamlı kademe denenir ({d1.CapMhz})");
 
     // 2) İkinci oturum: sınır işe yaradı (ısı düştü, FPS neredeyse aynı) ama hâlâ sıcak -> 3200
     var s2 = R("gpu", 45, 5, 58, 96, 88, 3500);
@@ -1023,6 +1023,11 @@ if (cmd == "autotune-test")
     bool GameAutoTunerNoHeadroom() { var d = Pulse.Core.Automation.GameAutoTuner.Decide(null, false, R("gpu", 90, 50, 60, 97, 97, null), null, [null]); return !d.Changed && d.Locked; }
     var heat = Pulse.Core.Hardware.CpuLadder.Build(4063, 2496, Pulse.Core.Hardware.CpuLadder.HeatFactors);
     Check(heat.Length >= 6 && heat[^1] >= 2600, $"Isı hedefi kademeleri daha ince ve tabanın üstünde ({string.Join(", ", heat.Select(x => x?.ToString() ?? "0"))})");
+    // Gerçek ölçüm: bu bilgisayarın sürekli hızı 3893 MHz -> ilk kademe 3600 (ölçüldü: -%8 hız, -12 °C)
+    var real = Pulse.Core.Hardware.CpuLadder.Build(3893, 2496);
+    Check(real.Length >= 4 && real[1] == 3600 && real[2] == 3300, $"Sürekli hız 3893 MHz: kademeler {string.Join(", ", real.Select(x => x?.ToString() ?? "sınırsız"))} (ilk kademe 3600)");
+    var realHeat = Pulse.Core.Hardware.CpuLadder.Build(3893, 2496, Pulse.Core.Hardware.CpuLadder.HeatFactors);
+    Check(realHeat[1] == 3600 && realHeat.Skip(1).Zip(realHeat.Skip(2), (a, b) => a > b).All(x => x), $"Isı hedefi kademeleri: ilk adım 3600, azalan ({string.Join(", ", realHeat.Select(x => x?.ToString() ?? "0"))})");
     Check(Pulse.Core.Hardware.CpuLadder.EffectivePeak(0, 2500) == 4000 && Pulse.Core.Hardware.CpuLadder.EffectivePeak(4300, 2500) == 4300, "Tepe hız bilinmiyorsa taban x1,6 varsayılır");
 
     Console.WriteLine(fails == 0 ? "OTOMATİK AYAR TESTİ GEÇTİ" : $"{fails} TEST KALDI");

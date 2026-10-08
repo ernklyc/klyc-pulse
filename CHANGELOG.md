@@ -2,6 +2,17 @@
 
 Biçim [Keep a Changelog](https://keepachangelog.com/tr/) esaslıdır; sürümleme [SemVer](https://semver.org/lang/tr/).
 
+## [1.6.1] — 2026-10-09
+
+### Değişenler (Isı denemesi sonucuna göre)
+- Gerçek ölçüm (ASUS TUF F15, i5-10300H, tam yük): sınırsız 3893 MHz / 82 °C → **3600 MHz sınırı: hız %8 azaldı, ısı 11,9 °C düştü**; 3300 MHz sınırı ısıyı fazladan yalnızca 0,3 °C düşürdü (hız %15 azaldı). Yani kazancın neredeyse tamamı **ilk kademede**.
+- **Kademeler artık kısa süreli tepe hıza değil, ölçülen SÜREKLİ yük altı hıza göre kurulur** (yoksa tepe hızın üstündeki ilk kademeler hiçbir şey yapmıyordu). Sürekli hız Isı denemesinden ve sınırsız oynanan oyun raporlarından öğrenilir.
+- **Akıllı oyun ayarı en hafif anlamlı kademeden başlar** (~%92 hız); ısı hâlâ yüksekse ve FPS güvendeyse sonraki kademeye iner.
+- Isı hedefi / oyunda acil fren kademeleri ilk adımı ~%8 olacak şekilde yeniden ayarlandı.
+
+### Düzeltilenler
+- Kendini sınama: kısayollar Ayarlar'dan kapatılmışsa "kaldı" denmez.
+
 ## [1.6.0] — 2026-10-09
 
 ### Eklenenler

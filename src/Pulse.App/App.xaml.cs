@@ -96,6 +96,13 @@ public partial class App : Application
         AppServices.Guard.Notice += (text, warn) => Dispatcher.Invoke(() => NoticeChip.Show(text, warn));
         AppServices.Guard.Enabled = AppServices.Settings.Current.ThermalGuard;
         if (AppServices.Settings.RemoveTempProfiles() is > 0 and var removed) Pulse.Core.Diagnostics.Journal.Write($"Geçici klasörden gelen {removed} oyun profili listeden silindi.");
+        // Sürekli yük altı hız henüz bilinmiyorsa, sınırsız oynanmış son oyun raporundan al (kademeler gerçek hıza göre kurulsun)
+        if (AppServices.Settings.Current.CpuSustainedMhz <= 0
+            && Pulse.Core.Diagnostics.GameReportStore.LoadHistory().LastOrDefault(r => r.CpuCapMhz is null && r.CpuMhzLoadedAvg is > 0) is { CpuMhzLoadedAvg: { } seed })
+        {
+            AppServices.Settings.Current.CpuSustainedMhz = seed;
+            AppServices.Settings.Save();
+        }
         AppServices.Cooling.Configure(AppServices.Settings.Current.CoolingFirst);
         AppServices.Update.Start();
         AppServices.Heat.Configure(AppServices.Settings.Current.HeatTarget);

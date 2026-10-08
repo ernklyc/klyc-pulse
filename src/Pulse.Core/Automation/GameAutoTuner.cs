@@ -72,8 +72,8 @@ public static class GameAutoTuner
 
     private static TuneDecision StepDown(int? currentCap, int idx, int?[] ladder, GameSessionReport cur)
     {
-        // Sınırsızdan ilk adım ikinci kademe (~%85): ilk kademe (~%92) küçük bir kesintidir
-        var next = currentCap is null ? ladder[Math.Min(2, ladder.Length - 1)] : ladder[idx + 1];
+        // Sınırsızdan en hafif anlamlı kademeyle (~%92 hız) başla: bu bilgisayarda ölçüldü, %8 hız kaybıyla ısı ~12 °C düştü; ikinci kademe fazladan ısı kazandırmadı
+        var next = ladder[idx + 1];
         return new TuneDecision(true, next, false,
             $"Isı yüksekti (sürenin %{cur.CpuAbove90Percent}'ında 90 °C üstü) ve oyunu {(cur.Bottleneck == "gpu" ? "ekran kartı" : "kare sınırı")} belirliyor: işlemci en çok {Describe(next)}'e ayarlandı. " +
             "Sonraki oyunda ısı ve FPS karşılaştırılır; FPS düşerse geri alınır.");

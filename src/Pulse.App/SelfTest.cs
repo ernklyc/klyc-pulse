@@ -170,6 +170,7 @@ public static class SelfTest
         await Quick("Kısayollar", () =>
         {
             var failed = AppServices.Hotkeys.Failed;
+            if (!AppServices.Settings.Current.Hotkeys) return (true, "kısayollar Ayarlar'dan kapalı (hata değil)");
             return (AppServices.Hotkeys.Enabled && failed.Count == 0, failed.Count == 0 ? "hepsi kayıtlı" : "alınamayanlar: " + string.Join(", ", failed));
         });
 
@@ -231,6 +232,13 @@ public static class SelfTest
                 using var cool = AppServices.Cooling.Pause();
                 var phases = await Task.Run(() => HeatBenchmark.Run(caps, restSec: 40, loadSec: 80, new Progress<string>(m => win.Running("Isı denemesi: " + m))));
                 var summary = HeatBenchmark.Summarize(phases);
+                // Sınırsız aşamadaki hız = bu bilgisayarın sürekli yük altı hızı: kademeler buna göre kurulur
+                if (phases.Count > 0 && phases[0].MedianMhz > 0)
+                {
+                    AppServices.Settings.Current.CpuSustainedMhz = phases[0].MedianMhz;
+                    AppServices.Settings.Save();
+                    summary += $" Sürekli hız {phases[0].MedianMhz:0} MHz olarak kaydedildi (kademeler buna göre kuruluyor).";
+                }
                 var hasTemps = phases.All(p => p.AvgTempC is not null);
                 return (phases.Count == caps.Count && hasTemps, summary + (hasTemps ? "" : " (Sıcaklık okunamadı: Pulse yönetici olarak çalışmıyor ya da bu bilgisayar sıcaklık sunmuyor.)"));
             }, 600);
