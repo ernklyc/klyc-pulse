@@ -23,7 +23,7 @@ public partial class ModeVm : ObservableObject
         [
             def.Asus.ToString() switch { "Turbo" => "Turbo", "Silent" => "Sessiz profil", _ => "Dengeli profil" },
             def.Boost > 0 ? "CPU turbo açık" : "CPU turbo kapalı",
-            $"{def.RefreshHz} Hz",
+            def.RefreshHz == Modes.MaxHz ? "Ekranın en yüksek Hz'i" : $"{def.RefreshHz} Hz",
             $"Parlaklık %{def.Brightness}",
             .. def.MaxState < 100 ? new[] { $"CPU ≤ %{def.MaxState}" } : [],
             .. def.GpuCapMhz is { } cap ? new[] { $"GPU ≤ {cap} MHz" } : [],

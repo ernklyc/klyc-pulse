@@ -21,7 +21,8 @@ public partial class GameProfileVm : ObservableObject
         _profile = profile;
         _store = store;
         _modeKey = profile.ModeKey;
-        _refreshIndex = profile.RefreshHz switch { 60 => 1, 144 => 2, _ => 0 };
+        // Eski sürümde kaydedilen 144 de "ekranın en yükseği" sayılır (sabit 144 artık yok).
+        _refreshIndex = profile.RefreshHz switch { 60 => 1, Core.Modes.Modes.MaxHz or 144 => 2, _ => 0 };
         _enabled = profile.Enabled;
         _loading = false;
         RefreshGpu();
@@ -44,14 +45,14 @@ public partial class GameProfileVm : ObservableObject
     }
 
     public static IReadOnlyList<ModeOption> Modes { get; } = Core.Modes.Modes.All.Select(m => new ModeOption(m.Key, m.Title + " modu")).ToList();
-    public static IReadOnlyList<string> RefreshOptions { get; } = ["Modun varsayılanı", "60 Hz", "144 Hz"];
+    public static IReadOnlyList<string> RefreshOptions { get; } = ["Modun varsayılanı", "60 Hz", "Ekranın en yükseği"];
 
     [ObservableProperty] private string _modeKey;
     [ObservableProperty] private int _refreshIndex;
     [ObservableProperty] private bool _enabled;
 
     partial void OnModeKeyChanged(string value) => Apply(p => p.ModeKey = value);
-    partial void OnRefreshIndexChanged(int value) => Apply(p => p.RefreshHz = value switch { 1 => 60, 2 => 144, _ => null });
+    partial void OnRefreshIndexChanged(int value) => Apply(p => p.RefreshHz = value switch { 1 => 60, 2 => Core.Modes.Modes.MaxHz, _ => null });
     partial void OnEnabledChanged(bool value) => Apply(p => p.Enabled = value);
 
     private void Apply(Action<GameProfile> change)

@@ -145,12 +145,15 @@ public sealed class ModeEngine : IDisposable
     {
         const string name = "Ekran yenileme hızı";
         var supported = DisplayService.SupportedRefreshRates();
-        if (supported.Count > 0 && !supported.Contains(mode.RefreshHz))
-            return new(name, StepStatus.Warning, $"{mode.RefreshHz} Hz bu ekranda yok (desteklenen: {string.Join(", ", supported)} Hz).");
+        var target = mode.RefreshHz == Modes.MaxHz && supported.Count > 0 ? supported.Max() : mode.RefreshHz;
+        if (target == Modes.MaxHz)
+            return new(name, StepStatus.Skipped, "Ekranın desteklediği yenileme hızları okunamadı.");
+        if (supported.Count > 0 && !supported.Contains(target))
+            return new(name, StepStatus.Warning, $"{target} Hz bu ekranda yok (desteklenen: {string.Join(", ", supported)} Hz).");
 
-        DisplayService.SetRefreshRate(mode.RefreshHz);
+        DisplayService.SetRefreshRate(target);
         Thread.Sleep(900);
-        return Verify(name, mode.RefreshHz, DisplayService.GetRefreshRate(), v => $"{v} Hz");
+        return Verify(name, target, DisplayService.GetRefreshRate(), v => $"{v} Hz");
     }
 
     private static StepResult ApplyBrightness(ModeDefinition mode)

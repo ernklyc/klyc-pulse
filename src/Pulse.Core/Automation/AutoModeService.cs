@@ -63,7 +63,7 @@ public sealed class AutoModeService : IDisposable
                 else
                 {
                     var key = profile?.ModeKey ?? Modes.Modes.Game;
-                    var overrides = profile is null ? null : new ModeOverrides(profile.RefreshHz, profile.Brightness);
+                    var overrides = profile is null ? null : new ModeOverrides(profile.RefreshHz == 144 ? Modes.Modes.MaxHz : profile.RefreshHz, profile.Brightness);
                     var hasOverrides = overrides is { RefreshHz: not null } or { Brightness: not null };
                     _restoreTo = _controller.CurrentKey ?? Modes.Modes.Daily;
                     Journal.Write($"Oyun algılandı ({game.Name}): '{key}' profili uygulanıyor, önceki mod {_restoreTo}.");

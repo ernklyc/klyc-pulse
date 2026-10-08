@@ -899,8 +899,9 @@ if (cmd == "profile-test")
     settings.Current.CloseConflictingApps = false;
     settings.Current.GameProfiles.RemoveAll(p => p.ExeName == "FakeGame");   // temiz başla
     using var controller = new ModeController(settings);
-    await controller.ApplyAsync("gunluk");                                     // 144 Hz, Günlük
-    Check(DisplayService.GetRefreshRate() == 144, $"Başlangıç: Günlük modu, 144 Hz (okunan: {DisplayService.GetRefreshRate()})");
+    var maxHz = DisplayService.SupportedRefreshRates().DefaultIfEmpty(0).Max();
+    await controller.ApplyAsync("gunluk");                                     // ekranın en yüksek Hz'i, Günlük
+    Check(DisplayService.GetRefreshRate() == maxHz, $"Başlangıç: Günlük modu, ekranın en yükseği {maxHz} Hz (okunan: {DisplayService.GetRefreshRate()})");
     using var auto = new AutoModeService(controller, settings, TimeSpan.FromSeconds(2));
 
     // 1) Profil yokken: oyun listeye kendiliğinden eklenmeli, varsayılan Oyun modu
@@ -925,7 +926,7 @@ if (cmd == "profile-test")
     game.Kill(true);
     sw.Restart();
     while (sw.Elapsed < TimeSpan.FromSeconds(30) && controller.CurrentKey != "gunluk") await Task.Delay(1000);
-    Check(controller.CurrentKey == "gunluk" && DisplayService.GetRefreshRate() == 144, $"Kapanınca Günlük + 144 Hz'e dönüldü (mod: {controller.CurrentKey}, {DisplayService.GetRefreshRate()} Hz)");
+    Check(controller.CurrentKey == "gunluk" && DisplayService.GetRefreshRate() == maxHz, $"Kapanınca Günlük + {maxHz} Hz'e dönüldü (mod: {controller.CurrentKey}, {DisplayService.GetRefreshRate()} Hz)");
 
     // 3) Profil kapalıyken karışmamalı
     prof.Enabled = false;

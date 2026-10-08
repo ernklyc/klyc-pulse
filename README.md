@@ -60,8 +60,8 @@ Tasarım ilkesi: **uygula → geri oku → doğrula.** Bir ayar yazıldıktan so
 
 | Dosya | Boyut | Ne zaman |
 |---|---|---|
-| `KLYC-Pulse-v1.0.0-win-x64.zip` | ~11 MB (zip) | [.NET 8 Masaüstü Çalışma Zamanı](https://dotnet.microsoft.com/download/dotnet/8.0) kuruluysa |
-| `KLYC-Pulse-v1.0.0-win-x64-self-contained.zip` | ~68 MB (zip) | Hiçbir şey kurmak istemiyorsanız (her şey içinde) |
+| `KLYC-Pulse-v1.0.1-win-x64.zip` | ~11 MB (zip) | [.NET 8 Masaüstü Çalışma Zamanı](https://dotnet.microsoft.com/download/dotnet/8.0) kuruluysa |
+| `KLYC-Pulse-v1.0.1-win-x64-self-contained.zip` | ~68 MB (zip) | Hiçbir şey kurmak istemiyorsanız (her şey içinde) |
 
 1. Zip'i açın, `KLYC-Pulse.exe`'yi istediğiniz bir klasöre koyun (ör. `C:\Programlar\KLYC-Pulse`).
 2. Çift tıklayın, **yönetici izni** isteyecektir (sensörler, ekran kartı ve servis ayarları için gerekir).
@@ -71,7 +71,7 @@ Tasarım ilkesi: **uygula → geri oku → doğrula.** Bir ayar yazıldıktan so
 
 ```powershell
 # özet kontrolü
-Get-FileHash .\KLYC-Pulse-v1.0.0-win-x64.zip -Algorithm SHA256
+Get-FileHash .\KLYC-Pulse-v1.0.1-win-x64.zip -Algorithm SHA256
 ```
 
 ## İlk kullanım

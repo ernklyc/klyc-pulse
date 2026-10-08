@@ -2,6 +2,11 @@
 
 Biçim [Keep a Changelog](https://keepachangelog.com/tr/) esaslıdır; sürümleme [SemVer](https://semver.org/lang/tr/).
 
+## [1.0.1] — 2026-10-08
+
+### Düzeltilenler
+- Oyun ve Günlük modları ekran yenileme hızını sabit 144 Hz yerine **ekranın desteklediği en yüksek hıza** ayarlıyor (ör. 180 Hz monitörde 180 Hz). Oyun profilinde seçenek 'Ekranın en yükseği' oldu; eski 144 kayıtları bu seçeneğe taşınır.
+
 ## [1.0.0] — 2026-10-08
 
 İlk kararlı sürüm.
