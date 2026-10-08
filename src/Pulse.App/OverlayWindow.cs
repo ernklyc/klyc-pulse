@@ -15,7 +15,7 @@ public sealed class OverlayWindow : Window
 {
     private readonly TextBlock _text = new()
     {
-        Foreground = Brushes.White,
+        Foreground = new SolidColorBrush(Color.FromArgb(0xB8, 0xFF, 0xFF, 0xFF)),   // soluk: oyunu bölmesin
         FontFamily = new FontFamily("Consolas"),
         FontSize = 13,
         LineHeight = 17,
@@ -35,7 +35,7 @@ public sealed class OverlayWindow : Window
         Focusable = false;
         Content = new Border
         {
-            Background = new SolidColorBrush(Color.FromArgb(0xD8, 0x11, 0x18, 0x27)),
+            Background = new SolidColorBrush(Color.FromArgb(0x70, 0x11, 0x18, 0x27)),
             CornerRadius = new CornerRadius(6),
             Padding = new Thickness(10, 7, 12, 7),
             Child = _text,

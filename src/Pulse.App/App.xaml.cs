@@ -58,6 +58,23 @@ public partial class App : Application
         // Vurgu rengi: sistem mavisi yerine tema mürekkebi (anahtarlar, seçili öğeler).
         ApplicationAccentColorManager.Apply(System.Windows.Media.Color.FromRgb(0x11, 0x18, 0x27), ApplicationTheme.Light);
 
+        // Görünüm denemesi (geliştirici): gösterge + uyarı yazısını birkaç saniye gösterip çıkar.
+        if (e.Args.Any(a => a.Equals("--notice-test", StringComparison.OrdinalIgnoreCase)))
+        {
+            AppServices.Overlay.Set(true);
+            var t = new System.Windows.Threading.DispatcherTimer { Interval = TimeSpan.FromSeconds(3) };
+            t.Tick += (_, _) =>
+            {
+                t.Stop();
+                NoticeChip.Show("Isı yüksek: işlemci 96°C, ekran kartı 63°C.", true);
+                var end = new System.Windows.Threading.DispatcherTimer { Interval = TimeSpan.FromSeconds(12) };
+                end.Tick += (_, _) => { end.Stop(); AppServices.Overlay.Set(false); Shutdown(); };
+                end.Start();
+            };
+            t.Start();
+            return;
+        }
+
         var selfTest = e.Args.FirstOrDefault(a => a.StartsWith("--selftest", StringComparison.OrdinalIgnoreCase));
         _window = new MainWindow();
         CreateTray();
@@ -71,8 +88,8 @@ public partial class App : Application
 
         AppServices.Hotkeys.Message += text => Dispatcher.Invoke(() => _tray?.ShowBalloonTip(2000, "KLYC-Pulse", text, System.Windows.Forms.ToolTipIcon.Info));
         AppServices.Hotkeys.Enabled = AppServices.Settings.Current.Hotkeys;
-        AppServices.Guard.Notice += (text, warn) => Dispatcher.Invoke(() =>
-            _tray?.ShowBalloonTip(5000, "Pulse ısı koruması", text, warn ? System.Windows.Forms.ToolTipIcon.Warning : System.Windows.Forms.ToolTipIcon.Info));
+        // Isı uyarıları: sağ alttaki büyük Windows balonu yerine sağ üstte küçük, kısa süreli yazı.
+        AppServices.Guard.Notice += (text, warn) => Dispatcher.Invoke(() => NoticeChip.Show(text, warn));
         AppServices.Guard.Enabled = AppServices.Settings.Current.ThermalGuard;
         AppServices.Heat.Configure(AppServices.Settings.Current.HeatTarget);
         AppServices.Companion.Start();

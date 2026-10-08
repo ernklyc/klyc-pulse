@@ -7,6 +7,7 @@ namespace Pulse.App;
 /// <summary>
 /// Isı bekçisi: sıcaklık uzun süre tehlikeli seviyede kalırsa Sessiz moda geçer (turbo kapanır, ısı düşer),
 /// güvenli seviyeye inince önceki moda döner. Önce uyarır, sonra serinletir. Ayarlardan kapatılabilir.
+/// Oyun modundayken Sessiz moda geçmez (oyunu bozar), yalnızca uyarır.
 /// </summary>
 public sealed class ThermalGuardService : IDisposable
 {
@@ -53,9 +54,16 @@ public sealed class ThermalGuardService : IDisposable
             {
                 case GuardEvent.Warn:
                     Journal.Write($"Isı bekçisi: uyarı ({hot}).");
-                    Notice?.Invoke($"Bilgisayar bir süredir çok sıcak ({hot}). Havalandırmayı kontrol et, gerekirse Sessiz moda geç.", true);
+                    Notice?.Invoke($"Isı yüksek: {hot}.", true);
                     break;
                 case GuardEvent.Cool:
+                    if (AppServices.Modes.CurrentKey == Modes.Game)
+                    {
+                        // Oyun ortasında Sessiz moda atlamak oyunu bozar; kademeli sınırlamayı "Sıcaklık sınırı" yapar.
+                        Journal.Write($"Isı bekçisi: çok sıcak ({hot}); Oyun modunda olduğu için Sessiz moda geçilmedi.");
+                        Notice?.Invoke($"Çok sıcak: {hot}.", true);
+                        break;
+                    }
                     _restoreTo = AppServices.Modes.CurrentKey is { } cur && cur != Modes.Quiet ? cur : _restoreTo;
                     Journal.Write($"Isı bekçisi: serinletme ({hot}), önceki mod {_restoreTo}.");
                     Notice?.Invoke($"Sıcaklık tehlikeli seviyede kaldı ({hot}). Sessiz moda geçiliyor, ısı düşünce eski moda dönülecek.", true);

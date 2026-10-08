@@ -2,6 +2,14 @@
 
 Biçim [Keep a Changelog](https://keepachangelog.com/tr/) esaslıdır; sürümleme [SemVer](https://semver.org/lang/tr/).
 
+## [1.0.3] — 2026-10-08
+
+### Değişenler
+- Isı bekçisi, Oyun modundayken oyunu bozmamak için Sessiz moda **geçmez**; yalnızca uyarır.
+- Isı uyarıları sağ alttaki büyük Windows balonu yerine **sağ üstte küçük, kısa süreli yazı** olarak gösterilir (gösterge varsa altında).
+- Oyun üstü gösterge daha soluk (yarı saydam).
+- Oyun bitince Oyun modundan **Günlük'e** dönülür (masaüstünde Turbo/yüksek fanla kalmaz).
+
 ## [1.0.2] — 2026-10-08
 
 ### Düzeltilenler

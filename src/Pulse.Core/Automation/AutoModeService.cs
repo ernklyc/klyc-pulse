@@ -65,7 +65,8 @@ public sealed class AutoModeService : IDisposable
                     var key = profile?.ModeKey ?? Modes.Modes.Game;
                     var overrides = profile is null ? null : new ModeOverrides(profile.RefreshHz == 144 ? Modes.Modes.MaxHz : profile.RefreshHz, profile.Brightness);
                     var hasOverrides = overrides is { RefreshHz: not null } or { Brightness: not null };
-                    _restoreTo = _controller.CurrentKey ?? Modes.Modes.Daily;
+                    // Oyun bitince masaüstünde Turbo/yüksek fanla kalmamak için Oyun modundan Günlük'e dönülür.
+                    _restoreTo = _controller.CurrentKey is null or Modes.Modes.Game ? Modes.Modes.Daily : _controller.CurrentKey;
                     Journal.Write($"Oyun algılandı ({game.Name}): '{key}' profili uygulanıyor, önceki mod {_restoreTo}.");
 
                     if (_controller.CurrentKey == key && !hasOverrides) _autoApplied = true;       // zaten istenen modda

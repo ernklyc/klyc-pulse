@@ -62,8 +62,8 @@ Get one of two files from the **[Releases](https://github.com/ernklyc/klyc-pulse
 
 | File | Size | When |
 |---|---|---|
-| `KLYC-Pulse-v1.0.2-win-x64.zip` | ~11 MB (zip) | If the [.NET 8 Desktop Runtime](https://dotnet.microsoft.com/download/dotnet/8.0) is installed |
-| `KLYC-Pulse-v1.0.2-win-x64-self-contained.zip` | ~68 MB (zip) | If you don't want to install anything (runtime included) |
+| `KLYC-Pulse-v1.0.3-win-x64.zip` | ~11 MB (zip) | If the [.NET 8 Desktop Runtime](https://dotnet.microsoft.com/download/dotnet/8.0) is installed |
+| `KLYC-Pulse-v1.0.3-win-x64-self-contained.zip` | ~68 MB (zip) | If you don't want to install anything (runtime included) |
 
 1. Unzip and put `KLYC-Pulse.exe` in any folder (e.g. `C:\Programs\KLYC-Pulse`).
 2. Double-click; it asks for **administrator rights** (needed for sensors, GPU and service settings).
@@ -72,7 +72,7 @@ Get one of two files from the **[Releases](https://github.com/ernklyc/klyc-pulse
 > **Windows SmartScreen / antivirus warning:** the app is not code-signed yet, so an "Unknown publisher" warning may appear. Compare the SHA-256 hash with `SHA256SUMS.txt` on the release page, or build from source yourself.
 
 ```powershell
-Get-FileHash .\KLYC-Pulse-v1.0.2-win-x64.zip -Algorithm SHA256
+Get-FileHash .\KLYC-Pulse-v1.0.3-win-x64.zip -Algorithm SHA256
 ```
 
 ## First use

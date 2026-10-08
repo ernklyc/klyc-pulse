@@ -946,6 +946,17 @@ if (cmd == "profile-test")
     while (sw.Elapsed < TimeSpan.FromSeconds(30) && controller.CurrentKey != "gunluk") await Task.Delay(1000);
     Check(controller.CurrentKey == "gunluk" && DisplayService.GetRefreshRate() == maxHz, $"Kapanınca Günlük + {maxHz} Hz'e dönüldü (mod: {controller.CurrentKey}, {DisplayService.GetRefreshRate()} Hz)");
 
+    // 2b) Oyun zaten Oyun modundayken açılırsa: kapanınca masaüstünde Turbo'da kalmamalı, Günlük'e dönmeli
+    prof.ModeKey = "oyun"; prof.RefreshHz = null;
+    await controller.ApplyAsync("oyun");
+    game = System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(fake, "fake-game") { UseShellExecute = false, CreateNoWindow = true })!;
+    await Task.Delay(8000);
+    Check(controller.CurrentKey == "oyun", $"Oyun modundayken oyun açıldı: mod Oyun (mod: {controller.CurrentKey})");
+    game.Kill(true);
+    sw.Restart();
+    while (sw.Elapsed < TimeSpan.FromSeconds(30) && controller.CurrentKey != "gunluk") await Task.Delay(1000);
+    Check(controller.CurrentKey == "gunluk", $"Oyun (Oyun modundan) kapanınca Günlük'e dönüldü, Oyun'da kalmadı (mod: {controller.CurrentKey})");
+
     // 3) Profil kapalıyken karışmamalı
     prof.Enabled = false;
     game = System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(fake, "fake-game") { UseShellExecute = false, CreateNoWindow = true })!;

@@ -10,6 +10,9 @@ public sealed class OverlayService
     private IDisposable? _subscription;
 
     public bool IsOn => _window is not null;
+
+    /// <summary>Gösterge sağ üst köşedeyse alt kenarının ekran konumu (uyarı yazısı altına yerleşsin diye); değilse null.</summary>
+    public double? TopRightBottom => _window is { Corner: 1 } w ? w.Top + w.ActualHeight : null;
     public event Action<bool>? Changed;
 
     public void Toggle() => Set(!IsOn);
