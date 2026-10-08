@@ -56,6 +56,8 @@ Design principle: **apply → read back → verify.** Values that cannot be read
 
 **Protective features:** *thermal guard* (switches to Quiet mode if dangerous temperatures persist), *heat target* (a software substitute for fan curves; lowers the CPU's maximum frequency in ~300 MHz steps and trims the GPU clock, only when a limit you set is exceeded), *mode keeper* (repairs power settings changed by other tools, checked every minute).
 
+If you like the project: [☕ Buy me a coffee](https://buymeacoffee.com/13tpsxlcea)
+
 ## Download and install
 
 Get one file from the **[Releases](https://github.com/ernklyc/klyc-pulse/releases)** page. **The installer is the easiest:**

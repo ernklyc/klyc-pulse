@@ -54,6 +54,8 @@ Tasarım ilkesi: **uygula → geri oku → doğrula.** Bir ayar yazıldıktan so
 
 **Koruma özellikleri:** *ısı koruması* (tehlikeli sıcaklık sürerse Sessiz moda geçer), *sıcaklık sınırı* (fan eğrisi yerine; işlemci/GPU'yu kademeli kısar), *mod koruyucu* (başka bir program güç ayarını bozarsa dakikada bir düzeltir).
 
+Projeyi beğendiysen: [☕ Bir kahve ısmarla](https://buymeacoffee.com/13tpsxlcea)
+
 ## İndir ve kur
 
 **[Releases](https://github.com/ernklyc/klyc-pulse/releases)** sayfasından birini indirin. **En kolayı kurulum dosyasıdır:**

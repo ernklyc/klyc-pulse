@@ -66,6 +66,15 @@ public partial class SettingsViewModel : ObservableObject, IDisposable
 
     [RelayCommand] private void ShowTour() => App.ShowTour();
 
+    private const string SupportUrl = "https://buymeacoffee.com/13tpsxlcea";
+
+    [RelayCommand]
+    private void OpenSupportPage()
+    {
+        try { Process.Start(new ProcessStartInfo(SupportUrl) { UseShellExecute = true }); }
+        catch (Exception ex) { Pulse.Core.Diagnostics.Journal.Write("Destek sayfası açılamadı: " + ex.Message); }
+    }
+
     [RelayCommand]
     private void OpenDataFolder()
     {
