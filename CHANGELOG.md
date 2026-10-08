@@ -2,6 +2,14 @@
 
 Biçim [Keep a Changelog](https://keepachangelog.com/tr/) esaslıdır; sürümleme [SemVer](https://semver.org/lang/tr/).
 
+## [1.7.1] — 2026-10-09
+
+### Eklenenler
+- **Kurulum dosyası (`KLYC-Pulse-Setup-v1.7.1.exe`, Velopack):** Çift tıkla kurulur (yönetici izni istemez), Başlat menüsü ve masaüstü kısayolu oluşturur, Windows "Uygulamalar"dan kaldırılır. Kaldırınca ayarlar ve geçmiş (`%LOCALAPPDATA%\Pulse`) silinmez. Gerçek kurulum/kaldırma bu bilgisayarda denendi: kısayol, kayıt ve klasör eksiksiz oluşup eksiksiz silindi; kısayoldan açınca uygulama yönetici izniyle başladı. Velopack'in kurulum sırasındaki özel çağrısı yönetici gerektiren uygulamayı başlatamadığı için günlükte zararsız bir uyarı (`yükseltme gerekiyor`) yazar; kurulum etkilenmez. Kurulum dosyası henüz dijital imzalı değil (SmartScreen uyarısı çıkabilir).
+
+### Değişenler
+- Derleme klasörünün yolu (Windows kullanıcı adı) artık exe'nin içine yazılmıyor (`Directory.Build.props`, `PathMap`); sürümler yeniden üretilebilir derleniyor.
+
 ## [1.7.0] — 2026-10-09
 
 ### Eklenenler

@@ -8,13 +8,14 @@
     <UseWPF>true</UseWPF>
     <UseWindowsForms>true</UseWindowsForms>
     <RootNamespace>Pulse.App</RootNamespace>
+    <StartupObject>Pulse.App.Program</StartupObject>
     <AssemblyName>KLYC-Pulse</AssemblyName>
     <ApplicationIcon>app.ico</ApplicationIcon>
     <SupportedOSPlatformVersion>10.0.19041.0</SupportedOSPlatformVersion>
     <ApplicationHighDpiMode>PerMonitorV2</ApplicationHighDpiMode>
-    <Version>1.7.0</Version>
-    <AssemblyVersion>1.7.0.0</AssemblyVersion>
-    <FileVersion>1.7.0.0</FileVersion>
+    <Version>1.7.1</Version>
+    <AssemblyVersion>1.7.1.0</AssemblyVersion>
+    <FileVersion>1.7.1.0</FileVersion>
     <Copyright>Copyright (c) 2026 KLYC</Copyright>
     <Product>KLYC-Pulse</Product>
     <Company>KLYC</Company>
@@ -28,6 +29,7 @@
 
   <ItemGroup>
     <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.2" />
+    <PackageReference Include="Velopack" Version="1.2.161" />
     <PackageReference Include="WPF-UI" Version="4.3.0" />
   </ItemGroup>
 

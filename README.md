@@ -56,12 +56,17 @@ Tasarım ilkesi: **uygula → geri oku → doğrula.** Bir ayar yazıldıktan so
 
 ## İndir ve kur
 
-**[Releases](https://github.com/ernklyc/klyc-pulse/releases)** sayfasından iki seçenekten birini indirin:
+**[Releases](https://github.com/ernklyc/klyc-pulse/releases)** sayfasından birini indirin. **En kolayı kurulum dosyasıdır:**
 
 | Dosya | Boyut | Ne zaman |
 |---|---|---|
-| `KLYC-Pulse-v1.7.0-win-x64.zip` | ~11 MB (zip) | [.NET 8 Masaüstü Çalışma Zamanı](https://dotnet.microsoft.com/download/dotnet/8.0) kuruluysa |
-| `KLYC-Pulse-v1.7.0-win-x64-self-contained.zip` | ~68 MB (zip) | Hiçbir şey kurmak istemiyorsanız (her şey içinde) |
+| `KLYC-Pulse-Setup-v1.7.1.exe` | ~80 MB | **Önerilen.** Çift tıkla kur: Başlat menüsü ve masaüstü kısayolu, "Uygulamalar"dan kaldırma. Hiçbir şey ayrıca kurmak gerekmez, yönetici izni istemez |
+| `KLYC-Pulse-v1.7.1-win-x64.zip` | ~11 MB (zip) | [.NET 8 Masaüstü Çalışma Zamanı](https://dotnet.microsoft.com/download/dotnet/8.0) kuruluysa |
+| `KLYC-Pulse-v1.7.1-win-x64-self-contained.zip` | ~68 MB (zip) | Hiçbir şey kurmak istemiyorsanız (her şey içinde) |
+
+**Kurulum dosyasıyla:** çalıştırın, bitince Başlat menüsünden "KLYC-Pulse"u açın (uygulama kendisi yönetici izni ister). Kaldırırsanız ayarlarınız ve geçmişiniz (`%LOCALAPPDATA%\Pulse`) silinmez; yeniden kurunca kaldığınız yerden devam edersiniz. Silmek isterseniz o klasörü elle silin.
+
+**Zip ile (kurulumsuz):**
 
 1. Zip'i açın, `KLYC-Pulse.exe`'yi istediğiniz bir klasöre koyun (ör. `C:\Programlar\KLYC-Pulse`).
 2. Çift tıklayın, **yönetici izni** isteyecektir (sensörler, ekran kartı ve servis ayarları için gerekir).
@@ -71,7 +76,7 @@ Tasarım ilkesi: **uygula → geri oku → doğrula.** Bir ayar yazıldıktan so
 
 ```powershell
 # özet kontrolü
-Get-FileHash .\KLYC-Pulse-v1.7.0-win-x64.zip -Algorithm SHA256
+Get-FileHash .\KLYC-Pulse-v1.7.1-win-x64.zip -Algorithm SHA256
 ```
 
 ## İlk kullanım
@@ -152,8 +157,9 @@ Mimari için [docs/MIMARI.md](docs/MIMARI.md).
 ## Kaldırma
 
 1. Ayarlar'dan "Bilgisayar açılınca Pulse de açılsın"ı kapatın (zamanlanmış görevi siler).
-2. Uygulamayı tepsiden **Çıkış** ile kapatın, `KLYC-Pulse.exe`'yi silin.
-3. İsterseniz `%LOCALAPPDATA%\Pulse` klasörünü silin (ayarlar, günlükler, karantina).
+2. Uygulamayı tepsiden **Çıkış** ile kapatın (yönetici izniyle çalıştığı için kaldırıcı onu kendisi kapatamaz).
+3. Kurulum dosyasıyla kurduysanız Windows **Ayarlar → Uygulamalar**'dan "KLYC-Pulse"u kaldırın; zip ile kullandıysanız `KLYC-Pulse.exe`'yi silin.
+4. İsterseniz `%LOCALAPPDATA%\Pulse` klasörünü silin (ayarlar, günlükler, karantina).
 
 Donanım ayarları kalıcı değildir; yeniden başlatınca varsayılana döner. Pulse'ın değiştirdiği Windows güç planı değerleri için Windows'un "Güç planı"ndan varsayılanları geri yükleyebilirsiniz.
 

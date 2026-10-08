@@ -58,12 +58,17 @@ Design principle: **apply → read back → verify.** Values that cannot be read
 
 ## Download and install
 
-Get one of two files from the **[Releases](https://github.com/ernklyc/klyc-pulse/releases)** page:
+Get one file from the **[Releases](https://github.com/ernklyc/klyc-pulse/releases)** page. **The installer is the easiest:**
 
 | File | Size | When |
 |---|---|---|
-| `KLYC-Pulse-v1.7.0-win-x64.zip` | ~11 MB (zip) | If the [.NET 8 Desktop Runtime](https://dotnet.microsoft.com/download/dotnet/8.0) is installed |
-| `KLYC-Pulse-v1.7.0-win-x64-self-contained.zip` | ~68 MB (zip) | If you don't want to install anything (runtime included) |
+| `KLYC-Pulse-Setup-v1.7.1.exe` | ~80 MB | **Recommended.** Double-click to install: Start menu and desktop shortcut, removable from "Apps". Nothing else to install, no admin rights needed to install |
+| `KLYC-Pulse-v1.7.1-win-x64.zip` | ~11 MB (zip) | If the [.NET 8 Desktop Runtime](https://dotnet.microsoft.com/download/dotnet/8.0) is installed |
+| `KLYC-Pulse-v1.7.1-win-x64-self-contained.zip` | ~68 MB (zip) | If you don't want to install anything (runtime included) |
+
+**With the installer:** run it, then open "KLYC-Pulse" from the Start menu (the app itself asks for administrator rights). Uninstalling keeps your settings and history (`%LOCALAPPDATA%\Pulse`), so a reinstall picks up where you left off; delete that folder by hand if you want them gone.
+
+**With the zip (no install):**
 
 1. Unzip and put `KLYC-Pulse.exe` in any folder (e.g. `C:\Programs\KLYC-Pulse`).
 2. Double-click; it asks for **administrator rights** (needed for sensors, GPU and service settings).
@@ -72,7 +77,7 @@ Get one of two files from the **[Releases](https://github.com/ernklyc/klyc-pulse
 > **Windows SmartScreen / antivirus warning:** the app is not code-signed yet, so an "Unknown publisher" warning may appear. Compare the SHA-256 hash with `SHA256SUMS.txt` on the release page, or build from source yourself.
 
 ```powershell
-Get-FileHash .\KLYC-Pulse-v1.7.0-win-x64.zip -Algorithm SHA256
+Get-FileHash .\KLYC-Pulse-v1.7.1-win-x64.zip -Algorithm SHA256
 ```
 
 ## First use
@@ -153,8 +158,9 @@ Architecture: [docs/MIMARI.md](docs/MIMARI.md) (Turkish).
 ## Uninstall
 
 1. Disable "Start Pulse with Windows" in Settings (removes the scheduled task).
-2. Exit from the tray icon and delete `KLYC-Pulse.exe`.
-3. Optionally delete `%LOCALAPPDATA%\Pulse` (settings, logs, quarantine).
+2. Exit from the tray icon (the app runs elevated, so the uninstaller cannot close it for you).
+3. If you used the installer, remove "KLYC-Pulse" in Windows **Settings → Apps**; if you used the zip, delete `KLYC-Pulse.exe`.
+4. Optionally delete `%LOCALAPPDATA%\Pulse` (settings, logs, quarantine).
 
 Hardware settings are not persistent and revert on reboot. To restore Windows power-plan values changed by Pulse, reset the plan defaults in Windows power options.
 
