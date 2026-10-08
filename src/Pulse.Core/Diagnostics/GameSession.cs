@@ -32,6 +32,12 @@ public sealed class GameSessionReport
     /// <summary>Otomatik ayar bu oturumdan sonra işlemci sınırını değiştirdi mi?</summary>
     public bool AutoTuneChanged { get; set; }
 
+    /// <summary>Oyun sırasında arka planda en çok yük bindiren programlar (oyun ve Pulse hariç); ölçülemediyse boş.</summary>
+    public List<BackgroundItem> Background { get; init; } = new();
+
+    /// <summary>Oyun dışındaki tüm programların toplam işlemci ortalaması (%); ölçülemediyse null.</summary>
+    public double? BackgroundCpuAvgPercent { get; init; }
+
     /// <summary>"gpu" | "cpu" | "other" | "unknown": oyunu en çok neyin sınırladığı.</summary>
     public string Bottleneck { get; init; } = "unknown";
 
@@ -73,7 +79,7 @@ public sealed class GameSessionRecorder
 
     /// <summary>Yeterli veri yoksa (varsayılan 90 sn'den kısa) null döner.</summary>
     public GameSessionReport? Build(double baseMhz, int minSamples = 90, int? displayHz = null, int? cpuCapMhz = null, GameSessionReport? previous = null, bool suggestCap = true,
-        DriveKind storage = DriveKind.Unknown, int? suggestMhz = null)
+        DriveKind storage = DriveKind.Unknown, int? suggestMhz = null, BackgroundSummary? background = null)
     {
         if (_samples.Count < minSamples) return null;
         var n = _samples.Count;
@@ -192,6 +198,12 @@ public sealed class GameSessionRecorder
             findings.Add("Oyun yavaş bir HDD'de duruyor. Yüklemeleri ve açık dünyada akış takılmalarını yavaşlatır; oyunu SSD'ye taşımak çözer (FPS'i artırmaz).");
         }
 
+        // 4d) Arka plandaki programlar: oyunla işlemci, disk ve belleği paylaşırlar (takılmanın sık görülen sebebi)
+        if (background is { Items.Count: > 0 })
+        {
+            foreach (var line in BackgroundFindings(background, bottleneck, ramPeak, ref severity)) findings.Add(line);
+        }
+
         // 5) FPS ve takılma
         if (fpsAvg is { } f)
         {
@@ -265,12 +277,67 @@ public sealed class GameSessionRecorder
             RamPeakPercent = Math.Round(ramPeak, 0),
             VramPeakPercent = vramPeak > 0 ? Math.Round(vramPeak, 0) : null,
             OnBatteryPercent = onBatteryPct,
+            Background = background?.Items ?? new(),
+            BackgroundCpuAvgPercent = background is { Items.Count: > 0 } ? background.TotalCpuAvgPercent : null,
             CpuCapMhz = cpuCapMhz,
             SuggestedCpuCapMhz = suggestedCap,
             Bottleneck = bottleneck,
             Severity = severity,
             Findings = findings,
         };
+    }
+
+    /// <summary>
+    /// Arka plan yükünden sade bulgular çıkarır. Yalnızca gerçekten anlamlı olanları söyler (en çok 3 satır); hiçbir şeyi kendisi kapatmaz.
+    /// Windows'un kendi işleri (Defender, Update vb.) için kapat demez, ne olduğunu söyler.
+    /// </summary>
+    public static List<string> BackgroundFindings(BackgroundSummary bg, string bottleneck, double ramPeakPercent, ref int severity)
+    {
+        var lines = new List<string>();
+        string Advice(BackgroundItem i) => i.Kind == "launcher"
+            ? " Bu bir oyun başlatıcısı; oyun açıkken kapatma (oyun kapanabilir). İndirme ya da güncelleme varsa oyun sırasında duraklat."
+            : i.Kind == "app"
+            ? bottleneck switch
+            {
+                "cpu" => " Oyunu işlemci sınırlıyor, bu yüzden FPS'i düşürmüş olabilir; oyundan önce kapat.",
+                "gpu" => " Oyunu ekran kartı sınırladığı için FPS'e etkisi az; yine de ısıyı azaltmak için oyundan önce kapatabilirsin.",
+                _ => " Oyundan önce kapatman iyi olur.",
+            }
+            : i.Name.ToLowerInvariant() switch
+            {
+                "msmpeng" or "mpdefendercoreservice" => " Windows Defender oyun sırasında tarama yapmış; tarama saatini oyun saatlerinden uzağa almak Windows Güvenliği'nden yapılır (Pulse güvenlik ayarlarına dokunmaz).",
+                "tiworker" or "trustedinstaller" or "wuauclt" or "musnotification" => " Windows Update arka planda çalışıyor; Windows'un 'etkin saatler' ayarına oyun saatini yazarsan oyun sırasında çalışmaz.",
+                "searchindexer" or "searchhost" => " Windows arama dizinleyicisi çalışıyordu; kendiliğinden biter.",
+                "compattelrunner" => " Windows'un veri toplama işi çalışıyordu; kendiliğinden biter.",
+                _ => i.Kind == "system" ? " Windows/sürücü işi; genelde kendiliğinden biter." : " Oyun sırasında arka planda çalışıyordu.",
+            };
+
+        var cpuItems = bg.Items
+            .Where(i => i.CpuAvgPercent >= 3 || (i.CpuPeakPercent >= 20 && i.ActivePercent >= 15))
+            .OrderByDescending(i => i.CpuAvgPercent).Take(3).ToList();
+        foreach (var i in cpuItems)
+        {
+            lines.Add($"Arka planda {i.Display} oyun boyunca ortalama %{i.CpuAvgPercent:0.#} işlemci kullandı (en çok %{i.CpuPeakPercent:0}).{Advice(i)}");
+            if (i.Kind == "app" && i.CpuAvgPercent >= 8 && bottleneck == "cpu") severity = Math.Max(severity, 1);
+        }
+
+        if (lines.Count < 3)
+        {
+            foreach (var i in bg.Items.Where(i => i.DiskAvgMBps >= 10 && !cpuItems.Contains(i)).OrderByDescending(i => i.DiskAvgMBps).Take(3 - lines.Count))
+                lines.Add($"Arka planda {i.Display} oyun boyunca ortalama {i.DiskAvgMBps:0} MB/sn disk okuma/yazma yaptı. Oyun diskten veri akıtıyorsa takılma yapabilir.{(i.Kind == "app" ? " Oyundan önce kapatırsan disk oyuna kalır." : Advice(i))}");
+        }
+
+        // Bellek: yalnızca bellek gerçekten daralmışken, büyük kapatılabilir programlar
+        if (ramPeakPercent >= 80 && lines.Count < 3)
+        {
+            var big = bg.Items.Where(i => i.Kind == "app" && i.RamPeakMB >= 1000 && !cpuItems.Contains(i)).OrderByDescending(i => i.RamPeakMB).FirstOrDefault();
+            if (big is not null)
+                lines.Add($"Bellek %{ramPeakPercent:0} dolmuşken {big.Display} arka planda yaklaşık {big.RamPeakMB / 1024:0.0} GB bellek tutuyordu. Oyundan önce kapatırsan bellek boşalır.");
+        }
+
+        if (bg.TotalCpuAvgPercent >= 15 && lines.Count > 0)
+            lines.Add($"Arka plandaki programlar toplamda ortalama %{bg.TotalCpuAvgPercent:0} işlemci harcadı.");
+        return lines;
     }
 
     /// <summary>Önceki oturumla karşılaştırma satırı. Karşılaştırılacak ortak değer yoksa null.</summary>

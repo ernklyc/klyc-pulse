@@ -13,6 +13,9 @@ public sealed class GameReportService : IDisposable
     private readonly object _gate = new();
     private GameSessionRecorder? _recorder;
     private IDisposable? _subscription;
+    private BackgroundLoadTracker? _background;
+    private System.Threading.Timer? _bgTimer;
+    private int _bgBusy;
 
     public GameSessionReport? Last { get; private set; } = GameReportStore.Load();
 
@@ -27,6 +30,9 @@ public sealed class GameReportService : IDisposable
             _recorder = new GameSessionRecorder(game);
             _subscription = AppServices.Sensors.Subscribe(wantFps: true);
             AppServices.Sensors.Updated += OnSensors;
+            // Arka plandaki programların yükü: 5 sn'de bir süreç sayaçları okunur (birkaç ms; oyunu etkilemez)
+            _background = new BackgroundLoadTracker(Environment.ProcessorCount, game);
+            _bgTimer = new System.Threading.Timer(_ => SampleBackground(), null, TimeSpan.Zero, TimeSpan.FromSeconds(5));
         }
 
         // Pilde oynamak FPS'i yarıya kadar düşürebilir: oyun başlarken bir kez uyar.
@@ -41,13 +47,30 @@ public sealed class GameReportService : IDisposable
         lock (_gate) _recorder?.Add(s, AppServices.Sensors.LatestFps, PowerSource.IsOnAc());
     }
 
+    private void SampleBackground()
+    {
+        if (Interlocked.Exchange(ref _bgBusy, 1) == 1) return;      // önceki okuma bitmediyse atla
+        try
+        {
+            var procs = ProcessSampler.Take();
+            lock (_gate) _background?.Add(procs, DateTime.UtcNow);
+        }
+        catch (Exception ex) { Journal.Write("Arka plan ölçümü hatası: " + ex.Message); }
+        finally { Volatile.Write(ref _bgBusy, 0); }
+    }
+
     public void Stop()
     {
         GameSessionRecorder? rec;
+        BackgroundSummary? background;
         lock (_gate)
         {
             rec = _recorder;
             _recorder = null;
+            _bgTimer?.Dispose();
+            _bgTimer = null;
+            background = _background?.Summarize();
+            _background = null;
             AppServices.Sensors.Updated -= OnSensors;
             _subscription?.Dispose();
             _subscription = null;
@@ -64,7 +87,7 @@ public sealed class GameReportService : IDisposable
             var profile = settings.FindProfile(rec.Game);
             var auto = s.AutoTuneGames && profile is { AutoTune: true, Enabled: true };
             var report = rec.Build(AppServices.Sensors.BaseMhz, displayHz: hz, cpuCapMhz: cap, previous: previous, suggestCap: !auto,
-                storage: DriveKindDetector.Detect(profile?.ExePath), suggestMhz: AppServices.GameLadder() is { Length: > 1 } lad ? lad[1] : null);
+                storage: DriveKindDetector.Detect(profile?.ExePath), suggestMhz: AppServices.GameLadder() is { Length: > 1 } lad ? lad[1] : null, background: background);
             if (report is null) { Journal.Write($"Oyun raporu: oturum çok kısa ({rec.Count} sn), rapor yok."); return; }
 
             // Yük altı tepe hızı öğren (sınırsız oturumlardan): kademeler bu bilgisayarın gerçek hızına göre kurulur

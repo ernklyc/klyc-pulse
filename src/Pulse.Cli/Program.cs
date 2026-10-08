@@ -1185,6 +1185,131 @@ if (cmd == "orphan-test")
     return fails == 0 ? 0 : 1;
 }
 
+if (cmd == "bgload")
+{
+    // Gerçek bilgisayarda: 30 sn boyunca arka plan yükünü ölçer ve en çok yük bindirenleri yazar (kimseyi kapatmaz).
+    var secs = int.Parse(args.ElementAtOrDefault(1) ?? "30");
+    var tr = new Pulse.Core.Diagnostics.BackgroundLoadTracker(Environment.ProcessorCount, "none");
+    var t0 = DateTime.UtcNow;
+    while ((DateTime.UtcNow - t0).TotalSeconds < secs)
+    {
+        tr.Add(Pulse.Core.Diagnostics.ProcessSampler.Take(), DateTime.UtcNow);
+        Thread.Sleep(5000);
+    }
+    var sum = tr.Summarize(10);
+    Console.WriteLine($"Aralık sayısı: {tr.Intervals}, toplam arka plan işlemci ortalaması: %{sum.TotalCpuAvgPercent}");
+    foreach (var i in sum.Items)
+        Console.WriteLine($"  {i.Display,-30} [{i.Kind,-6}] işlemci ort %{i.CpuAvgPercent,5} (tepe %{i.CpuPeakPercent,3}, etkin %{i.ActivePercent,3})  disk {i.DiskAvgMBps,6} MB/sn  bellek {i.RamPeakMB,6} MB");
+    return 0;
+}
+
+if (cmd == "bgload-test")
+{
+    // Arka plan yükü ölçümü: sahte süreç listeleriyle (donanıma dokunmaz) hesap, gruplama, dışlama ve rapor bulguları.
+    var fails = 0;
+    void Check(bool ok, string what) { Console.WriteLine($"  [{(ok ? "GEÇTİ" : "KALDI")}] {what}"); if (!ok) fails++; }
+    const int Cores = 8;
+    var t0 = new DateTime(2026, 1, 1, 20, 0, 0, DateTimeKind.Utc);
+    Pulse.Core.Diagnostics.ProcSample P(int pid, string name, double cpuSec, long io = 0, long ws = 200L << 20, string? path = null) => new(pid, 1000 + pid, name, cpuSec, io, ws, path);
+
+    // Her 5 sn'de bir örnek; fn(i) o ana kadarki toplam CPU saniyesi/disk baytı ile süreç listesi verir
+    Pulse.Core.Diagnostics.BackgroundSummary Run(int intervals, Func<int, List<Pulse.Core.Diagnostics.ProcSample>> fn, string game = "FakeGame")
+    {
+        var tr = new Pulse.Core.Diagnostics.BackgroundLoadTracker(Cores, game);
+        for (var i = 0; i <= intervals; i++) tr.Add(fn(i), t0.AddSeconds(5 * i));
+        return tr.Summarize();
+    }
+    // Toplam işlemcinin yüzde p'si = p/100 * Cores çekirdek-saniye / sn
+    double Cs(int i, double percent) => i * 5 * (percent / 100.0) * Cores;
+    const string GameDir = @"C:\Games\Fake";
+
+    // 1) Chrome iki süreç, toplam %10 -> gruplanır, rapor "kapat" der (oyunu işlemci sınırlıyorsa)
+    var s1 = Run(60, i => [P(1, "chrome", Cs(i, 6)), P(2, "chrome", Cs(i, 4)), P(3, "FakeGame", Cs(i, 40), path: GameDir + @"\FakeGame.exe")]);
+    var chrome = s1.Items.FirstOrDefault(x => x.Name == "chrome");
+    Check(chrome is not null && Math.Abs(chrome.CpuAvgPercent - 10) < 0.2, $"Chrome'un iki süreci tek program olarak toplanır (bulundu: %{chrome?.CpuAvgPercent})");
+    Check(chrome?.Display == "Google Chrome" && chrome.Kind == "app", "Tanınan programa okunur ad ve tür verilir");
+    Check(s1.Items.All(x => x.Name != "FakeGame"), "Oyunun kendisi arka plan sayılmaz");
+    Check(Math.Abs(s1.TotalCpuAvgPercent - 10) < 0.2, $"Toplam arka plan yükü oyunu saymaz (bulundu: %{s1.TotalCpuAvgPercent})");
+    var sev = 0;
+    var f1 = Pulse.Core.Diagnostics.GameSessionRecorder.BackgroundFindings(s1, "cpu", 60, ref sev);
+    Check(f1.Count == 1 && f1[0].Contains("Google Chrome") && f1[0].Contains("kapat") && f1[0].Contains("işlemci sınırlıyor"), $"İşlemci sınırlıyorsa Chrome için net uyarı: {f1.FirstOrDefault()}");
+    Check(sev == 1, $"Yük %8 üstü ve işlemci sınırlıyorsa önem 'dikkat' olur ({sev})");
+    sev = 0;
+    var f1g = Pulse.Core.Diagnostics.GameSessionRecorder.BackgroundFindings(s1, "gpu", 60, ref sev);
+    Check(f1g.Count == 1 && f1g[0].Contains("ekran kartı sınırladığı için FPS'e etkisi az") && sev == 0, "Ekran kartı sınırlıyorsa dürüst anlatılır, önem artmaz");
+
+    // 2) Oyunun klasöründeki yan süreçler (anti-hile) ve Pulse sayılmaz
+    var s2 = Run(60, i => [P(1, "FakeGame", Cs(i, 30), path: GameDir + @"\FakeGame.exe"), P(2, "EasyHelper", Cs(i, 20), path: GameDir + @"\Bin\EasyHelper.exe"),
+        P(3, "KLYC-Pulse", Cs(i, 15)), P(4, "System", Cs(i, 5)), P(5, "dwm", Cs(i, 6))]);
+    Check(s2.Items.Count == 0, $"Oyun klasöründeki yan süreç, Pulse ve Windows çekirdeği arka plan sayılmaz ({string.Join(",", s2.Items.Select(x => x.Name))})");
+
+    // 3) Defender: kapat denmez, ne olduğu söylenir ve güvenlik ayarına dokunulmadığı belirtilir
+    var s3 = Run(60, i => [P(1, "MsMpEng", Cs(i, 12))]);
+    sev = 0;
+    var f3 = Pulse.Core.Diagnostics.GameSessionRecorder.BackgroundFindings(s3, "cpu", 60, ref sev);
+    Check(f3.Count == 1 && f3[0].Contains("Defender") && !f3[0].Contains("kapat") && f3[0].Contains("dokunmaz"), $"Defender için 'kapat' denmez: {f3.FirstOrDefault()}");
+    Check(sev == 0, "Windows'un kendi işi önemi artırmaz");
+
+    // 4) Sessiz sistem: bulgu yok
+    var s4 = Run(60, i => [P(1, "chrome", Cs(i, 0.4)), P(2, "Spotify", Cs(i, 0.3)), P(3, "FakeGame", Cs(i, 50))]);
+    sev = 0;
+    Check(Pulse.Core.Diagnostics.GameSessionRecorder.BackgroundFindings(s4, "cpu", 50, ref sev).Count == 0, "Neredeyse boş arka planda gürültü çıkmaz");
+
+    // 5) Disk: 20 MB/sn yazan program
+    var s5 = Run(60, i => [P(1, "steam", Cs(i, 0.5), io: (long)(i * 5 * 20 * 1048576.0))]);
+    sev = 0;
+    var f5 = Pulse.Core.Diagnostics.GameSessionRecorder.BackgroundFindings(s5, "gpu", 50, ref sev);
+    Check(f5.Count == 1 && f5[0].Contains("Steam") && f5[0].Contains("MB/sn"), $"Disk yükü bulgusu: {f5.FirstOrDefault()}");
+    Check(f5[0].Contains("duraklat") && !f5[0].Contains("kapatabilirsin") && !f5[0].Contains("kapatırsan"), "Başlatıcı (Steam) için 'kapat' denmez, 'duraklat' denir");
+
+    // 6) Kısa süreli ani yük: tepe yüksek ama ortalama düşükse yine de söylenir (arada %60 ile 30 sn)
+    var s6 = Run(120, i => [P(1, "OneDrive", Cs(Math.Min(i, 20), 1) + (i > 20 ? Cs(Math.Min(i, 26) - 20, 60) + Cs(Math.Max(0, i - 26), 1) : 0))]);
+    Check(s6.Items.FirstOrDefault(x => x.Name == "OneDrive") is { CpuPeakPercent: >= 50 }, "Kısa ani yük tepe değerinde görünür");
+
+    // 7) Bellek: yalnızca bellek %80 üstündeyken ve büyük kapatılabilir programlar için
+    var s7 = Run(60, i => [P(1, "Discord", Cs(i, 1), ws: 1800L << 20), P(2, "FakeGame", Cs(i, 40))]);
+    sev = 0;
+    Check(Pulse.Core.Diagnostics.GameSessionRecorder.BackgroundFindings(s7, "gpu", 60, ref sev).Count == 0, "Bellek rahatken büyük programdan şikâyet edilmez");
+    var f7 = Pulse.Core.Diagnostics.GameSessionRecorder.BackgroundFindings(s7, "gpu", 90, ref sev);
+    Check(f7.Count == 1 && f7[0].Contains("Discord") && f7[0].Contains("GB"), $"Bellek dolmuşken büyük program söylenir: {f7.FirstOrDefault()}");
+
+    // 8) Süreç yeniden başlarsa (yeni pid) ve kapanırsa sayı bozulmaz
+    var s8 = Run(60, i => i < 30 ? [P(10, "chrome", Cs(i, 10))] : [P(11, "chrome", Cs(i - 30, 10))]);
+    Check(s8.Items.FirstOrDefault(x => x.Name == "chrome") is { } c8 && c8.CpuAvgPercent is > 8 and < 11, $"Süreç değişince ölçüm bozulmaz (%{s8.Items.FirstOrDefault()?.CpuAvgPercent})");
+
+    // 9) Yeterli ölçüm yoksa rapor boş
+    Check(Run(3, i => [P(1, "chrome", Cs(i, 50))]).Items.Count == 0, "Çok kısa ölçümde (6 aralıktan az) sonuç verilmez");
+
+    // 10) Rapora girer, kaydedilip geri okunur
+    var rec = new Pulse.Core.Diagnostics.GameSessionRecorder("FakeGame", new DateTime(2026, 1, 1, 20, 0, 0));
+    const long Gb = 1L << 30;
+    for (var i = 0; i < 300; i++)
+        rec.Add(new Pulse.Core.Monitoring.SensorSnapshot(DateTime.Now, 60, 3800, 80, new Pulse.Core.Monitoring.GpuReading(60, 98, 0, 1500, 4000, 40, 2 * Gb, 4 * Gb, 0), 8 * Gb, 16 * Gb, 4000, 4000), null);
+    var rep = rec.Build(2496, background: s1);
+    Check(rep is not null && rep.Background.Count == s1.Items.Count && rep.BackgroundCpuAvgPercent is > 9 and < 11, "Rapora arka plan listesi ve toplam yük girer");
+    Check(rep!.Findings.Any(t => t.Contains("Arka planda Google Chrome")), "Rapor bulgularında arka plan satırı var");
+    Check(rec.Build(2496) is { Background.Count: 0, BackgroundCpuAvgPercent: null }, "Ölçüm yoksa rapor eskisi gibi (arka plan alanı boş)");
+    var dir = Path.Combine(Path.GetTempPath(), "pulse-bgload-test-" + Guid.NewGuid().ToString("N")[..8]);
+    try
+    {
+        var file = Path.Combine(dir, "last.json");
+        Pulse.Core.Diagnostics.GameReportStore.Save(rep, file);
+        var back = Pulse.Core.Diagnostics.GameReportStore.Load(file);
+        Check(back is not null && back.Background.Count == rep.Background.Count && back.Background[0].Display == rep.Background[0].Display, "Kaydedilip geri okununca arka plan bilgisi korunur");
+        // Eski rapor dosyası (arka plan alanı yok) hâlâ okunur
+        File.WriteAllText(file, "{\"Game\":\"Eski\",\"Minutes\":10,\"Findings\":[\"x\"]}");
+        Check(Pulse.Core.Diagnostics.GameReportStore.Load(file) is { Game: "Eski", Background.Count: 0 }, "Eski sürümün raporu sorunsuz okunur");
+    }
+    finally { try { Directory.Delete(dir, true); } catch { } }
+
+    // 11) Gerçek süreç listesi okunabiliyor (en az bu program kendisi)
+    var live = Pulse.Core.Diagnostics.ProcessSampler.Take();
+    Check(live.Count > 10 && live.Any(p => p.Pid == Environment.ProcessId && p.CpuSeconds > 0 && p.WorkingSet > 0), $"Gerçek süreç listesi okunur ({live.Count} süreç)");
+
+    Console.WriteLine(fails == 0 ? "ARKA PLAN YÜKÜ TESTİ GEÇTİ" : $"{fails} TEST KALDI");
+    return fails == 0 ? 0 : 1;
+}
+
 if (cmd == "report-test")
 {
     // Oyun raporu: sahte oturumlarla (donanıma dokunmaz) bulguların doğru çıktığını sınar.

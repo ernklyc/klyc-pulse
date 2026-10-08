@@ -2,6 +2,12 @@
 
 Biçim [Keep a Changelog](https://keepachangelog.com/tr/) esaslıdır; sürümleme [SemVer](https://semver.org/lang/tr/).
 
+## [Yayınlanmadı]
+
+### Eklenenler
+- **Arka plan yükü ölçümü (kasma sebebi bulucu):** Oyun sırasında 5 sn'de bir çalışan programların işlemci, disk ve bellek kullanımı ölçülür (oyunun kendisi, yan süreçleri ve Pulse hariç; aynı adlı süreçler toplanır, örn. Chrome'un onlarca süreci tek satır). Oyun bitince raporda sade bulgu çıkar: *"Arka planda Google Chrome oyun boyunca ortalama %10 işlemci kullandı… oyundan önce kapat"*. Öneri oyunu neyin sınırladığına göre değişir (ekran kartı sınırlıyorsa "FPS'e etkisi az" der). Oyun başlatıcıları (Steam, Epic…) için "kapat" denmez (oyun kapanabilir), indirmeyi duraklatmak önerilir. Windows'un kendi işleri (Defender, Update, arama) için ne olduğu söylenir; güvenlik ayarlarına dokunulmaz. Hiçbir program otomatik kapatılmaz. Bellek yalnızca %80 üstündeyken büyük programlar için söylenir.
+- `pulse-cli bgload [sn]` (gerçek ölçüm) ve `bgload-test` (sahte süreçlerle sınama) komutları.
+
 ## [1.6.1] — 2026-10-09
 
 ### Değişenler (Isı denemesi sonucuna göre)
