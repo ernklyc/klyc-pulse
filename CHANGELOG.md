@@ -2,6 +2,11 @@
 
 Biçim [Keep a Changelog](https://keepachangelog.com/tr/) esaslıdır; sürümleme [SemVer](https://semver.org/lang/tr/).
 
+## [1.0.2] — 2026-10-08
+
+### Düzeltilenler
+- İzleme: işlemci hafif yükteyken (%30 altı) 75 °C'yi aşıyorsa artık 'Her şey normal' yerine uyarı gösterilir (havalandırma/termal macun ipucuyla).
+
 ## [1.0.1] — 2026-10-08
 
 ### Düzeltilenler

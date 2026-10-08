@@ -121,6 +121,8 @@ public partial class MonitorViewModel : ObservableObject, IDisposable
         if (g?.ThrottleText is { } gt && g.UtilPercent > 50) return ($"Ekran kartı kısılıyor: {gt}.", "BadBrush");
         if (s.CpuTempC is > 92) return ("İşlemci çok sıcak. Fan ve havalandırmayı kontrol et.", "BadBrush");
         if (s.CpuTempC is > 85) return ("İşlemci sıcak ama sınır içinde.", "WarnBrush");
+        if (s.CpuTempC is > 75 && s.CpuPercent < 30)
+            return ($"İşlemci hafif yükte bile {s.CpuTempC:0} °C. Bir süre boşta bekleyince düşmezse havalandırma tozlanmış ya da termal macun kurumuş olabilir.", "WarnBrush");
         if (cpuHint is not null) return ($"İşlemci: {cpuHint}.", "WarnBrush");
         if (s.RamPercent > 90) return ("Bellek dolmak üzere. Arka plandaki uygulamaları kapatmak iyi olur.", "WarnBrush");
         return ("Her şey normal. Bilgisayar yavaşlamıyor.", "GoodBrush");
