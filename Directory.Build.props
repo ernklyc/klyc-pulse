@@ -1,0 +1,7 @@
+<Project>
+  <!-- Derleme klasörünün yolu (ör. kullanıcı adı) exe içine yazılmasın: kaynak yolları "/_/" olarak eşlenir. -->
+  <PropertyGroup>
+    <PathMap>$(MSBuildThisFileDirectory)=/_/</PathMap>
+    <Deterministic>true</Deterministic>
+  </PropertyGroup>
+</Project>
