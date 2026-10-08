@@ -12,6 +12,9 @@ public partial class MainWindow : FluentWindow
         Loaded += (_, _) => RootNavigation.Navigate(StartPage());
     }
 
+    /// <summary>Pencereyi verilen sayfaya götürür (bildirime tıklayınca, turdan sonra).</summary>
+    public void GoTo(Type page) => RootNavigation.Navigate(page);
+
     /// <summary>--page=ayarlar gibi bir anahtar varsa o sayfayla açılır (sınama ve kısayollar için).</summary>
     private static Type StartPage()
     {

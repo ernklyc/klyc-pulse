@@ -13,6 +13,9 @@ public sealed class OverlayService
 
     /// <summary>Gösterge sağ üst köşedeyse alt kenarının ekran konumu (uyarı yazısı altına yerleşsin diye); değilse null.</summary>
     public double? TopRightBottom => _window is { Corner: 1 } w ? w.Top + w.ActualHeight : null;
+
+    /// <summary>Gösterge bu köşedeyse (0 sol üst, 1 sağ üst, 2 sol alt, 3 sağ alt) kapladığı dikey aralık; bildirimler üst üste binmesin diye.</summary>
+    public (double Top, double Bottom)? VerticalSpan(int corner) => _window is { } w && w.Corner == corner ? (w.Top, w.Top + w.ActualHeight) : null;
     public event Action<bool>? Changed;
 
     public void Toggle() => Set(!IsOn);

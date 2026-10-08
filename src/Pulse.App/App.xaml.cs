@@ -66,7 +66,7 @@ public partial class App : Application
             t.Tick += (_, _) =>
             {
                 t.Stop();
-                NoticeChip.Show("Isı yüksek: işlemci 96°C, ekran kartı 63°C.", true);
+                NoticeChip.Show("Oyun raporu hazır: dikkat edilecek şeyler var.", true, () => { });
                 var end = new System.Windows.Threading.DispatcherTimer { Interval = TimeSpan.FromSeconds(12) };
                 end.Tick += (_, _) => { end.Stop(); AppServices.Overlay.Set(false); Shutdown(); };
                 end.Start();
@@ -80,7 +80,11 @@ public partial class App : Application
         CreateTray();
 
         // Açılışta tepsiye başlatma: pencere gösterilmez.
-        if (!e.Args.Contains("--tray") && selfTest is null) _window.Show();
+        if (!e.Args.Contains("--tray") && selfTest is null)
+        {
+            _window.Show();
+            Dispatcher.BeginInvoke(new Action(() => MaybeShowTour()), System.Windows.Threading.DispatcherPriority.ApplicationIdle);
+        }
 
         AppServices.Modes.Applied += OnModeApplied;
         AppServices.AutoClean.Completed += freed =>
@@ -97,11 +101,22 @@ public partial class App : Application
         // Önceki oturumdan (çökme vb.) kalmış frekans sınırı varsa ve sıcaklık sınırı kapalıysa temizle; sessizce yavaş kalmasın.
         if (AppServices.Settings.Current.HeatTarget is null) _ = Task.Run(() => HeatTargetService.ClearStaleFrequencyCap());
         // Oyun raporu: oyun açılınca kayıt başlar, kapanınca küçük bir bilgi yazısı çıkar.
-        AppServices.Auto.GameStarted += game => AppServices.GameReport.Start(game);
-        AppServices.Auto.GameStopped += _ => AppServices.GameReport.Stop();
+        // Oyun açılınca FPS/ısı göstergesi kendiliğinden açılır (ayardan kapatılabilir), oyun kapanınca (biz açtıysak) kapanır.
+        var overlayAutoOn = false;
+        AppServices.Auto.GameStarted += game =>
+        {
+            AppServices.GameReport.Start(game);
+            if (AppServices.Settings.Current.AutoOverlay && !AppServices.Overlay.IsOn) { overlayAutoOn = true; AppServices.Overlay.Set(true); }
+        };
+        AppServices.Auto.GameStopped += _ =>
+        {
+            AppServices.GameReport.Stop();
+            if (overlayAutoOn) { overlayAutoOn = false; AppServices.Overlay.Set(false); }
+        };
         AppServices.GameReport.Ready += r => Dispatcher.Invoke(() =>
             NoticeChip.Show(r.AutoTuneChanged ? "Oyun raporu hazır. Otomatik ayar bu oyun için işlemci sınırını güncelledi (Oyunlar sayfası)."
-                : r.Severity == 0 ? "Oyun raporu hazır: sorun görülmedi (Oyunlar sayfası)." : "Oyun raporu hazır: dikkat edilecek şeyler var (Oyunlar sayfası).", r.Severity > 0 && !r.AutoTuneChanged));
+                : r.Severity == 0 ? "Oyun raporu hazır: sorun görülmedi." : "Oyun raporu hazır: dikkat edilecek şeyler var.", r.Severity > 0 && !r.AutoTuneChanged,
+            () => OpenPage(typeof(Pages.GamesPage))));
         AppServices.Companion.Start();
         AppServices.Keeper.Notice += text => Dispatcher.Invoke(() => _tray?.ShowBalloonTip(4000, "KLYC-Pulse", text, System.Windows.Forms.ToolTipIcon.Info));
         _ = Task.Run(async () => { await Task.Delay(4000); await AppServices.Modes.ReapplyGpuAsync(); });
@@ -189,7 +204,41 @@ public partial class App : Application
         _window.Topmost = true;
         _window.Activate();
         _window.Topmost = false;
+        Dispatcher.BeginInvoke(new Action(() => MaybeShowTour()), System.Windows.Threading.DispatcherPriority.ApplicationIdle);
     }
+
+    /// <summary>Pencereyi açıp (gerekirse) verilen sayfaya götürür; bildirimlere tıklayınca kullanılır.</summary>
+    public static void OpenPage(Type? page)
+    {
+        if (Current is not App a) return;
+        a.Dispatcher.Invoke(() =>
+        {
+            a.ShowWindow();
+            if (page is not null) a._window?.GoTo(page);
+        });
+    }
+
+    private bool _tourOpen;
+
+    /// <summary>İlk açılışta (ya da force ile) hızlı turu gösterir; bitince ya da atlanınca bir daha otomatik açılmaz.</summary>
+    private void MaybeShowTour(bool force = false)
+    {
+        if (_window is null || _tourOpen || !_window.IsVisible) return;
+        if (!force && AppServices.Settings.Current.OnboardingDone) return;
+        _tourOpen = true;
+        try
+        {
+            var tour = new TourWindow { Owner = _window };
+            tour.ShowDialog();
+            AppServices.Settings.Current.OnboardingDone = true;
+            AppServices.Settings.Save();
+            if (tour.NavigateTo is { } page) _window.GoTo(page);
+        }
+        finally { _tourOpen = false; }
+    }
+
+    /// <summary>Ayarlar sayfasındaki "Turu göster" düğmesi için.</summary>
+    public static void ShowTour() => (Current as App)?.Dispatcher.BeginInvoke(new Action(() => (Current as App)?.MaybeShowTour(true)));
 
     public void ExitApp()
     {

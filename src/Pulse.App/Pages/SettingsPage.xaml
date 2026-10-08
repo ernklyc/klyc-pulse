@@ -137,6 +137,50 @@
                     </Grid>
                 </StackPanel>
             </Border>
+            <TextBlock Style="{StaticResource PulseLabel}" Text="GÖRÜNÜM VE BİLDİRİMLER" Margin="0,18,0,8" />
+            <Border Style="{StaticResource PulseCard}" Padding="16,12">
+                <StackPanel>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Margin="0,0,20,0">
+                            <TextBlock Style="{StaticResource PulseBody}" FontWeight="Medium" Text="Oyun açılınca FPS ve ısı göstergesini kendiliğinden aç" />
+                            <TextBlock Style="{StaticResource PulseMuted}" TextWrapping="Wrap"
+                                       Text="Oyun kapanınca kendiliğinden kapanır. Görünmüyorsa oyunun görüntü ayarında “Tam ekran” yerine “Kenarlıksız pencere” seç." />
+                        </StackPanel>
+                        <ui:ToggleSwitch Grid.Column="1" VerticalAlignment="Center" IsChecked="{Binding AutoOverlay}" />
+                    </Grid>
+                    <Border Style="{StaticResource PulseHairline}" Margin="0,12,0,10" />
+                    <TextBlock Style="{StaticResource SettingTitle}" Text="Bildirimler ekranın hangi köşesinde çıksın" />
+                    <ItemsControl ItemsSource="{Binding NoticeCorners}" Margin="0,8,0,0">
+                        <ItemsControl.ItemsPanel><ItemsPanelTemplate><StackPanel Orientation="Horizontal" /></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Grid Margin="0,0,6,0">
+                                    <Button Content="{Binding Title}" Style="{StaticResource PulseSegment}" MinWidth="84"
+                                            Command="{Binding DataContext.SetNoticeCornerCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}" CommandParameter="{Binding}" />
+                                    <Button Content="{Binding Title}" Style="{StaticResource PulseSegmentActive}" MinWidth="84" Visibility="{Binding IsActive, Converter={StaticResource BoolToVis}}"
+                                            Command="{Binding DataContext.SetNoticeCornerCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}" CommandParameter="{Binding}" />
+                                </Grid>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                    <TextBlock Style="{StaticResource PulseMuted}" TextWrapping="Wrap" Margin="0,8,0,0"
+                               Text="Oyun içindeki uyarılar tıklamayı geçirir, oyuna karışmaz. Oyun bittikten sonra çıkan bildirimlere (rapor, yeni sürüm) tıklayınca ilgili sayfa açılır." />
+                    <Border Style="{StaticResource PulseHairline}" Margin="0,12,0,10" />
+                    <DockPanel>
+                        <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+                            <Button Content="Turu göster" Style="{StaticResource PulseGhostButton}" Command="{Binding ShowTourCommand}" Margin="0,0,8,0" />
+                            <Button Content="Ayar klasörünü aç" Style="{StaticResource PulseGhostButton}" Command="{Binding OpenDataFolderCommand}" />
+                        </StackPanel>
+                        <TextBlock Style="{StaticResource PulseMuted}" TextWrapping="Wrap" VerticalAlignment="Center" Margin="0,0,12,0"
+                                   Text="Ayarların güncellemede silinmez; her kayıtta otomatik yedeği alınır." />
+                    </DockPanel>
+                </StackPanel>
+            </Border>
+
             <TextBlock Style="{StaticResource PulseLabel}" Text="GÜNCELLEMELER" Margin="0,18,0,8" />
             <Border Style="{StaticResource PulseCard}" Padding="16,12">
                 <StackPanel>

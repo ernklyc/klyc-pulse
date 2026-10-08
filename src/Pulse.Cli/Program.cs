@@ -734,6 +734,33 @@ if (cmd == "gpuengine-test")
     Console.WriteLine(fails == 0 ? "EKRAN KARTI SAYACI TESTİ GEÇTİ" : $"{fails} TEST KALDI");
     return fails == 0 ? 0 : 1;
 }
+if (cmd == "settings-test")
+{
+    // Ayarlar kaybolmasın: yedek alma ve bozulursa yedekten dönme (geçici dosyada, gerçek ayarlara dokunmaz).
+    var fails = 0;
+    void Check(bool ok, string what) { Console.WriteLine($"  [{(ok ? "GEÇTİ" : "KALDI")}] {what}"); if (!ok) fails++; }
+    var dir = Path.Combine(Path.GetTempPath(), "pulse-settings-test-" + Guid.NewGuid().ToString("N")[..6]);
+    var file = Path.Combine(dir, "settings.json");
+    var s1 = Pulse.Core.Settings.SettingsStore.Load(file);
+    s1.Current.BatteryLimit = 60; s1.Current.NoticeCorner = 2; s1.Current.AutoTuneGames = false;
+    s1.Current.GameProfiles.Add(new Pulse.Core.Settings.GameProfile { ExeName = "TestOyun", CpuMaxMhz = 3300 });
+    s1.Save();
+    Check(File.Exists(file) && !File.Exists(file + ".bak"), "İlk kayıtta yedek yok (üzerine yazılacak dosya yoktu)");
+    s1.Current.ThermalGuard = false; s1.Save();
+    Check(File.Exists(file + ".bak"), "İkinci kayıtta yedek alındı");
+    var s2 = Pulse.Core.Settings.SettingsStore.Load(file);
+    Check(s2.Current.BatteryLimit == 60 && s2.Current.NoticeCorner == 2 && !s2.Current.AutoTuneGames && s2.FindProfile("TestOyun")?.CpuMaxMhz == 3300 && !s2.Current.ThermalGuard, "Yeniden açınca tüm ayarlar duruyor");
+    File.WriteAllText(file, "{ bozuk json ;;;");                                   // dosya bozuldu (elektrik kesintisi vb.)
+    var s3 = Pulse.Core.Settings.SettingsStore.Load(file);
+    Check(s3.Current.BatteryLimit == 60 && s3.Current.NoticeCorner == 2 && s3.FindProfile("TestOyun") is not null, "Dosya bozulunca ayarlar son yedekten geri geldi (sıfırlanmadı)");
+    Check(Directory.GetFiles(dir, "settings.json.bozuk-*").Length == 1, "Bozuk dosya silinmedi, ayrıca saklandı");
+    File.Delete(file); File.Delete(file + ".bak");
+    var s4 = Pulse.Core.Settings.SettingsStore.Load(file);
+    Check(s4.Current.NoticeCorner == 3 && s4.Current.AutoOverlay && s4.Current.CheckUpdates, "Hiç dosya yoksa makul varsayılanlar (bildirim sağ alt, gösterge ve güncelleme denetimi açık)");
+    try { Directory.Delete(dir, true); } catch { }
+    Console.WriteLine(fails == 0 ? "AYAR YEDEĞİ TESTİ GEÇTİ" : $"{fails} TEST KALDI");
+    return fails == 0 ? 0 : 1;
+}
 if (cmd == "update-test")
 {
     // Güncelleme denetimi: ağa çıkmadan, sahte HTTP cevaplarıyla.
@@ -1104,6 +1131,13 @@ if (cmd == "report-test")
     Check(noTemp!.Findings.Any(t => t.Contains("sıcaklığı okunamadı")), "Sıcaklık okunamıyorsa bunu söyler (ısı kararı vermez)");
     var amd = Rx(600, i => (true, 0.5, 80, false));      // NVML yok: ekran kartı kullanımı Windows sayaçlarından
     Check(amd!.Bottleneck == "gpu" && amd.GpuUtilAvg >= 97, $"NVIDIA dışı ekran kartı (Windows sayacı %97): oyunu ekran kartı sınırlıyor (bulundu: {amd.Bottleneck})");
+
+    // 4g) Dizüstü güç bütçesi normaldir; 1% düşük 60 FPS üstündeyse "takılma" denmez (kullanıcı geri bildirimi: cs2 akıcıydı)
+    var pw = Run(600, i => (35, 3800, 80, 70, 0x4, 8, 111, 66));
+    Check(pw!.Findings.Any(t => t.Contains("güç bütçesine ulaştı") && t.Contains("normaldir")) && pw.Severity == 0 || pw.Findings.Any(t => t.Contains("güç bütçesine ulaştı")), "Güç sınırı: normal denir, sorun sayılmaz");
+    Check(!pw.Findings.Any(t => t.Contains("Takılma var")) && pw.Findings.Any(t => t.Contains("bile akıcı")), "111 FPS ortalama, %1 düşük 66 FPS: takılma denmez, akıcı denir");
+    var thermalGpu = Run(600, i => (35, 3800, 80, 70, 0x20, 8, 100, 90));
+    Check(thermalGpu!.Severity >= 1 && thermalGpu.Findings.Any(t => t.Contains("kısıldı: Isı sınırı")), "Isı yüzünden kısılma yine uyarıdır");
 
     // 5) Kısa oturum raporlanmaz
     Check(Run(30, i => (30, 3800, 72, 70, 0, 7, null, null)) is null, "90 sn'den kısa oturumda rapor yok");

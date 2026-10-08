@@ -55,7 +55,7 @@ public sealed class UpdateService : IDisposable
                 Journal.Write($"Güncelleme denetimi: yeni sürüm {l.Tag}.");
                 if (!manual && s.DismissedUpdate != l.Tag)
                     System.Windows.Application.Current?.Dispatcher.BeginInvoke(() =>
-                        NoticeChip.Show($"Yeni sürüm var: KLYC-Pulse {l.Version.ToString(3)}. Ana ekrandan sürüm notlarına bakabilirsin.", false));
+                        NoticeChip.Show($"Yeni sürüm var: KLYC-Pulse {l.Version.ToString(3)}.", false, () => App.OpenPage(typeof(Pages.HomePage))));
             }
             else
             {

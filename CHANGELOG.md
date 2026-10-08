@@ -2,6 +2,19 @@
 
 Biçim [Keep a Changelog](https://keepachangelog.com/tr/) esaslıdır; sürümleme [SemVer](https://semver.org/lang/tr/).
 
+## [1.4.0] — 2026-10-09
+
+### Eklenenler
+- **Hızlı tur:** İlk açanlar için 6 adımlık, atlanabilir tanıtım (modlar, oyunlar, gösterge, temizlik, gizlilik). Ayarlar'dan yeniden açılır.
+- **Tıklanabilir bildirimler:** Oyun bittikten sonra çıkan bildirimlere (oyun raporu, yeni sürüm) tıklayınca ilgili sayfa açılır. Oyun içi uyarılar tıklamayı geçirir, oyuna karışmaz.
+- **Bildirim köşesi seçilebilir** (varsayılan sağ alt); gösterge aynı köşedeyse bildirim yanına/üstüne yerleşir.
+- **Oyunda gösterge kendiliğinden açılır** (Ayarlar'dan kapatılır) ve oyun kapanınca kapanır.
+- **Ayarlar kaybolmasın:** Her kayıtta otomatik yedek (`settings.json.bak`); dosya bozulursa son yedekten geri yüklenir, bozuk dosya ayrıca saklanır. Ayarlar > "Ayar klasörünü aç".
+
+### Düzeltilenler
+- Oyun raporu: ekran kartının "Güç sınırı"na ulaşması dizüstülerde normal olduğu için sorun sayılmaz (ısı sınırı hâlâ uyarıdır).
+- Oyun raporu: %1 düşük FPS 60'ın üstündeyse "takılma var" denmez, "en kötü karelerde bile akıcı" denir.
+
 ## [1.3.0] — 2026-10-09
 
 ### Eklenenler

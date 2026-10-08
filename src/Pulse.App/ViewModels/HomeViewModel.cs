@@ -38,6 +38,7 @@ public partial class HomeViewModel : ObservableObject, IDisposable
         ChangeBrightness = AppServices.Settings.Current.ChangeBrightness;
         _controller.Applied += OnApplied;
         AppServices.Update.Changed += OnUpdateChanged;
+        AppServices.Settings.Changed += OnSettingsChanged;
         _controller.Busy += OnBusy;
 
     }
@@ -55,6 +56,8 @@ public partial class HomeViewModel : ObservableObject, IDisposable
     [ObservableProperty] private bool _hasUpdate = AppServices.Update.ShowBanner;
     [ObservableProperty] private string _updateTitle = UpdateTitleText();
     private static string UpdateTitleText() => AppServices.Update.Available is { } a ? $"Yeni sürüm var: KLYC-Pulse {a.Version.ToString(3)} (şu an {UpdateService.CurrentText})" : "";
+    // Tur bitince (OnboardingDone) eski "hoş geldin" kartı kendiliğinden kaybolsun
+    private void OnSettingsChanged() => System.Windows.Application.Current?.Dispatcher.BeginInvoke(() => { if (AppServices.Settings.Current.OnboardingDone) ShowWelcome = false; });
     private void OnUpdateChanged() => System.Windows.Application.Current?.Dispatcher.BeginInvoke(() => { HasUpdate = AppServices.Update.ShowBanner; UpdateTitle = UpdateTitleText(); });
 
     [RelayCommand] private void OpenUpdate() => AppServices.Update.OpenReleasePage();
@@ -186,6 +189,7 @@ public partial class HomeViewModel : ObservableObject, IDisposable
         _controller.Applied -= OnApplied;
         _controller.Busy -= OnBusy;
         AppServices.Update.Changed -= OnUpdateChanged;
+        AppServices.Settings.Changed -= OnSettingsChanged;
     }
 
     [StructLayout(LayoutKind.Sequential)]

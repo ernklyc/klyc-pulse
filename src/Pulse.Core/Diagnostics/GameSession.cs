@@ -148,8 +148,16 @@ public sealed class GameSessionRecorder
         if (throttled.Count >= Math.Max(10, n / 20))
         {
             var reason = throttled.GroupBy(s => s.GpuThrottle!).OrderByDescending(x => x.Count()).First();
-            severity = Math.Max(severity, 1);
-            findings.Add($"Ekran kartı sürenin %{Pct(throttled.Count, n)}'inde kısıldı: {reason.Key}.");
+            if (reason.Key == "Güç sınırı")
+            {
+                // Dizüstü ekran kartlarının sabit bir güç bütçesi vardır; dolunca sürücü hızı biraz kısar. Normaldir, sorun değildir.
+                findings.Add($"Ekran kartı sürenin %{Pct(throttled.Count, n)}'inde güç bütçesine ulaştı ('Güç sınırı'). Dizüstü ekran kartlarının sabit bir güç bütçesi vardır; dolunca hızı biraz kısılır. Bu normaldir, ısı sorunu değildir.");
+            }
+            else
+            {
+                severity = Math.Max(severity, 1);
+                findings.Add($"Ekran kartı sürenin %{Pct(throttled.Count, n)}'inde kısıldı: {reason.Key}.");
+            }
         }
 
         // 4) Bellek
@@ -188,11 +196,14 @@ public sealed class GameSessionRecorder
         if (fpsAvg is { } f)
         {
             var line = $"Ortalama {f:0} FPS" + (lowAvg is { } l ? $", en kötü %1'lik karelerde {l:0} FPS." : ".");
-            if (lowAvg is { } low && low < f * 0.6)
+            // 1% düşük 60 FPS'in üstündeyse oyun akıcıdır (ortalamadan uzak olsa bile); yalnızca gerçekten düşükse "takılma" denir.
+            if (lowAvg is { } low && low < f * 0.6 && low < 60)
             {
                 severity = Math.Max(severity, 1);
                 line += " Takılma var: en kötü karelerin hızı ortalamanın çok altında.";
             }
+            else if (lowAvg is { } ok && ok >= 60)
+                line += " En kötü karelerde bile akıcı.";
             findings.Add(line);
         }
 

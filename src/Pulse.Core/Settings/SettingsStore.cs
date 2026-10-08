@@ -11,6 +11,12 @@ public sealed class AppSettings
     /// <summary>Oyunlara göre kendini ayarla: oyun raporlarına bakıp işlemci hız sınırını dener, ölçer, zararlıysa geri alır.</summary>
     public bool AutoTuneGames { get; set; } = true;
 
+    /// <summary>Bildirimlerin köşesi: 0 sol üst, 1 sağ üst, 2 sol alt, 3 sağ alt.</summary>
+    public int NoticeCorner { get; set; } = 3;
+
+    /// <summary>Oyun açılınca FPS/ısı göstergesini kendiliğinden aç, oyun kapanınca kapat.</summary>
+    public bool AutoOverlay { get; set; } = true;
+
     /// <summary>Günde en fazla bir kez GitHub'dan en son sürümü sorar (indirme/kurma yapmaz). Kapatılabilir.</summary>
     public bool CheckUpdates { get; set; } = true;
     public DateTime? LastUpdateCheck { get; set; }
@@ -113,7 +119,23 @@ public sealed class SettingsStore
             if (File.Exists(store._filePath))
                 store.Current = JsonSerializer.Deserialize<AppSettings>(File.ReadAllText(store._filePath)) ?? new();
         }
-        catch (Exception ex) { Journal.Write("Ayarlar okunamadı, varsayılanlar kullanılıyor: " + ex.Message); }
+        catch (Exception ex)
+        {
+            // Ayar dosyası bozulduysa son sağlam yedekten dön: ayarlar sıfırlanmasın.
+            Journal.Write("Ayarlar okunamadı: " + ex.Message);
+            var bak = store._filePath + ".bak";
+            try
+            {
+                if (File.Exists(bak))
+                {
+                    store.Current = JsonSerializer.Deserialize<AppSettings>(File.ReadAllText(bak)) ?? new();
+                    Journal.Write("Ayarlar son yedekten geri yüklendi.");
+                    File.Copy(bak, store._filePath + ".bozuk-" + DateTime.Now.ToString("yyyyMMdd-HHmmss"), true);   // bozuk dosyayı da sakla
+                }
+                else Journal.Write("Yedek yok, varsayılan ayarlar kullanılıyor.");
+            }
+            catch (Exception ex2) { Journal.Write("Yedekten de okunamadı, varsayılanlar kullanılıyor: " + ex2.Message); }
+        }
         return store;
     }
 
@@ -146,6 +168,8 @@ public sealed class SettingsStore
                 // Önce geçici dosyaya yaz, sonra değiştir: yarım kalmış (bozuk) ayar dosyası oluşmaz.
                 var tmp = _filePath + ".tmp";
                 File.WriteAllText(tmp, JsonSerializer.Serialize(Current, Json));
+                // Üzerine yazmadan önce mevcut (sağlam) dosyanın yedeğini al; ayarlar hiçbir koşulda kaybolmasın.
+                if (File.Exists(_filePath)) { try { File.Copy(_filePath, _filePath + ".bak", true); } catch { } }
                 File.Move(tmp, _filePath, true);
             }
             catch (Exception ex) { Journal.Write("Ayarlar kaydedilemedi: " + ex.Message); }

@@ -40,6 +40,36 @@ public partial class SettingsViewModel : ObservableObject, IDisposable
     public bool IsAdmin { get; }
     public string VersionText { get; } = $"KLYC-Pulse {System.Reflection.Assembly.GetExecutingAssembly().GetName().Version?.ToString(3)} · MIT lisansı";
 
+    // ---- Görünüm: bildirim köşesi, oyunda gösterge, tur ----
+    public ObservableCollection<ChoiceVm> NoticeCorners { get; } = BuildCorners();
+    private static ObservableCollection<ChoiceVm> BuildCorners()
+    {
+        var list = new ObservableCollection<ChoiceVm>();
+        foreach (var (title, v) in new[] { ("Sol üst", 0), ("Sağ üst", 1), ("Sol alt", 2), ("Sağ alt", 3) })
+            list.Add(new ChoiceVm(title, v) { IsActive = v == AppServices.Settings.Current.NoticeCorner });
+        return list;
+    }
+
+    [RelayCommand]
+    private void SetNoticeCorner(ChoiceVm c)
+    {
+        Save(s => s.NoticeCorner = c.Value);
+        foreach (var x in NoticeCorners) x.IsActive = x.Value == c.Value;
+        NoticeChip.Show("Bildirimler artık burada çıkacak.", false);
+    }
+
+    [ObservableProperty] private bool _autoOverlay = AppServices.Settings.Current.AutoOverlay;
+    partial void OnAutoOverlayChanged(bool value) => Save(s => s.AutoOverlay = value);
+
+    [RelayCommand] private void ShowTour() => App.ShowTour();
+
+    [RelayCommand]
+    private void OpenDataFolder()
+    {
+        try { Process.Start(new ProcessStartInfo("explorer.exe", $"\"{System.IO.Path.GetDirectoryName(Pulse.Core.Diagnostics.Journal.Directory)}\"") { UseShellExecute = true }); }
+        catch { }
+    }
+
     // ---- Güncellemeler ----
     [ObservableProperty] private bool _checkUpdates = AppServices.Settings.Current.CheckUpdates;
     partial void OnCheckUpdatesChanged(bool value) => Save(s => s.CheckUpdates = value);
