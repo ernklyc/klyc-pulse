@@ -1,0 +1,24 @@
+# Derleme çıktıları
+bin/
+obj/
+dist/
+dist-new/
+yeni/
+kontrol/
+*.pdb
+*.user
+.vs/
+
+# Geliştirme sırasında oluşan yerel dosyalar (kişisel yollar/sonuçlar içerir)
+/real_appdata/
+/ekran_goruntuleri/
+/*.ps1
+/*.txt
+/PLAN.md
+*.yedek
+selftest*.txt
+*_sonuc.txt
+
+# Ama bunlar yayınlanır
+!/LICENSE
+!/THIRD-PARTY-NOTICES.md
