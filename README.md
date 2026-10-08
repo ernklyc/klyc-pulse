@@ -60,8 +60,8 @@ Tasarım ilkesi: **uygula → geri oku → doğrula.** Bir ayar yazıldıktan so
 
 | Dosya | Boyut | Ne zaman |
 |---|---|---|
-| `KLYC-Pulse-v1.2.0-win-x64.zip` | ~11 MB (zip) | [.NET 8 Masaüstü Çalışma Zamanı](https://dotnet.microsoft.com/download/dotnet/8.0) kuruluysa |
-| `KLYC-Pulse-v1.2.0-win-x64-self-contained.zip` | ~68 MB (zip) | Hiçbir şey kurmak istemiyorsanız (her şey içinde) |
+| `KLYC-Pulse-v1.3.0-win-x64.zip` | ~11 MB (zip) | [.NET 8 Masaüstü Çalışma Zamanı](https://dotnet.microsoft.com/download/dotnet/8.0) kuruluysa |
+| `KLYC-Pulse-v1.3.0-win-x64-self-contained.zip` | ~68 MB (zip) | Hiçbir şey kurmak istemiyorsanız (her şey içinde) |
 
 1. Zip'i açın, `KLYC-Pulse.exe`'yi istediğiniz bir klasöre koyun (ör. `C:\Programlar\KLYC-Pulse`).
 2. Çift tıklayın, **yönetici izni** isteyecektir (sensörler, ekran kartı ve servis ayarları için gerekir).
@@ -71,7 +71,7 @@ Tasarım ilkesi: **uygula → geri oku → doğrula.** Bir ayar yazıldıktan so
 
 ```powershell
 # özet kontrolü
-Get-FileHash .\KLYC-Pulse-v1.2.0-win-x64.zip -Algorithm SHA256
+Get-FileHash .\KLYC-Pulse-v1.3.0-win-x64.zip -Algorithm SHA256
 ```
 
 ## İlk kullanım
@@ -104,7 +104,7 @@ Her Windows 10 (2004+) / 11 x64 bilgisayarda çalışır; **donanıma özel adı
 - **Sınırlı donanım ayarları.** Ekran kartı hızlandırma tavanı çekirdek +150 / bellek +700 MHz'dir, **kalıcı değildir** (mod değişince, uygulama kapanınca ya da yeniden başlatınca fabrika hızına döner).
 - **Isı koruması.** Tehlikeli sıcaklık (işlemci 97 °C, ekran kartı 90 °C, 10 sn) sürerse Sessiz moda geçer.
 - **Güvenlik ayarlarına dokunmaz** (Defender, Bellek Bütünlüğü vb.) ve çekirdek sürücüsü yüklemez.
-- **Veri toplamaz, internete bağlanmaz** (yalnızca sizin başlattığınız winget güncelleme ve Windows Update taraması dışında).
+- **Veri toplamaz.** İnternete yalnızca üç yerde bağlanır: (1) günde en fazla bir kez GitHub'dan en son sürüm numarasını sormak için (indirme/kurma yapmaz, kişisel bilgi göndermez; Ayarlar > Güncellemeler'den kapatılır), (2) sizin başlattığınız winget güncelleme kontrolü, (3) sizin başlattığınız Windows Update sürücü taraması.
 
 ## Sık sorulan sorular
 

@@ -19,6 +19,16 @@ public static class AppServices
     public static ThermalGuardService Guard { get; } = new();
     public static HeatTargetService Heat { get; } = new();
     public static GameReportService GameReport { get; } = new();
+    public static UpdateService Update { get; } = new();
+
+    /// <summary>Bu bilgisayarın işlemci hız sınırı kademeleri (null = sınırsız). Yük altı tepe hız öğrenildikçe güncellenir.</summary>
+    public static int?[] CpuLadderFor(double[] factors)
+    {
+        var baseMhz = Pulse.Core.Monitoring.SensorHub.ReadBaseMhz();
+        return Pulse.Core.Hardware.CpuLadder.Build(Pulse.Core.Hardware.CpuLadder.EffectivePeak(Settings.Current.CpuPeakMhz, baseMhz), baseMhz, factors);
+    }
+
+    public static int?[] GameLadder() => CpuLadderFor(Pulse.Core.Hardware.CpuLadder.GameFactors);
     private static ModeKeeperService? _keeper;
     public static ModeKeeperService Keeper => _keeper ??= new ModeKeeperService();
     public static CompanionService Companion { get; } = new(Settings);
@@ -33,6 +43,7 @@ public static class AppServices
         _keeper?.Dispose();
         // Güvenlik: Pulse kapanırken ekran kartı hızlandırması fabrika hızına döner (kalıcı kalmasın).
         try { if (Pulse.Core.Hardware.GpuOverclock.Read() is { } oc && (oc.CoreMhz != 0 || oc.MemMhz != 0)) Pulse.Core.Hardware.GpuOverclock.Reset(); } catch { }
+        Update.Dispose();
         GameReport.Dispose();
         Heat.Dispose();
         Guard.Dispose();

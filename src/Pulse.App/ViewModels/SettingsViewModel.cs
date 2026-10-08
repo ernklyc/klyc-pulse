@@ -40,6 +40,24 @@ public partial class SettingsViewModel : ObservableObject, IDisposable
     public bool IsAdmin { get; }
     public string VersionText { get; } = $"KLYC-Pulse {System.Reflection.Assembly.GetExecutingAssembly().GetName().Version?.ToString(3)} · MIT lisansı";
 
+    // ---- Güncellemeler ----
+    [ObservableProperty] private bool _checkUpdates = AppServices.Settings.Current.CheckUpdates;
+    partial void OnCheckUpdatesChanged(bool value) => Save(s => s.CheckUpdates = value);
+    [ObservableProperty] private string _updateStatus = AppServices.Update.Status;
+    [ObservableProperty] private bool _updateAvailable = AppServices.Update.Available is not null;
+
+    [RelayCommand]
+    private async Task CheckUpdateNow()
+    {
+        UpdateStatus = "Denetleniyor…";
+        await AppServices.Update.CheckAsync(manual: true);
+        UpdateStatus = AppServices.Update.Status;
+        UpdateAvailable = AppServices.Update.Available is not null;
+    }
+
+    [RelayCommand]
+    private void OpenReleasePage() => AppServices.Update.OpenReleasePage();
+
     [ObservableProperty] private bool _minimizeToTray;
     [ObservableProperty] private bool _autoGameMode;
     [ObservableProperty] private bool _autoQuietOnBattery;

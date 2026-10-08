@@ -15,17 +15,31 @@ namespace Pulse.App;
 /// </summary>
 public sealed class HeatTargetService : IDisposable
 {
-    /// <summary>Kademe 0 = sınırsız (0), sonra sırayla düşen en yüksek frekanslar (MHz). Son kademe taban hıza yakındır.</summary>
-    public static readonly int[] CpuCapMhz = [0, 3800, 3500, 3200, 2900, 2700, 2500];
+    /// <summary>Kademe 0 = sınırsız (0), sonra sırayla düşen en yüksek frekanslar (MHz). Bu bilgisayarın gerçek hızından türetilir.</summary>
+    private int[] _caps = [0, 3800, 3500, 3200, 2900, 2700, 2500];
+    private int _paused;
     private const int GpuStepMhz = 150;
     private const int GpuMaxLevel = 6;
 
-    private readonly StepGovernor _cpu = new(CpuCapMhz.Length - 1);
+    private StepGovernor _cpu = new(6);
     private readonly StepGovernor _gpu = new(GpuMaxLevel);
     private IDisposable? _subscription;
     private int _busy;
 
     public bool Enabled => _subscription is not null;
+
+    /// <summary>Kısa süreli güç ayarı denemeleri sırasında kademe değişikliklerini bekletir.</summary>
+    public IDisposable Pause()
+    {
+        Interlocked.Increment(ref _paused);
+        return new Resume(this);
+    }
+
+    private sealed class Resume(HeatTargetService owner) : IDisposable
+    {
+        private int _done;
+        public void Dispose() { if (Interlocked.Exchange(ref _done, 1) == 0) Interlocked.Decrement(ref owner._paused); }
+    }
     public int CpuLevel => _cpu.Level;
     public int GpuLevel => _gpu.Level;
     public event Action<string>? Notice;
@@ -43,9 +57,12 @@ public sealed class HeatTargetService : IDisposable
             return;
         }
 
-        _cpu.TargetC = t;
         _gpu.TargetC = Math.Max(65, t - 5);
-        if (Enabled) return;
+        if (Enabled) { _cpu.TargetC = t; return; }
+        // Kademeleri bu bilgisayarın gerçek hızından türet (yalnızca açılırken)
+        var ladder = AppServices.CpuLadderFor(CpuLadder.HeatFactors);
+        _caps = ladder.Select(x => x ?? 0).ToArray();
+        _cpu = new StepGovernor(Math.Max(1, _caps.Length - 1)) { TargetC = t };
         _subscription = AppServices.Sensors.Subscribe(wantFps: false);
         AppServices.Sensors.Updated += OnSensors;
         AppServices.Modes.Applied += OnModeApplied;
@@ -55,6 +72,7 @@ public sealed class HeatTargetService : IDisposable
 
     private void OnSensors(SensorSnapshot s)
     {
+        if (Volatile.Read(ref _paused) > 0) return;
         var cpuChange = _cpu.Feed(s.CpuTempC, DateTime.Now);
         var gpuChange = _gpu.Feed(s.Gpu?.TempC, DateTime.Now);
         if (cpuChange is null && gpuChange is null) return;
@@ -79,7 +97,7 @@ public sealed class HeatTargetService : IDisposable
         if (mode is null) return;
         // Oyun profili zaten bir sınır koyduysa (baseline) sıcaklık sınırı ondan daha gevşek olamaz; kademe 0 = o taban sınır.
         var baseline = AppServices.Modes.ActiveDefinition?.CpuMaxMhz ?? 0;
-        var ladder = CpuCapMhz[Math.Min(level, CpuCapMhz.Length - 1)];
+        var ladder = _caps[Math.Min(level, _caps.Length - 1)];
         var value = ladder == 0 ? baseline : baseline == 0 ? ladder : Math.Min(baseline, ladder);
         var scheme = Powercfg.ActiveScheme();
         if (scheme is null) return;
@@ -111,8 +129,7 @@ public sealed class HeatTargetService : IDisposable
     /// <summary>Frekans sınırını (MHz, 0 = yok) prizde ve pilde yazar, planı yeniden etkinleştirir.</summary>
     private static void WriteFrequencyCap(string scheme, int mhz)
     {
-        Powercfg.SetAc(scheme, Powercfg.SubProcessor, Powercfg.MaxFrequency, mhz);
-        Powercfg.SetDc(scheme, Powercfg.SubProcessor, Powercfg.MaxFrequency, mhz);
+        Powercfg.SetFrequencyCap(scheme, mhz);
         Powercfg.SetActive(scheme);
     }
 

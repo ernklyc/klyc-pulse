@@ -7,6 +7,7 @@ using Pulse.Core.Modes;
 using Pulse.Core.Platform;
 
 // Motoru arayüzsüz sınamak için: pulse-cli status | apply <mod> | all
+Environment.SetEnvironmentVariable("KLYC_PULSE_TEST", "1");   // testlerin geçici klasördeki sahte oyunları algılanabilsin (uygulamada kapalıdır)
 var cmd = args.Length > 0 ? args[0] : "status";
 
 if (cmd == "status")
@@ -686,18 +687,103 @@ if (cmd == "detect-test")
     Console.WriteLine(fails == 0 ? "OYUN ALGILAMA TESTİ GEÇTİ" : $"{fails} TEST KALDI");
     return fails == 0 ? 0 : 1;
 }
+if (cmd == "freqprobe-test")
+{
+    // Frekans sınırı denemesi gerçek donanımda: tüm çekirdekleri ~20 sn yorar, ayarları geri koyar.
+    var fails = 0;
+    void Check(bool ok, string what) { Console.WriteLine($"  [{(ok ? "GEÇTİ" : "KALDI")}] {what}"); if (!ok) fails++; }
+    var scheme = Pulse.Core.Platform.Powercfg.ActiveScheme()!;
+    string[] pk = [Pulse.Core.Platform.Powercfg.BoostMode, Pulse.Core.Platform.Powercfg.MaxProcessorState, Pulse.Core.Platform.Powercfg.MaxFrequency];   // deneme yalnızca bunlara dokunur (açık bir Pulse'ın Mod Koruyucusu diğerlerini değiştirebilir)
+    var before = pk.Select(k => (Pulse.Core.Platform.Powercfg.GetAc(scheme, Pulse.Core.Platform.Powercfg.SubProcessor, k), Pulse.Core.Platform.Powercfg.GetDc(scheme, Pulse.Core.Platform.Powercfg.SubProcessor, k))).ToList();
+    var r = Pulse.Core.Hardware.FreqCapProbe.Run();
+    Console.WriteLine("  " + r.Note);
+    Check(r.Supported == true, "Bu bilgisayarda frekans sınırı uygulanıyor (ölçüldü)");
+    Check(r.UncappedMhz > r.CappedMhz + 300, $"Sınırsız {r.UncappedMhz:0} MHz, sınırlı {r.CappedMhz:0} MHz: belirgin fark");
+    var after = pk.Select(k => (Pulse.Core.Platform.Powercfg.GetAc(scheme, Pulse.Core.Platform.Powercfg.SubProcessor, k), Pulse.Core.Platform.Powercfg.GetDc(scheme, Pulse.Core.Platform.Powercfg.SubProcessor, k))).ToList();
+    Check(before.SequenceEqual(after), "Deneme sonunda tüm güç ayarları eski haline döndü");
+    Console.WriteLine(fails == 0 ? "FREKANS DENEMESİ TESTİ GEÇTİ" : $"{fails} TEST KALDI");
+    return fails == 0 ? 0 : 1;
+}
+if (cmd == "drive-test")
+{
+    // Gerçek disk türü (yönetici gerekmez). CI'da çalışmaz: sonuç makineye bağlıdır.
+    var fails = 0;
+    void Check(bool ok, string what) { Console.WriteLine($"  [{(ok ? "GEÇTİ" : "KALDI")}] {what}"); if (!ok) fails++; }
+    var c = Pulse.Core.Diagnostics.DriveKindDetector.Detect(@"C:\Windows");
+    Console.WriteLine($"  C: diski -> {c}");
+    Check(c != Pulse.Core.Diagnostics.DriveKind.Unknown, "C: diskinin türü okunabiliyor");
+    Check(Pulse.Core.Diagnostics.DriveKindDetector.Detect(null) == Pulse.Core.Diagnostics.DriveKind.Unknown && Pulse.Core.Diagnostics.DriveKindDetector.Detect(@"\\sunucu\paylasim\x.exe") == Pulse.Core.Diagnostics.DriveKind.Unknown, "Yol yoksa ve ağ yolunda bilinmiyor döner");
+    Check(Pulse.Core.Diagnostics.DriveKindDetector.Detect(@"Z:\yok\yok.exe") == Pulse.Core.Diagnostics.DriveKind.Unknown || true, "Olmayan sürücü hata vermez");
+    Console.WriteLine(fails == 0 ? "DİSK TÜRÜ TESTİ GEÇTİ" : $"{fails} TEST KALDI");
+    return fails == 0 ? 0 : 1;
+}
+
+if (cmd == "gpuengine-test")
+{
+    // NVIDIA dışı ekran kartları için yedek: Windows "GPU Engine" sayaçları. Gerçek donanımda 6 sn okur.
+    var fails = 0;
+    void Check(bool ok, string what) { Console.WriteLine($"  [{(ok ? "GEÇTİ" : "KALDI")}] {what}"); if (!ok) fails++; }
+    using var r = new Pulse.Core.Monitoring.GpuEngineReader();
+    var values = new List<double?>();
+    var sw = System.Diagnostics.Stopwatch.StartNew();
+    r.ReadMaxAdapterPercent();
+    for (var i = 0; i < 6; i++) { await Task.Delay(1000); values.Add(r.ReadMaxAdapterPercent()); }
+    Console.WriteLine($"  Okumalar: {string.Join(", ", values.Select(v => v?.ToString("0") ?? "yok"))}  ({sw.Elapsed.TotalSeconds:0.0} sn)");
+    Check(values.Any(v => v is not null), "Sayaçlar okunabiliyor");
+    Check(values.All(v => v is null or (>= 0 and <= 100)), "Değerler 0-100 aralığında");
+    Console.WriteLine(fails == 0 ? "EKRAN KARTI SAYACI TESTİ GEÇTİ" : $"{fails} TEST KALDI");
+    return fails == 0 ? 0 : 1;
+}
+if (cmd == "update-test")
+{
+    // Güncelleme denetimi: ağa çıkmadan, sahte HTTP cevaplarıyla.
+    var fails = 0;
+    void Check(bool ok, string what) { Console.WriteLine($"  [{(ok ? "GEÇTİ" : "KALDI")}] {what}"); if (!ok) fails++; }
+    var Cur = new Version(1, 2, 0, 0);
+    Check(Pulse.Core.Platform.UpdateChecker.IsNewer(new Version(1, 10, 0), new Version(1, 9, 9, 0)), "1.10.0, 1.9.9'dan yenidir (sayısal karşılaştırma)");
+    Check(!Pulse.Core.Platform.UpdateChecker.IsNewer(new Version(1, 2, 0), Cur), "Aynı sürüm yeni sayılmaz (1.2.0 = 1.2.0.0)");
+    Check(!Pulse.Core.Platform.UpdateChecker.IsNewer(new Version(1, 1, 0), Cur), "Eski sürüm yeni sayılmaz");
+    Check(Pulse.Core.Platform.UpdateChecker.TryParseTag("v1.3.0", out var v1) && v1 == new Version(1, 3, 0), "v1.3.0 çözülür");
+    Check(Pulse.Core.Platform.UpdateChecker.TryParseTag("V2.0.1-beta+7", out var v2) && v2 == new Version(2, 0, 1), "Ek etiketli sürüm çözülür");
+    Check(!Pulse.Core.Platform.UpdateChecker.TryParseTag("nightly", out _) && !Pulse.Core.Platform.UpdateChecker.TryParseTag("", out _), "Anlaşılmaz etiket reddedilir");
+
+    const string ok = "{\"tag_name\":\"v1.3.0\",\"html_url\":\"https://github.com/ernklyc/klyc-pulse/releases/tag/v1.3.0\",\"body\":\"Yenilikler\",\"draft\":false,\"prerelease\":false,\"published_at\":\"2026-10-09T10:00:00Z\"}";
+    var info = Pulse.Core.Platform.UpdateChecker.Parse(ok);
+    Check(info is { Version.Minor: 3 } && info.Url.EndsWith("v1.3.0") && info.Notes == "Yenilikler" && info.Published is not null, "GitHub cevabı çözülür");
+    Check(Pulse.Core.Platform.UpdateChecker.Parse(ok.Replace("\"prerelease\":false", "\"prerelease\":true")) is null, "Ön sürüm yok sayılır");
+    Check(Pulse.Core.Platform.UpdateChecker.Parse(ok.Replace("\"draft\":false", "\"draft\":true")) is null, "Taslak yok sayılır");
+    Check(Pulse.Core.Platform.UpdateChecker.Parse("{bozuk") is null && Pulse.Core.Platform.UpdateChecker.Parse("{}") is null, "Bozuk cevap null döner, hata vermez");
+    var evil = ok.Replace("https://github.com/ernklyc/klyc-pulse/releases/tag/v1.3.0", "https://evil.example/download.exe");
+    Check(Pulse.Core.Platform.UpdateChecker.Parse(evil)?.Url == Pulse.Core.Platform.UpdateChecker.ReleasesPage, "github.com dışı adres kabul edilmez (güvenlik)");
+
+    var newer = await Pulse.Core.Platform.UpdateChecker.CheckAsync(Cur, new FakeHandler(System.Net.HttpStatusCode.OK, ok));
+    Check(newer.IsNewer && newer.Latest?.Tag == "v1.3.0" && newer.Error is null, "Yeni sürüm varsa bildirilir");
+    var same = await Pulse.Core.Platform.UpdateChecker.CheckAsync(new Version(1, 3, 0, 0), new FakeHandler(System.Net.HttpStatusCode.OK, ok));
+    Check(!same.IsNewer && same.Latest is not null && same.Error is null, "Güncelsek yeni sürüm denmez");
+    var priv = await Pulse.Core.Platform.UpdateChecker.CheckAsync(Cur, new FakeHandler(System.Net.HttpStatusCode.NotFound, "{}"));
+    Check(priv.Latest is null && !priv.IsNewer && priv.Error is not null, "404 (gizli depo): hata mesajı, çökmez");
+    var limited = await Pulse.Core.Platform.UpdateChecker.CheckAsync(Cur, new FakeHandler(System.Net.HttpStatusCode.Forbidden, "{}"));
+    Check(limited.Error is not null && limited.Error.Contains("çok istek"), "Hız sınırı (403): nazik mesaj");
+    var offline = await Pulse.Core.Platform.UpdateChecker.CheckAsync(Cur, new FakeHandler(null, ""));
+    Check(offline.Error is not null && !offline.IsNewer, "İnternet yoksa hata mesajı, çökmez");
+
+    Console.WriteLine(fails == 0 ? "GÜNCELLEME DENETİMİ TESTİ GEÇTİ" : $"{fails} TEST KALDI");
+    return fails == 0 ? 0 : 1;
+}
+
 if (cmd == "autotune-test")
 {
     // Kendi kendine ayar: sahte oturum raporlarıyla karar mantığı (donanıma dokunmaz).
     var fails = 0;
     void Check(bool ok, string what) { Console.WriteLine($"  [{(ok ? "GEÇTİ" : "KALDI")}] {what}"); if (!ok) fails++; }
+    int?[] Ladder = [null, 3800, 3500, 3200, 3000];
     Pulse.Core.Diagnostics.GameSessionReport R(string bottleneck, int above90, int above95, double? fps, double? gpu, double temp, int? cap, double minutes = 30, string game = "FC25") => new()
     {
         Game = game, Start = DateTime.Now, Minutes = minutes, Bottleneck = bottleneck, CpuAbove90Percent = above90, CpuAbove95Percent = above95,
         AvgFps = fps, GpuUtilAvg = gpu, CpuTempAvg = temp, CpuCapMhz = cap,
     };
     Pulse.Core.Automation.TuneDecision D(int? cap, bool locked, Pulse.Core.Diagnostics.GameSessionReport cur, Pulse.Core.Diagnostics.GameSessionReport? prev = null) =>
-        Pulse.Core.Automation.GameAutoTuner.Decide(cap, locked, cur, prev);
+        Pulse.Core.Automation.GameAutoTuner.Decide(cap, locked, cur, prev, Ladder);
 
     // 1) İlk oturum: sıcak + ekran kartı sınırlıyor -> 3500
     var s1 = R("gpu", 88, 40, 60, 97, 93, null);
@@ -747,6 +833,19 @@ if (cmd == "autotune-test")
     // 9) Başka oyunun geçmişi karıştırılmaz
     var other = R("gpu", 88, 40, 60, 97, 93, null, game: "BaskaOyun");
     Check(D(3500, false, R("gpu", 45, 5, 40, 96, 88, 3500), other) is { CapMhz: 3200 }, "Başka oyunun oturumu etkiyi ölçmek için kullanılmaz (ilk oturum gibi davranır)");
+
+    // 10) Kademeler her işlemciye uyarlanır
+    var pc = Pulse.Core.Hardware.CpuLadder.Build(4063, 2496);
+    Check(pc.Length == 5 && pc[0] is null && pc[1] == 3700 && pc[2] == 3500 && pc[4] == 2800, $"Bu dizüstü (4,06 GHz tepe, 2,5 GHz taban): {string.Join(", ", pc.Select(x => x?.ToString() ?? "sınırsız"))}");
+    var desk = Pulse.Core.Hardware.CpuLadder.Build(5500, 3700);
+    Check(desk[1] == 5100 && desk[^1] >= 3800 && desk.Skip(1).Zip(desk.Skip(2), (a, b) => a > b).All(x => x), $"Masaüstü (5,5 GHz tepe, 3,7 GHz taban): kademeler azalan ve tabanın üstünde ({string.Join(", ", desk.Select(x => x?.ToString() ?? "sınırsız"))})");
+    var lowTurbo = Pulse.Core.Hardware.CpuLadder.Build(2600, 2400);
+    Check(lowTurbo.Length == 1, "Turbo payı olmayan işlemcide sınırlanacak yer yok");
+    Check(GameAutoTunerNoHeadroom(), "Kademe yoksa otomatik ayar dokunmaz");
+    bool GameAutoTunerNoHeadroom() { var d = Pulse.Core.Automation.GameAutoTuner.Decide(null, false, R("gpu", 90, 50, 60, 97, 97, null), null, [null]); return !d.Changed && d.Locked; }
+    var heat = Pulse.Core.Hardware.CpuLadder.Build(4063, 2496, Pulse.Core.Hardware.CpuLadder.HeatFactors);
+    Check(heat.Length >= 6 && heat[^1] >= 2600, $"Isı hedefi kademeleri daha ince ve tabanın üstünde ({string.Join(", ", heat.Select(x => x?.ToString() ?? "0"))})");
+    Check(Pulse.Core.Hardware.CpuLadder.EffectivePeak(0, 2500) == 4000 && Pulse.Core.Hardware.CpuLadder.EffectivePeak(4300, 2500) == 4300, "Tepe hız bilinmiyorsa taban x1,6 varsayılır");
 
     Console.WriteLine(fails == 0 ? "OTOMATİK AYAR TESTİ GEÇTİ" : $"{fails} TEST KALDI");
     return fails == 0 ? 0 : 1;
@@ -921,7 +1020,7 @@ if (cmd == "report-test")
                 (long)(x.ramGb * Gb), 16 * Gb, 4000, 4000);
             rec.Add(snap, x.fps is { } fp ? new Pulse.Core.Monitoring.FpsReading(1, "FakeGame", fp, 1000 / fp, x.low ?? fp) : null);
         }
-        return rec.Build(2496, displayHz: displayHz, cpuCapMhz: cap, previous: previous);
+        return rec.Build(2496, displayHz: displayHz, cpuCapMhz: cap, previous: previous, suggestMhz: 3500);
     }
 
     // 1) Çok sıcak, işlemci hız kaybediyor, ekran kartı az çalışıyor (işlemci sınırı)
@@ -977,6 +1076,34 @@ if (cmd == "report-test")
     Check(Pulse.Core.Diagnostics.GameReportStore.LoadHistory(hp).Count == 2 && lastFor?.CpuCapMhz == 3500, "Geçmişte iki oturum var, son oturum doğru bulunuyor");
     Check(Pulse.Core.Diagnostics.GameReportStore.LastFor("yok-oyun", hp) is null, "Olmayan oyun için geçmiş yok");
     try { Directory.Delete(Path.GetDirectoryName(hp)!, true); } catch { }
+
+    // 4f) Evrensel bulgular: pil, ekran kartı belleği, HDD, ısı okunamıyor, NVIDIA dışı ekran kartı
+    Pulse.Core.Diagnostics.GameSessionReport? Rx(int seconds, Func<int, (bool? ac, double vramFrac, double? temp, bool nvml)> f, Pulse.Core.Diagnostics.DriveKind storage = Pulse.Core.Diagnostics.DriveKind.Unknown)
+    {
+        var rec = new Pulse.Core.Diagnostics.GameSessionRecorder("FakeGame", new DateTime(2026, 1, 1, 20, 0, 0));
+        for (var i = 0; i < seconds; i++)
+        {
+            var x = f(i);
+            var gpu = x.nvml ? new Pulse.Core.Monitoring.GpuReading(60, 97, 0, 1500, 4000, 40, (long)(x.vramFrac * 4 * Gb), 4L * Gb, 0) : null;
+            var snap = new Pulse.Core.Monitoring.SensorSnapshot(DateTime.Now, 35, 3800, x.temp, gpu, 8 * Gb, 16 * Gb, 4000, 4000, x.nvml ? null : 97);
+            rec.Add(snap, null, x.ac);
+        }
+        return rec.Build(2496, storage: storage, suggestMhz: 3500);
+    }
+    var bat = Rx(600, i => (i % 10 < 6 ? false : true, 0.5, 80, true));
+    Check(bat!.OnBatteryPercent == 60 && bat.Severity == 2 && bat.Findings.Any(t => t.Contains("pilde oynandı")), $"Oyunun %60'ı pilde: uyarı (%{bat.OnBatteryPercent})");
+    Check(!Rx(600, i => (true, 0.5, 80, true))!.Findings.Any(t => t.Contains("pilde")), "Hep prizde: pil uyarısı yok");
+    Check(!Rx(600, i => (null, 0.5, 80, true))!.Findings.Any(t => t.Contains("pilde")), "Güç kaynağı bilinmiyorsa pil uyarısı yok (masaüstü)");
+    var vram = Rx(600, i => (true, 0.98, 80, true));
+    Check(vram!.Severity == 2 && vram.VramPeakPercent >= 98 && vram.Findings.Any(t => t.Contains("Ekran kartı belleği")), "Ekran kartı belleği %98: doku kalitesini düşür uyarısı");
+    Check(!Rx(600, i => (true, 0.6, 80, true))!.Findings.Any(t => t.Contains("Ekran kartı belleği")), "Bellek rahatsa VRAM uyarısı yok");
+    var hdd = Rx(600, i => (true, 0.5, 80, true), Pulse.Core.Diagnostics.DriveKind.Hdd);
+    Check(hdd!.Findings.Any(t => t.Contains("HDD")), "Oyun HDD'deyse SSD önerilir");
+    Check(!Rx(600, i => (true, 0.5, 80, true), Pulse.Core.Diagnostics.DriveKind.Ssd)!.Findings.Any(t => t.Contains("HDD")), "SSD'de HDD uyarısı yok");
+    var noTemp = Rx(600, i => (true, 0.5, null, true));
+    Check(noTemp!.Findings.Any(t => t.Contains("sıcaklığı okunamadı")), "Sıcaklık okunamıyorsa bunu söyler (ısı kararı vermez)");
+    var amd = Rx(600, i => (true, 0.5, 80, false));      // NVML yok: ekran kartı kullanımı Windows sayaçlarından
+    Check(amd!.Bottleneck == "gpu" && amd.GpuUtilAvg >= 97, $"NVIDIA dışı ekran kartı (Windows sayacı %97): oyunu ekran kartı sınırlıyor (bulundu: {amd.Bottleneck})");
 
     // 5) Kısa oturum raporlanmaz
     Check(Run(30, i => (30, 3800, 72, 70, 0, 7, null, null)) is null, "90 sn'den kısa oturumda rapor yok");
@@ -1420,3 +1547,10 @@ foreach (var key in keys)
     if (!result.Success) failed++;
 }
 return failed == 0 ? 0 : 1;
+
+// update-test için sahte HTTP cevabı (status null = ağ hatası)
+file sealed class FakeHandler(System.Net.HttpStatusCode? status, string body) : HttpMessageHandler
+{
+    protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken) =>
+        status is null ? throw new HttpRequestException("bağlantı yok") : Task.FromResult(new HttpResponseMessage(status.Value) { Content = new StringContent(body) });
+}

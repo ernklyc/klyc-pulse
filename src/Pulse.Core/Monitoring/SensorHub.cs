@@ -15,7 +15,8 @@ public sealed record SensorSnapshot(
     long RamUsedBytes,
     long RamTotalBytes,
     int? CpuFanRpm,
-    int? GpuFanRpm)
+    int? GpuFanRpm,
+    double? GpuEnginePercent = null)       // NVML yokken (AMD/Intel ekran kartı) Windows sayaçlarından 3B kullanımı
 {
     public double RamPercent => RamTotalBytes > 0 ? 100.0 * RamUsedBytes / RamTotalBytes : 0;
 
@@ -35,6 +36,7 @@ public sealed record SensorSnapshot(
 public sealed class SensorHub : IDisposable
 {
     private readonly Nvml? _nvml = Nvml.TryOpen();
+    private GpuEngineReader? _gpuEngine;
     private readonly AsusAcpi? _acpi = AsusAcpi.TryOpen();
     private readonly PerformanceCounter? _cpuUtility;
     private readonly PerformanceCounter? _cpuPerf;
@@ -76,7 +78,8 @@ public sealed class SensorHub : IDisposable
             cpuTemp ? ReadCpuTemp() : null,
             _nvml?.Read(),
             total - Optimizer.AvailableRamBytes(), total,
-            _acpi?.GetCpuFanRpm(), _acpi?.GetGpuFanRpm());
+            _acpi?.GetCpuFanRpm(), _acpi?.GetGpuFanRpm(),
+            _nvml is null ? (_gpuEngine ??= new GpuEngineReader()).ReadMaxAdapterPercent() : null);
     }
 
     private static double? ReadCpuTemp()
@@ -86,7 +89,7 @@ public sealed class SensorHub : IDisposable
         return temps.Count > 0 ? Math.Round(temps.Max(), 1) : null;
     }
 
-    private static double ReadBaseMhz()
+    public static double ReadBaseMhz()
     {
         try { return Registry.LocalMachine.OpenSubKey(@"HARDWARE\DESCRIPTION\System\CentralProcessor\0")?.GetValue("~MHz") is int v ? v : 2500; }
         catch { return 2500; }
@@ -94,6 +97,7 @@ public sealed class SensorHub : IDisposable
 
     public void Dispose()
     {
+        _gpuEngine?.Dispose();
         _acpi?.Dispose();
         _cpuUtility?.Dispose();
         _cpuPerf?.Dispose();

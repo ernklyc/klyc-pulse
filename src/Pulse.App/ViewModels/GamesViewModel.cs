@@ -22,7 +22,8 @@ public partial class GameProfileVm : ObservableObject
         _store = store;
         _modeKey = profile.ModeKey;
         // Eski sürümde kaydedilen 144 de "ekranın en yükseği" sayılır (sabit 144 artık yok).
-        _cpuCapIndex = Math.Max(0, Array.IndexOf(CpuCaps, profile.CpuMaxMhz));
+        BuildCaps();
+        _cpuCapIndex = Math.Max(0, Array.IndexOf(_caps, profile.CpuMaxMhz));
         _autoTune = profile.AutoTune;
         _autoTuneNote = profile.AutoTuneNote ?? "";
         _refreshIndex = profile.RefreshHz switch { 60 => 1, Core.Modes.Modes.MaxHz or 144 => 2, _ => 0 };
@@ -48,8 +49,25 @@ public partial class GameProfileVm : ObservableObject
     }
 
     public static IReadOnlyList<ModeOption> Modes { get; } = Core.Modes.Modes.All.Select(m => new ModeOption(m.Key, m.Title + " modu")).ToList();
-    public static IReadOnlyList<string> CpuCapOptions { get; } = ["Sınırsız (en hızlı)", "En çok 3,8 GHz", "En çok 3,5 GHz (daha serin)", "En çok 3,2 GHz (serin)", "En çok 3,0 GHz (en serin)"];
-    private static readonly int?[] CpuCaps = [null, 3800, 3500, 3200, 3000];
+    /// <summary>İşlemci hız sınırı seçenekleri: bu bilgisayarın gerçek hızından türetilir (her işlemciye uyar).</summary>
+    public ObservableCollection<string> CpuCapOptions { get; } = new();
+    private int?[] _caps = [null];
+
+    /// <summary>Kademeleri (yeniden) kurar; profilde ladder dışı bir değer varsa "elle" olarak eklenir. Değiştiyse true.</summary>
+    private bool BuildCaps()
+    {
+        var ladder = AppServices.GameLadder().ToList();
+        if (_profile.CpuMaxMhz is { } cur && !ladder.Contains(cur)) ladder.Add(cur);
+        var caps = ladder.OrderBy(x => x is null ? 0 : 1).ThenByDescending(x => x ?? 0).ToArray();
+        if (caps.SequenceEqual(_caps) && CpuCapOptions.Count == caps.Length) return false;
+        _caps = caps;
+        var onLadder = AppServices.GameLadder();
+        CpuCapOptions.Clear();
+        for (var i = 0; i < caps.Length; i++)
+            CpuCapOptions.Add(caps[i] is not { } mhz ? "Sınırsız (en hızlı)"
+                : onLadder.Contains(mhz) ? Core.Hardware.CpuLadder.Label(i, caps.Length, mhz) : $"En çok {mhz / 1000.0:0.0} GHz (elle)");
+        return true;
+    }
     public static IReadOnlyList<string> RefreshOptions { get; } = ["Modun varsayılanı", "60 Hz", "Ekranın en yükseği"];
 
     [ObservableProperty] private string _modeKey;
@@ -62,7 +80,8 @@ public partial class GameProfileVm : ObservableObject
     public void SyncAuto()
     {
         _loading = true;
-        CpuCapIndex = Math.Max(0, Array.IndexOf(CpuCaps, _profile.CpuMaxMhz));
+        BuildCaps();
+        CpuCapIndex = Math.Max(0, Array.IndexOf(_caps, _profile.CpuMaxMhz));
         AutoTuneNote = _profile.AutoTuneNote ?? "";
         _loading = false;
     }
@@ -74,7 +93,7 @@ public partial class GameProfileVm : ObservableObject
     // Elle seçilen sınıra otomatik ayar dokunmaz (Otomatik ayarı kapatıp açınca yeniden öğrenir).
     partial void OnCpuCapIndexChanged(int value) => Apply(p =>
     {
-        p.CpuMaxMhz = CpuCaps[Math.Clamp(value, 0, CpuCaps.Length - 1)];
+        p.CpuMaxMhz = _caps[Math.Clamp(value, 0, _caps.Length - 1)];
         p.AutoTuneLocked = true;
         p.AutoTuneNote = "Elle seçildi; otomatik ayar dokunmuyor. Otomatik ayarı kapatıp açarsan yeniden öğrenir.";
         AutoTuneNote = p.AutoTuneNote;
@@ -121,11 +140,42 @@ public partial class GamesViewModel : ObservableObject, IDisposable
         Reload();
         LoadGameSettings();
         AutoTuneGames = _store.Current.AutoTuneGames;
+        RefreshFreqCapText();
         _timer.Tick += (_, _) => { Reload(); GameText = Detected(); foreach (var g in Games) { g.RefreshGpu(); g.SyncAuto(); } };
         _timer.Start();
         GameText = Detected();
         ShowReport(AppServices.GameReport.Last);
         AppServices.GameReport.Ready += OnReportReady;
+    }
+
+    // ---- İşlemci hız sınırı desteği ---------------------------------------
+    [ObservableProperty] private string _freqCapText = "";
+    [ObservableProperty] private bool _probing;
+
+    private void RefreshFreqCapText()
+    {
+        var s = _store.Current;
+        var peak = s.CpuPeakMhz > 0 ? $" Öğrenilen tepe hız: {s.CpuPeakMhz / 1000.0:0.0} GHz." : "";
+        FreqCapText = s.FreqCapSupported switch
+        {
+            true => "✓ Bu bilgisayarda işlemci hız sınırı çalışıyor. " + s.FreqCapNote + peak,
+            false => "✗ " + s.FreqCapNote + " Hız sınırı özellikleri bu bilgisayarda kapalı.",
+            _ => "İşlemci hız sınırının bu bilgisayarda çalışıp çalışmadığı henüz denenmedi. Otomatik ayar ilk sınırı koymadan önce kendiliğinden dener." + peak,
+        };
+    }
+
+    [RelayCommand]
+    private async Task ProbeFreqCap()
+    {
+        if (Probing || FreqCapService.IsRunning) return;
+        var ok = System.Windows.MessageBox.Show(
+            "İşlemcinin hız sınırı bu bilgisayarda çalışıyor mu diye ölçülecek. Bunun için işlemci yaklaşık 20 saniye tam yüklenir (fan hızlanır). Oyun açıkken yapma. Devam edilsin mi?",
+            "Hız sınırı denemesi", System.Windows.MessageBoxButton.YesNo, System.Windows.MessageBoxImage.Question);
+        if (ok != System.Windows.MessageBoxResult.Yes) return;
+        Probing = true;
+        FreqCapText = "Deneniyor… (yaklaşık 20 saniye, işlemci tam yüklenir)";
+        try { await FreqCapService.RunAsync(); }
+        finally { Probing = false; RefreshFreqCapText(); foreach (var g in Games) g.SyncAuto(); }
     }
 
     // ---- Son oyun raporu -------------------------------------------------
@@ -146,7 +196,7 @@ public partial class GamesViewModel : ObservableObject, IDisposable
         if (_store.FindProfile(_report.Game) is not { } profile) return;
         profile.CpuMaxMhz = cap;
         _store.Save();
-        foreach (var g in Games.ToList()) if (ReferenceEquals(g.Profile, profile)) g.CpuCapIndex = Math.Max(0, Array.IndexOf(new int?[] { null, 3800, 3500, 3200, 3000 }, cap));
+        foreach (var g in Games.ToList()) if (ReferenceEquals(g.Profile, profile)) g.SyncAuto();
         ShowSuggestion = false;
         ReportNote = $"Uygulandı: {_report.Game} için işlemci en çok {cap / 1000.0:0.0} GHz. Bir sonraki oyunda geçerli olur; rapor önceki oturumla karşılaştırır. İstersen aşağıdaki listeden değiştirebilirsin.";
     }

@@ -37,6 +37,7 @@ public partial class HomeViewModel : ObservableObject, IDisposable
         foreach (var m in Modes) m.IsActive = m.Key == current;
         ChangeBrightness = AppServices.Settings.Current.ChangeBrightness;
         _controller.Applied += OnApplied;
+        AppServices.Update.Changed += OnUpdateChanged;
         _controller.Busy += OnBusy;
 
     }
@@ -49,6 +50,15 @@ public partial class HomeViewModel : ObservableObject, IDisposable
     [ObservableProperty] private MonitorViewModel? _live;
 
     [ObservableProperty] private bool _showWelcome = !AppServices.Settings.Current.OnboardingDone;
+
+    // ---- Güncelleme kartı ----
+    [ObservableProperty] private bool _hasUpdate = AppServices.Update.ShowBanner;
+    [ObservableProperty] private string _updateTitle = UpdateTitleText();
+    private static string UpdateTitleText() => AppServices.Update.Available is { } a ? $"Yeni sürüm var: KLYC-Pulse {a.Version.ToString(3)} (şu an {UpdateService.CurrentText})" : "";
+    private void OnUpdateChanged() => System.Windows.Application.Current?.Dispatcher.BeginInvoke(() => { HasUpdate = AppServices.Update.ShowBanner; UpdateTitle = UpdateTitleText(); });
+
+    [RelayCommand] private void OpenUpdate() => AppServices.Update.OpenReleasePage();
+    [RelayCommand] private void DismissUpdate() => AppServices.Update.Dismiss();
     [ObservableProperty] private bool _changeBrightness = true;
 
     // ---- Hızlandır ----
@@ -175,6 +185,7 @@ public partial class HomeViewModel : ObservableObject, IDisposable
     {
         _controller.Applied -= OnApplied;
         _controller.Busy -= OnBusy;
+        AppServices.Update.Changed -= OnUpdateChanged;
     }
 
     [StructLayout(LayoutKind.Sequential)]

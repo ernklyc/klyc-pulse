@@ -10,6 +10,18 @@ public sealed class AppSettings
     public bool AutoGameMode { get; set; } = false;
     /// <summary>Oyunlara göre kendini ayarla: oyun raporlarına bakıp işlemci hız sınırını dener, ölçer, zararlıysa geri alır.</summary>
     public bool AutoTuneGames { get; set; } = true;
+
+    /// <summary>Günde en fazla bir kez GitHub'dan en son sürümü sorar (indirme/kurma yapmaz). Kapatılabilir.</summary>
+    public bool CheckUpdates { get; set; } = true;
+    public DateTime? LastUpdateCheck { get; set; }
+    public string? DismissedUpdate { get; set; }
+
+    /// <summary>Bu bilgisayarda Windows işlemci frekans sınırını uyguluyor mu? null = henüz denenmedi.</summary>
+    public bool? FreqCapSupported { get; set; }
+    public string? FreqCapNote { get; set; }
+
+    /// <summary>Öğrenilen yük altı en yüksek işlemci hızı (MHz). Sınır kademeleri buna göre bu bilgisayara uyarlanır. 0 = bilinmiyor.</summary>
+    public double CpuPeakMhz { get; set; }
     public bool AutoQuietOnBattery { get; set; } = false;
     public bool CloseConflictingApps { get; set; } = false;
     public bool MinimizeToTray { get; set; } = true;
@@ -82,6 +94,15 @@ public sealed class SettingsStore
 
     public AppSettings Current { get; private set; } = new();
     public event Action? Changed;
+
+    /// <summary>Geçici klasörden (%TEMP%) gelen oyun profillerini siler (test/yükleyici artıkları gerçek oyun değildir). Silinen sayısını döner.</summary>
+    public int RemoveTempProfiles()
+    {
+        var temp = Path.GetTempPath();
+        var n = Current.GameProfiles.RemoveAll(p => !string.IsNullOrEmpty(p.ExePath) && p.ExePath.StartsWith(temp, StringComparison.OrdinalIgnoreCase));
+        if (n > 0) Save();
+        return n;
+    }
 
     /// <summary>Ayarları yükler. path verilirse (testler için) o dosya kullanılır, gerçek ayarlara dokunulmaz.</summary>
     public static SettingsStore Load(string? path = null)

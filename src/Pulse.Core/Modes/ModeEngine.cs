@@ -126,8 +126,7 @@ public sealed class ModeEngine : IDisposable
                 Powercfg.SetDc(scheme, Powercfg.SubProcessor, Powercfg.MaxProcessorState, mode.MaxState);
                 Powercfg.SetDc(scheme, Powercfg.SubProcessor, Powercfg.EnergyPerformancePref, mode.Epp);
                 // Her mod "frekans sınırı yok"tan (ya da oyun profilinin seçtiği sınırdan) başlar; sıcaklık sınırı gerekirse üstüne koyar (eski sınır kalıntısı kalmasın).
-                Powercfg.SetAc(scheme, Powercfg.SubProcessor, Powercfg.MaxFrequency, mode.CpuMaxMhz ?? 0);
-                Powercfg.SetDc(scheme, Powercfg.SubProcessor, Powercfg.MaxFrequency, mode.CpuMaxMhz ?? 0);
+                Powercfg.SetFrequencyCap(scheme, mode.CpuMaxMhz ?? 0);
             }
             Powercfg.SetActive(active);
             Thread.Sleep(attempt == 0 ? 900 : 1500);

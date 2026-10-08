@@ -21,6 +21,8 @@ public static class GameDetector
         "beservice", "battleye", "vgc", "vgtray", "epicwebhelper", "eosoverlay", "ue4prereq", "dotnet", "updater",
     ];
 
+    private static bool AllowTemp => Environment.GetEnvironmentVariable("KLYC_PULSE_TEST") == "1";
+
     public sealed record DetectedGame(string Name, string Path, int Pid = 0);
 
     public static string? FindRunningGame() => FindRunningGameInfo()?.Name;
@@ -34,6 +36,9 @@ public static class GameDetector
             {
                 var path = GetImagePath(p.Id);
                 if (path is null) continue;
+                // Geçici klasördeki programlar oyun sayılmaz (testlerin sahte oyunları gerçek profil listesine karışmasın).
+                // Testler KLYC_PULSE_TEST ortam değişkeniyle bunu açar.
+                if (!AllowTemp && path.StartsWith(Path.GetTempPath(), StringComparison.OrdinalIgnoreCase)) continue;
                 var file = Path.GetFileNameWithoutExtension(path).ToLowerInvariant();
                 var known = isKnownGame?.Invoke(path, file) == true;      // elle eklenen oyun (pencere/bellek kuralı aşağıda yine uygulanır)
                 if (!known && !LibraryMarkers.Any(m => path.Contains(m, StringComparison.OrdinalIgnoreCase))) continue;

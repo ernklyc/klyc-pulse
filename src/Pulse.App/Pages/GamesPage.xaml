@@ -45,6 +45,17 @@
                     <ui:ToggleSwitch Grid.Column="1" VerticalAlignment="Center" IsChecked="{Binding AutoTuneGames}" />
                 </Grid>
             </Border>
+            <Border Style="{StaticResource PulseCard}" Padding="16,10" Margin="0,8,0,0">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <TextBlock Style="{StaticResource PulseMuted}" TextWrapping="Wrap" Margin="0,0,16,0" VerticalAlignment="Center" Text="{Binding FreqCapText}" />
+                    <Button Grid.Column="1" Content="Şimdi dene" Style="{StaticResource PulseGhostButton}" VerticalAlignment="Center"
+                            Command="{Binding ProbeFreqCapCommand}" IsEnabled="{Binding Probing, Converter={StaticResource InvertBool}}" />
+                </Grid>
+            </Border>
 
             <!-- Son oyun raporu -->
             <TextBlock Style="{StaticResource PulseLabel}" Text="SON OYUN RAPORU" Margin="0,16,0,8" />
@@ -168,7 +179,7 @@
                                     </StackPanel>
                                     <StackPanel Grid.Column="2">
                                         <TextBlock Style="{StaticResource PulseLabel}" Text="İŞLEMCİ HIZI" Margin="0,0,0,3" />
-                                        <ComboBox HorizontalAlignment="Stretch" ItemsSource="{x:Static vm:GameProfileVm.CpuCapOptions}" SelectedIndex="{Binding CpuCapIndex, Mode=TwoWay}" />
+                                        <ComboBox HorizontalAlignment="Stretch" ItemsSource="{Binding CpuCapOptions}" SelectedIndex="{Binding CpuCapIndex, Mode=TwoWay}" />
                                     </StackPanel>
                                 </Grid>
                             </Grid>

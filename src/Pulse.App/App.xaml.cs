@@ -91,6 +91,8 @@ public partial class App : Application
         // Isı uyarıları: sağ alttaki büyük Windows balonu yerine sağ üstte küçük, kısa süreli yazı.
         AppServices.Guard.Notice += (text, warn) => Dispatcher.Invoke(() => NoticeChip.Show(text, warn));
         AppServices.Guard.Enabled = AppServices.Settings.Current.ThermalGuard;
+        if (AppServices.Settings.RemoveTempProfiles() is > 0 and var removed) Pulse.Core.Diagnostics.Journal.Write($"Geçici klasörden gelen {removed} oyun profili listeden silindi.");
+        AppServices.Update.Start();
         AppServices.Heat.Configure(AppServices.Settings.Current.HeatTarget);
         // Önceki oturumdan (çökme vb.) kalmış frekans sınırı varsa ve sıcaklık sınırı kapalıysa temizle; sessizce yavaş kalmasın.
         if (AppServices.Settings.Current.HeatTarget is null) _ = Task.Run(() => HeatTargetService.ClearStaleFrequencyCap());

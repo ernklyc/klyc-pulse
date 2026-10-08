@@ -20,6 +20,8 @@ public sealed class GameSessionReport
     public double? GpuUtilAvg { get; init; }
     public int? GpuTempMax { get; init; }
     public double RamPeakPercent { get; init; }
+    public double? VramPeakPercent { get; init; }
+    public int OnBatteryPercent { get; init; }
 
     /// <summary>Oturum sırasında uygulanan işlemci hızı sınırı (MHz); null = sınırsızdı.</summary>
     public int? CpuCapMhz { get; init; }
@@ -44,7 +46,7 @@ public sealed class GameSessionReport
 /// <summary>Oyun süresince saniyede bir örnek toplar, bitince <see cref="GameSessionReport"/> üretir. Hiçbir ayarı değiştirmez.</summary>
 public sealed class GameSessionRecorder
 {
-    private sealed record Sample(double? CpuPercent, double? CpuMhz, double? CpuTempC, int? GpuUtil, int? GpuTemp, string? GpuThrottle, double RamPercent, double? Fps, double? LowFps);
+    private sealed record Sample(double? CpuPercent, double? CpuMhz, double? CpuTempC, int? GpuUtil, int? GpuTemp, string? GpuThrottle, double RamPercent, double? Fps, double? LowFps, bool? OnAc, double? VramPercent);
 
     private const int MaxSamples = 4 * 3600;     // en fazla 4 saatlik oturum
     private readonly List<Sample> _samples = new();
@@ -60,14 +62,18 @@ public sealed class GameSessionRecorder
     public int Count => _samples.Count;
     public string Game => _game;
 
-    public void Add(SensorSnapshot s, FpsReading? fps)
+    public void Add(SensorSnapshot s, FpsReading? fps, bool? onAc = null)
     {
         if (_samples.Count >= MaxSamples) return;
-        _samples.Add(new Sample(s.CpuPercent, s.CpuMhz, s.CpuTempC, s.Gpu?.UtilPercent, s.Gpu?.TempC, s.Gpu?.ThrottleText, s.RamPercent, fps?.Fps, fps?.LowFps));
+        // Ekran kartı kullanımı: NVML varsa o, yoksa (AMD/Intel) Windows'un GPU Engine sayaçları
+        var gpuUtil = s.Gpu?.UtilPercent ?? (s.GpuEnginePercent is { } e ? (int?)Math.Round(e) : null);
+        double? vram = s.Gpu is { VramTotalBytes: > 0, VramUsedBytes: { } used } g ? 100.0 * used / g.VramTotalBytes!.Value : null;
+        _samples.Add(new Sample(s.CpuPercent, s.CpuMhz, s.CpuTempC, gpuUtil, s.Gpu?.TempC, s.Gpu?.ThrottleText, s.RamPercent, fps?.Fps, fps?.LowFps, onAc, vram));
     }
 
     /// <summary>Yeterli veri yoksa (varsayılan 90 sn'den kısa) null döner.</summary>
-    public GameSessionReport? Build(double baseMhz, int minSamples = 90, int? displayHz = null, int? cpuCapMhz = null, GameSessionReport? previous = null, bool suggestCap = true)
+    public GameSessionReport? Build(double baseMhz, int minSamples = 90, int? displayHz = null, int? cpuCapMhz = null, GameSessionReport? previous = null, bool suggestCap = true,
+        DriveKind storage = DriveKind.Unknown, int? suggestMhz = null)
     {
         if (_samples.Count < minSamples) return null;
         var n = _samples.Count;
@@ -102,7 +108,18 @@ public sealed class GameSessionRecorder
         var findings = new List<string>();
         var severity = 0;
 
+        // 0) Pilde oynandı mı? (en büyük tek FPS kaybı nedeni)
+        var acKnown = _samples.Count(s => s.OnAc is not null);
+        var onBatteryPct = acKnown > 0 ? Pct(_samples.Count(s => s.OnAc == false), acKnown) : 0;
+        if (onBatteryPct >= 30)
+        {
+            severity = 2;
+            findings.Add($"Oyunun %{onBatteryPct}'i pilde oynandı. Pilde işlemci ve ekran kartı güç sınırına girer; FPS yarıya kadar düşebilir. Prize takıp oyna.");
+        }
+
         // 1) Isı
+        if (temps.Count == 0)
+            findings.Add("İşlemci sıcaklığı okunamadı (Pulse yönetici olarak çalışmıyor ya da bu bilgisayar sıcaklığı sunmuyor); ısı değerlendirmesi ve otomatik ısı ayarı yapılamadı.");
         if (tempMax is { } tmax)
         {
             if (above95 >= 10 || above90 >= 40)
@@ -147,6 +164,26 @@ public sealed class GameSessionRecorder
             findings.Add($"Bellek %{ramPeak:0}'e çıktı; sınıra yakın. Arka plandaki uygulamaları kapatmak iyi olur.");
         }
 
+        // 4b) Ekran kartı belleği (VRAM): dolunca dokular sistem belleğine taşar ve takılma yapar (4 GB'lık kartlarda sık)
+        var vramPeak = _samples.Where(s => s.VramPercent is not null).Select(s => s.VramPercent!.Value).DefaultIfEmpty(0).Max();
+        if (vramPeak >= 95)
+        {
+            severity = Math.Max(severity, 2);
+            findings.Add($"Ekran kartı belleği %{vramPeak:0}'e kadar doldu. Dolunca dokular sistem belleğine taşar ve oyun takılır. Oyunda doku kalitesini bir kademe düşür.");
+        }
+        else if (vramPeak >= 90)
+        {
+            severity = Math.Max(severity, 1);
+            findings.Add($"Ekran kartı belleği %{vramPeak:0}'e çıktı; sınıra yakın. Takılma olursa doku kalitesini bir kademe düşür.");
+        }
+
+        // 4c) Oyun HDD'de mi? (yükleme ve açık dünya akışında takılma yapar; SSD'ye taşımak çözer, FPS'i artırmaz)
+        if (storage == DriveKind.Hdd)
+        {
+            severity = Math.Max(severity, 1);
+            findings.Add("Oyun yavaş bir HDD'de duruyor. Yüklemeleri ve açık dünyada akış takılmalarını yavaşlatır; oyunu SSD'ye taşımak çözer (FPS'i artırmaz).");
+        }
+
         // 5) FPS ve takılma
         if (fpsAvg is { } f)
         {
@@ -172,10 +209,10 @@ public sealed class GameSessionRecorder
         var veryHot = above90 >= 40 || above95 >= 10;
         if (veryHot && cpuCapMhz is null && suggestCap)
         {
-            if (bottleneck is "gpu" or "other")
+            if (bottleneck is "gpu" or "other" && suggestMhz is { } sm)
             {
-                suggestedCap = 3500;
-                findings.Add("Öneri: bu oyun için işlemci hızını en çok 3,5 GHz'e sınırla (aşağıdaki düğme). Oyunu ekran kartı sınırladığı için FPS neredeyse aynı kalır, ısı belirgin düşer. Sonraki oyunda rapor önceki oturumla karşılaştırır.");
+                suggestedCap = sm;
+                findings.Add($"Öneri: bu oyun için işlemci hızını en çok {sm / 1000.0:0.0} GHz'e sınırla (aşağıdaki düğme). Oyunu ekran kartı sınırladığı için FPS neredeyse aynı kalır, ısı belirgin düşer. Sonraki oyunda rapor önceki oturumla karşılaştırır.");
             }
             else if (bottleneck == "cpu")
                 findings.Add("Oyunu işlemci sınırladığı için işlemci hızını kısmak FPS'i düşürür. Önce soğutmayı düzeltmek (temizlik, macun, altlık) daha doğru.");
@@ -194,7 +231,7 @@ public sealed class GameSessionRecorder
             "gpu" => $"Bu oyunu ekran kartı sınırlıyor (ortalama %{gpuAvg:0} çalıştı). İşlemci hızını kısmak FPS'i az etkiler ama ısıyı belirgin düşürür.",
             "cpu" => $"Ekran kartı ortalama %{gpuAvg:0} çalıştı; oyunu büyük olasılıkla işlemci sınırlıyor. İşlemci hızını kısmak FPS'i düşürür.",
             "other" => "Ekran kartı ve işlemci tam yüklenmedi; kare sınırı (V-Sync / FPS sınırı) ya da oyunun kendisi sınırlıyor olabilir.",
-            _ => "Ekran kartı verisi alınamadı.",
+            _ => "Ekran kartı kullanımı okunamadı; oyunu neyin sınırladığı belirlenemedi.",
         });
 
         if (severity == 0) findings.Insert(0, "Bu oyun boyunca belirgin bir sorun görülmedi.");
@@ -215,6 +252,8 @@ public sealed class GameSessionRecorder
             GpuUtilAvg = gpuAvg is null ? null : Math.Round(gpuAvg.Value, 0),
             GpuTempMax = gpuTempMax,
             RamPeakPercent = Math.Round(ramPeak, 0),
+            VramPeakPercent = vramPeak > 0 ? Math.Round(vramPeak, 0) : null,
+            OnBatteryPercent = onBatteryPct,
             CpuCapMhz = cpuCapMhz,
             SuggestedCpuCapMhz = suggestedCap,
             Bottleneck = bottleneck,
@@ -252,7 +291,7 @@ public static class GameReportStore
     public static string DefaultPath { get; } = Path.Combine(
         Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Pulse", "last_game_report.json");
 
-    public static void Save(GameSessionReport report, string? path = null)
+    public static void Save(GameSessionReport report, string? path = null, bool replaceLast = false)
     {
         try
         {
@@ -262,6 +301,8 @@ public static class GameReportStore
             // Geçmiş: aynı oyunun önceki oturumlarıyla karşılaştırma için son 20 rapor
             var histPath = HistoryPath(path);
             var list = LoadHistory(path);
+            // Sonradan güncellenen rapor (ör. frekans denemesi bitince) geçmişte ikiye bölünmesin
+            if (replaceLast && list.Count > 0 && list[^1].Start == report.Start && string.Equals(list[^1].Game, report.Game, StringComparison.OrdinalIgnoreCase)) list.RemoveAt(list.Count - 1);
             list.Add(report);
             if (list.Count > 20) list.RemoveRange(0, list.Count - 20);
             Write(histPath, JsonSerializer.Serialize(list, Options));

@@ -34,6 +34,16 @@ Yeni bir marka modülü eklemek için bkz. [CONTRIBUTING.md](../CONTRIBUTING.md)
 
 Yeni bir bilgisayarda ilk iş `KLYC-Pulse.exe --selftest` çalıştırıp sonucu inceleyin.
 
+## Her bilgisayara uyum: ölçerek karar verir
+
+KLYC-Pulse varsayım yapmaz, bu bilgisayarda ölçer:
+
+- **İşlemci hız sınırı:** Windows'un "işlemci en yüksek frekansı" ayarı çoğu Intel dizüstü/masaüstünde çalışır ama bazı sistemlerde (Ryzen, bazı HWP/üretici yazılımı yapılandırmaları) yok sayılabilir. Pulse ilk sınırı koymadan önce tüm çekirdekleri ~20 sn yorup sınırsız ve sınırlı gerçek hızı ölçer; sınır çalışmıyorsa hız sınırı özelliklerini kapatır (Oyunlar sayfasında "Şimdi dene" ile elle de yapılır). Hibrit Intel (12. nesil ve sonrası) için performans çekirdeği sınıfı da yazılır.
+- **Kademeler:** Hız sınırı kademeleri sabit sayı değil, bu bilgisayarın yük altındaki gerçek en yüksek hızının yüzdesidir ve taban hızın altına inmez. 5,5 GHz'lik bir masaüstü de 4 GHz'lik bir dizüstü de kendine uygun kademeleri alır. Turbo payı olmayan işlemcide sınırlanacak yer yoktur, otomatik ayar dokunmaz.
+- **Ekran kartı kullanımı:** NVIDIA'da NVML, AMD/Intel'de Windows'un "GPU Engine" sayaçları (Görev Yöneticisi ile aynı kaynak) kullanılır; oyunu neyin sınırladığı her markada bulunabilir.
+- **İşlemci sıcaklığı:** Windows'un ACPI/termal bölgesinden okunur (yönetici gerekir). Okunamazsa rapor bunu söyler ve ısıya dayalı otomatik ayar yapılmaz.
+- **Pil, ekran kartı belleği, disk:** Rapor pilde oynamayı, 4 GB'lık kartlarda ekran kartı belleğinin dolmasını ve oyunun HDD'de durmasını ayrıca bulur.
+
 ## Bilinen kısıtlar
 
 - İşlemci voltajı (undervolt) ve güç sınırı yazma: çekirdek sürücüsü gerektirir, çoğu sistemde BIOS tarafından kilitlidir; desteklenmez.

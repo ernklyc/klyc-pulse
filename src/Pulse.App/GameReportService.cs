@@ -1,11 +1,12 @@
+using Pulse.Core.Automation;
 using Pulse.Core.Diagnostics;
 using Pulse.Core.Monitoring;
 
 namespace Pulse.App;
 
 /// <summary>
-/// Oyun açıkken sensörleri (ısı, işlemci hızı, ekran kartı, bellek, FPS) kaydeder; oyun kapanınca sade dille bir rapor çıkarır.
-/// Hiçbir ayarı değiştirmez. Rapor Oyunlar sayfasında görünür ve %LOCALAPPDATA%\Pulse altında saklanır.
+/// Oyun açıkken sensörleri (ısı, işlemci hızı, ekran kartı, bellek, FPS) kaydeder; oyun kapanınca sade dille bir rapor çıkarır
+/// ve (açıksa) oyuna özel işlemci hız sınırını kendi kendine ayarlar. Rapor Oyunlar sayfasında görünür.
 /// </summary>
 public sealed class GameReportService : IDisposable
 {
@@ -15,7 +16,7 @@ public sealed class GameReportService : IDisposable
 
     public GameSessionReport? Last { get; private set; } = GameReportStore.Load();
 
-    /// <summary>Yeni rapor hazır olunca (zamanlayıcı iş parçacığında tetiklenir).</summary>
+    /// <summary>Yeni rapor hazır olunca (ya da sonradan güncellenince) tetiklenir; zamanlayıcı iş parçacığında gelir.</summary>
     public event Action<GameSessionReport>? Ready;
 
     public void Start(string game)
@@ -27,11 +28,17 @@ public sealed class GameReportService : IDisposable
             _subscription = AppServices.Sensors.Subscribe(wantFps: true);
             AppServices.Sensors.Updated += OnSensors;
         }
+
+        // Pilde oynamak FPS'i yarıya kadar düşürebilir: oyun başlarken bir kez uyar.
+        if (PowerSource.IsOnAc() == false)
+            Dispatch(() => NoticeChip.Show("Pilde oynuyorsun. Prize takarsan FPS belirgin artar (pilde işlemci ve ekran kartı güç sınırına girer).", true));
     }
+
+    private static void Dispatch(Action a) => System.Windows.Application.Current?.Dispatcher.BeginInvoke(a);
 
     private void OnSensors(SensorSnapshot s)
     {
-        lock (_gate) _recorder?.Add(s, AppServices.Sensors.LatestFps);
+        lock (_gate) _recorder?.Add(s, AppServices.Sensors.LatestFps, PowerSource.IsOnAc());
     }
 
     public void Stop()
@@ -53,30 +60,85 @@ public sealed class GameReportService : IDisposable
             var hz = Pulse.Core.Platform.DisplayService.GetRefreshRate();
             var cap = AppServices.Modes.ActiveDefinition?.CpuMaxMhz;
             var settings = AppServices.Settings;
+            var s = settings.Current;
             var profile = settings.FindProfile(rec.Game);
-            var auto = settings.Current.AutoTuneGames && profile is { AutoTune: true, Enabled: true };
-            var report = rec.Build(AppServices.Sensors.BaseMhz, displayHz: hz, cpuCapMhz: cap, previous: previous, suggestCap: !auto);
+            var auto = s.AutoTuneGames && profile is { AutoTune: true, Enabled: true };
+            var report = rec.Build(AppServices.Sensors.BaseMhz, displayHz: hz, cpuCapMhz: cap, previous: previous, suggestCap: !auto,
+                storage: DriveKindDetector.Detect(profile?.ExePath), suggestMhz: AppServices.GameLadder() is { Length: > 2 } lad ? lad[2] : null);
             if (report is null) { Journal.Write($"Oyun raporu: oturum çok kısa ({rec.Count} sn), rapor yok."); return; }
 
-            // Kendi kendine ayar: raporu inceleyip işlemci sınırını dener / geri alır
-            if (auto && profile is not null)
-            {
-                var d = Pulse.Core.Automation.GameAutoTuner.Decide(profile.CpuMaxMhz, profile.AutoTuneLocked, report, previous);
-                profile.AutoTuneNote = d.Note;
-                profile.AutoTuneLocked = d.Locked;
-                if (d.Changed) { profile.CpuMaxMhz = d.CapMhz; report.AutoTuneChanged = true; }
-                settings.Save();
-                report.Findings.Add("Otomatik ayar: " + d.Note);
-                Journal.Write($"Otomatik ayar ({rec.Game}): {(d.Changed ? "değişti → " + Pulse.Core.Automation.GameAutoTuner.Describe(d.CapMhz) : "değişmedi")}; {d.Note}");
-            }
+            // Yük altı tepe hızı öğren (sınırsız oturumlardan): kademeler bu bilgisayarın gerçek hızına göre kurulur
+            if (cap is null && report.CpuMhzPeak is { } pk && pk > s.CpuPeakMhz) { s.CpuPeakMhz = pk; settings.Save(); }
 
-            Last = report;
-            GameReportStore.Save(report);
-            Journal.Write($"Oyun raporu: {report.Title}");
-            foreach (var f in report.Findings) Journal.Write("  - " + f);
-            Ready?.Invoke(report);
+            if (auto && profile is not null) RunAutoTune(profile, report, previous, cap);
+
+            Publish(report);
         }
         catch (Exception ex) { Journal.Write("Oyun raporu hatası: " + ex.Message); }
+    }
+
+    /// <summary>Raporu saklar, günlüğe yazar ve arayüze bildirir.</summary>
+    private void Publish(GameSessionReport report)
+    {
+        Last = report;
+        GameReportStore.Save(report, replaceLast: true);
+        Journal.Write($"Oyun raporu: {report.Title}");
+        foreach (var f in report.Findings) Journal.Write("  - " + f);
+        Ready?.Invoke(report);
+    }
+
+    private void RunAutoTune(Pulse.Core.Settings.GameProfile profile, GameSessionReport report, GameSessionReport? previous, int? cap)
+    {
+        var settings = AppServices.Settings;
+        var s = settings.Current;
+        string Note(string text) { report.Findings.Add("Otomatik ayar: " + text); profile.AutoTuneNote = text; settings.Save(); Journal.Write($"Otomatik ayar ({report.Game}): {text}"); return text; }
+
+        // Sınır koyulmuşken hız yine de sınırı aşıyorsa: bu bilgisayar sınırı uygulamıyor
+        if (cap is { } c && report.CpuMhzPeak is { } peak && peak > c * 1.12)
+        {
+            s.FreqCapSupported = false;
+            s.FreqCapNote = $"Oyun sırasında hız {peak:0} MHz'e çıktı ama sınır {c} MHz'di: bu bilgisayar sınırı uygulamıyor.";
+            profile.AutoTuneLocked = true;
+            Note(s.FreqCapNote + " Otomatik ayar durduruldu (Oyunlar sayfasından yeniden denenebilir).");
+            return;
+        }
+        if (s.FreqCapSupported == false)
+        {
+            Note("Bu bilgisayar işlemci hız sınırını uygulamıyor (denemede ölçüldü); otomatik ayar yapılmıyor.");
+            return;
+        }
+
+        var ladder = AppServices.GameLadder();
+        var d = GameAutoTuner.Decide(profile.CpuMaxMhz, profile.AutoTuneLocked, report, previous, ladder);
+
+        // İlk kez bir sınır koymadan önce, sınırın bu bilgisayarda gerçekten işe yaradığını ölç
+        if (d.Changed && d.CapMhz is not null && s.FreqCapSupported != true)
+        {
+            if (PowerSource.IsOnAc() == false)
+            {
+                Note("Frekans sınırı denemesi prizde yapılır; prize takılıyken bir sonraki oyundan sonra denenecek.");
+                return;
+            }
+            Note("Bu bilgisayarda işlemci hız sınırının işe yarayıp yaramadığı ölçülüyor (~20 sn, işlemci tam yüklenir). Sonuç gelince ayar uygulanır.");
+            _ = Task.Run(async () =>
+            {
+                var r = await FreqCapService.RunAsync();
+                if (r is null) return;
+                var d2 = r.Supported == true ? GameAutoTuner.Decide(profile.CpuMaxMhz, profile.AutoTuneLocked, report, previous, AppServices.GameLadder()) : d;
+                if (r.Supported == true && d2.Changed)
+                {
+                    profile.CpuMaxMhz = d2.CapMhz; profile.AutoTuneLocked = d2.Locked; report.AutoTuneChanged = true;
+                    Note(d2.Note);
+                }
+                else Note(r.Supported == true ? d2.Note : r.Note + (r.Supported == false ? " Otomatik ayar yapılmıyor." : " Sonraki oyundan sonra yeniden denenecek."));
+                Publish(report);
+            });
+            return;
+        }
+
+        profile.AutoTuneLocked = d.Locked;
+        if (d.Changed) { profile.CpuMaxMhz = d.CapMhz; report.AutoTuneChanged = true; }
+        Note(d.Note);
     }
 
     public void Dispose() => Stop();

@@ -62,8 +62,8 @@ Get one of two files from the **[Releases](https://github.com/ernklyc/klyc-pulse
 
 | File | Size | When |
 |---|---|---|
-| `KLYC-Pulse-v1.2.0-win-x64.zip` | ~11 MB (zip) | If the [.NET 8 Desktop Runtime](https://dotnet.microsoft.com/download/dotnet/8.0) is installed |
-| `KLYC-Pulse-v1.2.0-win-x64-self-contained.zip` | ~68 MB (zip) | If you don't want to install anything (runtime included) |
+| `KLYC-Pulse-v1.3.0-win-x64.zip` | ~11 MB (zip) | If the [.NET 8 Desktop Runtime](https://dotnet.microsoft.com/download/dotnet/8.0) is installed |
+| `KLYC-Pulse-v1.3.0-win-x64-self-contained.zip` | ~68 MB (zip) | If you don't want to install anything (runtime included) |
 
 1. Unzip and put `KLYC-Pulse.exe` in any folder (e.g. `C:\Programs\KLYC-Pulse`).
 2. Double-click; it asks for **administrator rights** (needed for sensors, GPU and service settings).
@@ -72,7 +72,7 @@ Get one of two files from the **[Releases](https://github.com/ernklyc/klyc-pulse
 > **Windows SmartScreen / antivirus warning:** the app is not code-signed yet, so an "Unknown publisher" warning may appear. Compare the SHA-256 hash with `SHA256SUMS.txt` on the release page, or build from source yourself.
 
 ```powershell
-Get-FileHash .\KLYC-Pulse-v1.2.0-win-x64.zip -Algorithm SHA256
+Get-FileHash .\KLYC-Pulse-v1.3.0-win-x64.zip -Algorithm SHA256
 ```
 
 ## First use
@@ -105,7 +105,7 @@ Vendor modules are optional: if the hardware is missing the step is skipped and 
 - **Bounded hardware settings.** GPU overclock ceiling is core +150 / memory +700 MHz and is **not persistent** (resets on mode change, app exit or reboot).
 - **Thermal guard.** If dangerous temperatures persist (CPU 97 °C, GPU 90 °C, 10 s) it switches to Quiet mode.
 - **Does not touch security settings** (Defender, Memory Integrity, …) and installs no kernel driver.
-- **No telemetry, no network** (apart from the winget update check and Windows Update scan that you start yourself).
+- **No telemetry.** It touches the network in only three places: (1) at most once a day to ask GitHub for the latest version number (downloads/installs nothing, sends no personal data; can be turned off in Settings > Updates), (2) the winget update check you start, (3) the Windows Update driver scan you start.
 
 ## FAQ
 

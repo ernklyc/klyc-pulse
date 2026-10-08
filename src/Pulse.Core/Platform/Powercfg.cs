@@ -14,6 +14,8 @@ public static class Powercfg
     public const string EnergyPerformancePref = "36687f9e-e3a5-4dbf-b1dc-15eb381c6863";
     /// <summary>İşlemci en yüksek frekansı (MHz, 0 = sınırsız). "Üst sınır %"dan farkı: %100'ün altı turbo'yu tamamen kapatabilir, bu ise hızı MHz olarak kademeli sınırlar.</summary>
     public const string MaxFrequency = "75b0ae3f-bce0-45a7-8c89-c9611c25e100";
+    /// <summary>Aynı ayar, "verimlilik sınıfı 1" (hibrit Intel 12. nesil+ işlemcilerde performans çekirdekleri). Hibrit olmayanlarda etkisizdir.</summary>
+    public const string MaxFrequencyClass1 = "75b0ae3f-bce0-45a7-8c89-c9611c25e101";
     public const string SubVideo = "7516b95f-f776-4464-8c53-06167f40cc99";
     public const string VideoIdle = "3c0bc021-c8a8-4e07-a973-6b14cbcb2b7e";
     public const string SubSleep = "238c9fa8-0aad-41ed-83f4-97be242c8f20";
@@ -71,4 +73,14 @@ public static class Powercfg
         Run("/setacvalueindex", scheme, sub, setting, value.ToString());
 
     public static void SetActive(string scheme) => Run("/setactive", scheme);
+
+    /// <summary>İşlemci en yüksek frekansını (MHz, 0 = sınırsız) prizde ve pilde, iki çekirdek sınıfı için de yazar. Planı etkinleştirmez.</summary>
+    public static void SetFrequencyCap(string scheme, int mhz)
+    {
+        foreach (var setting in new[] { MaxFrequency, MaxFrequencyClass1 })
+        {
+            SetAc(scheme, SubProcessor, setting, mhz);
+            SetDc(scheme, SubProcessor, setting, mhz);
+        }
+    }
 }

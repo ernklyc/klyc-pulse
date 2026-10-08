@@ -10,6 +10,20 @@ public sealed class ModeKeeperService : IDisposable
 {
     private readonly Timer _timer;
     private int _running;
+    private int _paused;
+
+    /// <summary>Kısa süreli güç ayarı denemeleri sırasında (ör. frekans sınırı denemesi) koruyucunun araya girmesini engeller.</summary>
+    public IDisposable Pause()
+    {
+        Interlocked.Increment(ref _paused);
+        return new Resume(this);
+    }
+
+    private sealed class Resume(ModeKeeperService owner) : IDisposable
+    {
+        private int _done;
+        public void Dispose() { if (Interlocked.Exchange(ref _done, 1) == 0) Interlocked.Decrement(ref owner._paused); }
+    }
 
     public event Action<string>? Notice;
 
@@ -17,12 +31,12 @@ public sealed class ModeKeeperService : IDisposable
 
     private async void Tick()
     {
-        if (!AppServices.Settings.Current.KeepMode) return;
+        if (!AppServices.Settings.Current.KeepMode || Volatile.Read(ref _paused) > 0) return;
         if (Interlocked.Exchange(ref _running, 1) == 1) return;
         try
         {
             // Sıcaklık sınırı açıksa işlemci üst sınırını kendisi değiştirir; onu "bozulma" sayma.
-            var ignoreMax = AppServices.Heat.Enabled;
+            var ignoreMax = false;     // sıcaklık sınırı artık yalnızca frekans sınırını değiştirir; üst sınır % mod değerinde kalır
             if (await AppServices.Modes.RepairPowerAsync(ignoreMax))
                 Notice?.Invoke("Başka bir program güç ayarlarını değiştirmişti. Seçtiğin modun ayarlarını geri düzelttim.");
         }

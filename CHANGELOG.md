@@ -2,6 +2,14 @@
 
 Biçim [Keep a Changelog](https://keepachangelog.com/tr/) esaslıdır; sürümleme [SemVer](https://semver.org/lang/tr/).
 
+## [1.3.0] — 2026-10-09
+
+### Eklenenler
+- **Güncelleme denetimi:** Günde en fazla bir kez GitHub'dan en son sürüm numarasını sorar; yeni sürüm varsa küçük bir uyarı ve Ana ekranda "Sürüm notları ve indir" kartı çıkar (indirmeyi kullanıcı başlatır, uygulama kendisi indirmez). Ayarlar > Güncellemeler'den kapatılır. Yalnızca github.com adreslerini açar.
+- **Her bilgisayara uyum:** Frekans sınırı denemesi (bu bilgisayarda sınır gerçekten uygulanıyor mu, ölçülür; uygulanmıyorsa hız sınırı özellikleri kapanır), hibrit Intel için performans çekirdeği sınıfı da yazılır, sınır kademeleri bu bilgisayarın gerçek hızından türetilir (sabit 3,5 GHz yok), NVIDIA dışı ekran kartlarında Windows GPU sayaçları, ısı okunamazsa bunu söyleme.
+- **Oyun raporu:** pilde oynama, ekran kartı belleğinin (VRAM) dolması ve oyunun HDD'de durması da bulunur. Oyun başlarken pildeysen uyarır.
+- Mod Koruyucu ve Isı hedefi, kısa süreli güç ayarı denemeleri sırasında bekletilir.
+
 ## [1.2.0] — 2026-10-08
 
 ### Eklenenler

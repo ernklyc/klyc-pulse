@@ -76,6 +76,17 @@
 
             <Border Style="{StaticResource PulseHairline}" Margin="0,14,0,12" />
 
+            <Border Style="{StaticResource PulseCard}" Margin="0,0,0,12" Padding="16,10"
+                    Visibility="{Binding HasUpdate, Converter={StaticResource BoolToVis}}">
+                <DockPanel>
+                    <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center">
+                        <Button Content="Sürüm notları ve indir" Style="{StaticResource PulsePrimaryButton}" Command="{Binding OpenUpdateCommand}" Margin="0,0,8,0" />
+                        <Button Content="Daha sonra" Style="{StaticResource PulseGhostButton}" Command="{Binding DismissUpdateCommand}" />
+                    </StackPanel>
+                    <TextBlock Text="{Binding UpdateTitle}" Style="{StaticResource PulseBody}" FontWeight="Medium" VerticalAlignment="Center" Margin="0,0,12,0" TextTrimming="CharacterEllipsis" />
+                </DockPanel>
+            </Border>
+
             <Border Style="{StaticResource PulseCard}" Margin="0,0,0,12" Padding="16,12"
                     Visibility="{Binding ShowWelcome, Converter={StaticResource BoolToVis}}">
                 <DockPanel>

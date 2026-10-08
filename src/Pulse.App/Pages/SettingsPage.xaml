@@ -137,6 +137,31 @@
                     </Grid>
                 </StackPanel>
             </Border>
+            <TextBlock Style="{StaticResource PulseLabel}" Text="GÜNCELLEMELER" Margin="0,18,0,8" />
+            <Border Style="{StaticResource PulseCard}" Padding="16,12">
+                <StackPanel>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Margin="0,0,20,0">
+                            <TextBlock Style="{StaticResource PulseBody}" FontWeight="Medium" Text="Yeni sürüm var mı diye kendiliğinden bak" />
+                            <TextBlock Style="{StaticResource PulseMuted}" TextWrapping="Wrap"
+                                       Text="Günde en fazla bir kez GitHub'a bağlanıp en son sürüm numarasını sorar. Hiçbir şey indirmez ya da kurmaz, kişisel bilgi göndermez. Kapatırsan hiç bağlanmaz." />
+                        </StackPanel>
+                        <ui:ToggleSwitch Grid.Column="1" VerticalAlignment="Center" IsChecked="{Binding CheckUpdates}" />
+                    </Grid>
+                    <Border Style="{StaticResource PulseHairline}" Margin="0,10,0,10" />
+                    <DockPanel>
+                        <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+                            <Button Content="Şimdi denetle" Style="{StaticResource PulseGhostButton}" Command="{Binding CheckUpdateNowCommand}" Margin="0,0,8,0" />
+                            <Button Content="Sürüm sayfasını aç" Style="{StaticResource PulseGhostButton}" Command="{Binding OpenReleasePageCommand}" />
+                        </StackPanel>
+                        <TextBlock Text="{Binding UpdateStatus}" Style="{StaticResource PulseMuted}" VerticalAlignment="Center" TextWrapping="Wrap" Margin="0,0,12,0" />
+                    </DockPanel>
+                </StackPanel>
+            </Border>
             <Border Style="{StaticResource PulseHairline}" Margin="0,22,0,10" />
             <TextBlock Style="{StaticResource PulseMuted}" Text="{Binding VersionText}" />
             <TextBlock Style="{StaticResource PulseMuted}" Margin="0,2,0,0" TextWrapping="Wrap"
