@@ -141,11 +141,15 @@ public sealed class ModeEngine : IDisposable
         yield return Verify("Pilde de aynı (ek hız)", mode.Boost, Powercfg.GetDc(active, Powercfg.SubProcessor, Powercfg.BoostMode), v => v == 0 ? "kapalı" : "açık");
     }
 
+    /// <summary>İstenen hızı çözer: MaxHz ise ekranın desteklediği en yüksek; liste boşsa MaxHz (belirlenemedi) döner.</summary>
+    public static int ResolveRefreshTarget(int requestedHz, IReadOnlyList<int> supported) =>
+        requestedHz == Modes.MaxHz && supported.Count > 0 ? supported.Max() : requestedHz;
+
     private static StepResult ApplyRefresh(ModeDefinition mode)
     {
         const string name = "Ekran yenileme hızı";
         var supported = DisplayService.SupportedRefreshRates();
-        var target = mode.RefreshHz == Modes.MaxHz && supported.Count > 0 ? supported.Max() : mode.RefreshHz;
+        var target = ResolveRefreshTarget(mode.RefreshHz, supported);
         if (target == Modes.MaxHz)
             return new(name, StepStatus.Skipped, "Ekranın desteklediği yenileme hızları okunamadı.");
         if (supported.Count > 0 && !supported.Contains(target))

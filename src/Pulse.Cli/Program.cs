@@ -270,6 +270,24 @@ if (cmd == "hotkey-test")
     return fails == 0 ? 0 : 1;
 }
 
+if (cmd == "refresh-test")
+{
+    // Yenileme hızı seçimi: sahte ekran listeleriyle (donanıma dokunmaz). 180 Hz'lik ekran dahil.
+    var fails = 0;
+    void Check(bool ok, string what) { Console.WriteLine($"  [{(ok ? "GEÇTİ" : "KALDI")}] {what}"); if (!ok) fails++; }
+    int R(int req, params int[] supported) => Pulse.Core.Modes.ModeEngine.ResolveRefreshTarget(req, supported);
+    const int Max = Pulse.Core.Modes.Modes.MaxHz;
+    Check(R(Max, 60, 144, 180) == 180, "180 Hz'lik ekranda 'en yüksek' = 180");
+    Check(R(Max, 60, 100, 144) == 144, "144 Hz'lik ekranda 'en yüksek' = 144");
+    Check(R(Max, 60) == 60, "Yalnız 60 Hz'lik ekranda 'en yüksek' = 60");
+    Check(R(Max) == Max, "Liste okunamazsa belirlenemedi (atlanır)");
+    Check(R(60, 60, 144, 180) == 60, "Açık 60 Hz isteği olduğu gibi kalır");
+    Check(Pulse.Core.Modes.Modes.Get("oyun")!.RefreshHz == Max && Pulse.Core.Modes.Modes.Get("gunluk")!.RefreshHz == Max, "Oyun ve Günlük modu 'en yüksek' ister");
+    Check(Pulse.Core.Modes.Modes.Get("sessiz")!.RefreshHz == 60 && Pulse.Core.Modes.Modes.Get("bosta")!.RefreshHz == 60, "Sessiz ve Boşta 60 Hz kalır");
+    Console.WriteLine(fails == 0 ? "YENİLEME HIZI TESTİ GEÇTİ" : $"{fails} TEST KALDI");
+    return fails == 0 ? 0 : 1;
+}
+
 if (cmd == "governor-test")
 {
     var fails = 0;

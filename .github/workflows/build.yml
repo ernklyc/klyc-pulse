@@ -18,7 +18,7 @@ jobs:
       - name: Mantık testleri (donanıma dokunmaz)
         shell: pwsh
         run: |
-          $tests = 'guard-test','governor-test','hotkey-test','winget-parse-test','autoclean-test','cleanup-test','uninstall-parse-test'
+          $tests = 'guard-test','governor-test','hotkey-test','refresh-test','winget-parse-test','autoclean-test','cleanup-test','uninstall-parse-test'
           $failed = @()
           foreach ($t in $tests) {
             dotnet run --project src/Pulse.Cli -c Release --no-build -- $t
