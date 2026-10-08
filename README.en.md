@@ -38,7 +38,7 @@ Design principle: **apply → read back → verify.** Values that cannot be read
 | Page | What it does |
 |---|---|
 | **Home** | 4 modes: **Game, Daily, Quiet, Idle**. One click applies the ASUS profile, CPU boost, max state, energy preference (AC and battery), refresh rate, brightness and GPU clock cap, verifying each step. Live temperature/load card. **Boost**: temp-file cleanup + memory trim + before/after report. |
-| **Games** | Switches mode automatically when a game starts and restores it on exit. Per-game profiles, GPU preference (use the NVIDIA GPU), process priority. Checks and fixes Windows game settings (HAGS, Game Mode, game capture). **Game report:** during a game it records temperatures, CPU clock, GPU throttling, memory and FPS, then explains in plain language what caused stutter and what limits the game, and suggests a per-game CPU frequency cap when it makes sense (compared against the next session). |
+| **Games** | Switches mode automatically when a game starts and restores it on exit. Per-game profiles, GPU preference (use the NVIDIA GPU), process priority. Checks and fixes Windows game settings (HAGS, Game Mode, game capture). **Game report:** during a game it records temperatures, CPU clock, GPU throttling, memory and FPS, then explains in plain language what caused stutter and what limits the game, and tunes a per-game CPU frequency cap by itself when it makes sense (compared against the next session; reverted and locked if FPS drops noticeably). |
 | **Cleanup** | Finds and removes harmless temporary files; risky ones wait 7 days in quarantine. Browser, Steam, Epic, Discord and NVIDIA installer leftovers. **Duplicate files:** finds identical large files, keeps the oldest of each group, sends extras to the Recycle Bin after your confirmation. **Old leftovers:** conservatively finds AppData/ProgramData folders left by apps uninstalled long ago (installed apps, games, system folders and recently used folders are never shown); nothing is deleted automatically, selected folders go to the Recycle Bin. Disk analysis and restore points. Never deletes without confirmation. |
 | **Processes** | Groups programs with CPU/memory, close, priority, **Eco mode** (EcoQoS). Windows, security and anti-cheat processes are protected. |
 | **Apps** | winget updates, uninstall (leftovers go to the Recycle Bin), startup items, background services and scheduled tasks. |
@@ -62,8 +62,8 @@ Get one of two files from the **[Releases](https://github.com/ernklyc/klyc-pulse
 
 | File | Size | When |
 |---|---|---|
-| `KLYC-Pulse-v1.1.0-win-x64.zip` | ~11 MB (zip) | If the [.NET 8 Desktop Runtime](https://dotnet.microsoft.com/download/dotnet/8.0) is installed |
-| `KLYC-Pulse-v1.1.0-win-x64-self-contained.zip` | ~68 MB (zip) | If you don't want to install anything (runtime included) |
+| `KLYC-Pulse-v1.2.0-win-x64.zip` | ~11 MB (zip) | If the [.NET 8 Desktop Runtime](https://dotnet.microsoft.com/download/dotnet/8.0) is installed |
+| `KLYC-Pulse-v1.2.0-win-x64-self-contained.zip` | ~68 MB (zip) | If you don't want to install anything (runtime included) |
 
 1. Unzip and put `KLYC-Pulse.exe` in any folder (e.g. `C:\Programs\KLYC-Pulse`).
 2. Double-click; it asks for **administrator rights** (needed for sensors, GPU and service settings).
@@ -72,7 +72,7 @@ Get one of two files from the **[Releases](https://github.com/ernklyc/klyc-pulse
 > **Windows SmartScreen / antivirus warning:** the app is not code-signed yet, so an "Unknown publisher" warning may appear. Compare the SHA-256 hash with `SHA256SUMS.txt` on the release page, or build from source yourself.
 
 ```powershell
-Get-FileHash .\KLYC-Pulse-v1.1.0-win-x64.zip -Algorithm SHA256
+Get-FileHash .\KLYC-Pulse-v1.2.0-win-x64.zip -Algorithm SHA256
 ```
 
 ## First use

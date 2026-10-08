@@ -31,6 +31,20 @@
                     </StackPanel>
                 </Grid>
             </Border>
+            <Border Style="{StaticResource PulseCard}" Padding="16,12" Margin="0,8,0,0">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <StackPanel Margin="0,0,20,0">
+                        <TextBlock Style="{StaticResource PulseBody}" FontWeight="Medium" Text="Oyunlara göre kendini ayarla" />
+                        <TextBlock Style="{StaticResource PulseMuted}" TextWrapping="Wrap"
+                                   Text="Her oyunu oynadıkça Pulse raporu inceler: işlemci çok ısınıyor ve oyunu ekran kartı sınırlıyorsa işlemci hızını bir kademe düşürmeyi dener, sonraki oyunda FPS ve ısıyı ölçer. FPS belirgin düşerse geri alır ve o oyun için kilitler. Sen hiçbir şey yapmadan öğrenir." />
+                    </StackPanel>
+                    <ui:ToggleSwitch Grid.Column="1" VerticalAlignment="Center" IsChecked="{Binding AutoTuneGames}" />
+                </Grid>
+            </Border>
 
             <!-- Son oyun raporu -->
             <TextBlock Style="{StaticResource PulseLabel}" Text="SON OYUN RAPORU" Margin="0,16,0,8" />
@@ -104,10 +118,12 @@
                                 <Grid.RowDefinitions>
                                     <RowDefinition Height="Auto" />
                                     <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
                                 </Grid.RowDefinitions>
                                 <Grid>
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
                                         <ColumnDefinition Width="Auto" />
                                         <ColumnDefinition Width="Auto" />
                                     </Grid.ColumnDefinitions>
@@ -122,13 +138,19 @@
                                         </StackPanel>
                                     </StackPanel>
                                     <StackPanel Grid.Column="1" Margin="0,0,14,0" VerticalAlignment="Center">
+                                        <TextBlock Style="{StaticResource PulseLabel}" Text="OTOMATİK AYAR" Margin="0,0,0,3" />
+                                        <ui:ToggleSwitch IsChecked="{Binding AutoTune}" />
+                                    </StackPanel>
+                                    <StackPanel Grid.Column="2" Margin="0,0,14,0" VerticalAlignment="Center">
                                         <TextBlock Style="{StaticResource PulseLabel}" Text="AÇIK" Margin="0,0,0,3" />
                                         <ui:ToggleSwitch IsChecked="{Binding Enabled}" />
                                     </StackPanel>
-                                    <Button Grid.Column="2" Content="Kaldır" Style="{StaticResource PulseGhostButton}" VerticalAlignment="Center"
+                                    <Button Grid.Column="3" Content="Kaldır" Style="{StaticResource PulseGhostButton}" VerticalAlignment="Center"
                                             Command="{Binding DataContext.RemoveGameCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
                                             CommandParameter="{Binding}" />
                                 </Grid>
+                                <TextBlock Grid.Row="2" Text="{Binding AutoTuneNote}" Style="{StaticResource PulseMuted}" TextWrapping="Wrap" Margin="0,8,0,0"
+                                           Visibility="{Binding AutoTuneNote, Converter={StaticResource StringToVis}}" />
                                 <Grid Grid.Row="1" Margin="0,10,0,0">
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="*" />

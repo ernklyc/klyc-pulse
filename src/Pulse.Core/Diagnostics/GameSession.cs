@@ -27,6 +27,9 @@ public sealed class GameSessionReport
     /// <summary>Raporun önerdiği işlemci hızı sınırı (MHz); öneri yoksa null.</summary>
     public int? SuggestedCpuCapMhz { get; init; }
 
+    /// <summary>Otomatik ayar bu oturumdan sonra işlemci sınırını değiştirdi mi?</summary>
+    public bool AutoTuneChanged { get; set; }
+
     /// <summary>"gpu" | "cpu" | "other" | "unknown": oyunu en çok neyin sınırladığı.</summary>
     public string Bottleneck { get; init; } = "unknown";
 
@@ -64,7 +67,7 @@ public sealed class GameSessionRecorder
     }
 
     /// <summary>Yeterli veri yoksa (varsayılan 90 sn'den kısa) null döner.</summary>
-    public GameSessionReport? Build(double baseMhz, int minSamples = 90, int? displayHz = null, int? cpuCapMhz = null, GameSessionReport? previous = null)
+    public GameSessionReport? Build(double baseMhz, int minSamples = 90, int? displayHz = null, int? cpuCapMhz = null, GameSessionReport? previous = null, bool suggestCap = true)
     {
         if (_samples.Count < minSamples) return null;
         var n = _samples.Count;
@@ -167,7 +170,7 @@ public sealed class GameSessionRecorder
         // 5c) Isı yüksekse işlemci hızı sınırı önerisi: yalnızca oyunu ekran kartı/kare sınırı belirliyorsa FPS'i az etkiler
         int? suggestedCap = null;
         var veryHot = above90 >= 40 || above95 >= 10;
-        if (veryHot && cpuCapMhz is null)
+        if (veryHot && cpuCapMhz is null && suggestCap)
         {
             if (bottleneck is "gpu" or "other")
             {

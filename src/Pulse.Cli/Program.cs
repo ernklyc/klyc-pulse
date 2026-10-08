@@ -660,6 +660,98 @@ if (cmd == "fps-test")
     return 0;
 }
 
+if (cmd == "detect-test")
+{
+    // Elle eklenen oyunlar klasör kuralına uymasa da algılanır mı? (sahte oyun, 450 MB bellek tutar)
+    var fails = 0;
+    void Check(bool ok, string what) { Console.WriteLine($"  [{(ok ? "GEÇTİ" : "KALDI")}] {what}"); if (!ok) fails++; }
+    var dir = Path.Combine(Path.GetTempPath(), "pulse-detecttest", "Custom");
+    Directory.CreateDirectory(dir);
+    var fake = Path.Combine(dir, "CustomGame.exe");
+    foreach (var f in Directory.GetFiles(AppContext.BaseDirectory)) File.Copy(f, Path.Combine(dir, Path.GetFileName(f)), true);
+    File.Move(Path.Combine(dir, "pulse-cli.exe"), fake, true);
+    var game = System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(fake, "fake-game") { UseShellExecute = false, CreateNoWindow = true })!;
+    try
+    {
+        await Task.Delay(3000);
+        Check(Pulse.Core.Automation.GameDetector.FindRunningGameInfo()?.Name != "CustomGame", "Tanıtılmamış, kütüphane klasörü dışındaki program oyun sayılmaz");
+        var known = Pulse.Core.Automation.GameDetector.FindRunningGameInfo((path, name) => string.Equals(path, fake, StringComparison.OrdinalIgnoreCase));
+        Check(known?.Name == "CustomGame", $"Yolu profilde kayıtlı oyun algılanır ({known?.Name})");
+        var byName = Pulse.Core.Automation.GameDetector.FindRunningGameInfo((path, name) => name == "customgame");
+        Check(byName?.Name == "CustomGame", "Adı profilde kayıtlı oyun algılanır");
+        var other = Pulse.Core.Automation.GameDetector.FindRunningGameInfo((path, name) => name == "baskaoyun");
+        Check(other?.Name != "CustomGame", "Başka ada kayıtlı profil bu programı oyun yapmaz");
+    }
+    finally { try { game.Kill(true); } catch { } await Task.Delay(800); try { Directory.Delete(Path.Combine(Path.GetTempPath(), "pulse-detecttest"), true); } catch { } }
+    Console.WriteLine(fails == 0 ? "OYUN ALGILAMA TESTİ GEÇTİ" : $"{fails} TEST KALDI");
+    return fails == 0 ? 0 : 1;
+}
+if (cmd == "autotune-test")
+{
+    // Kendi kendine ayar: sahte oturum raporlarıyla karar mantığı (donanıma dokunmaz).
+    var fails = 0;
+    void Check(bool ok, string what) { Console.WriteLine($"  [{(ok ? "GEÇTİ" : "KALDI")}] {what}"); if (!ok) fails++; }
+    Pulse.Core.Diagnostics.GameSessionReport R(string bottleneck, int above90, int above95, double? fps, double? gpu, double temp, int? cap, double minutes = 30, string game = "FC25") => new()
+    {
+        Game = game, Start = DateTime.Now, Minutes = minutes, Bottleneck = bottleneck, CpuAbove90Percent = above90, CpuAbove95Percent = above95,
+        AvgFps = fps, GpuUtilAvg = gpu, CpuTempAvg = temp, CpuCapMhz = cap,
+    };
+    Pulse.Core.Automation.TuneDecision D(int? cap, bool locked, Pulse.Core.Diagnostics.GameSessionReport cur, Pulse.Core.Diagnostics.GameSessionReport? prev = null) =>
+        Pulse.Core.Automation.GameAutoTuner.Decide(cap, locked, cur, prev);
+
+    // 1) İlk oturum: sıcak + ekran kartı sınırlıyor -> 3500
+    var s1 = R("gpu", 88, 40, 60, 97, 93, null);
+    var d1 = D(null, false, s1);
+    Check(d1.Changed && d1.CapMhz == 3500 && !d1.Locked, $"İlk sıcak oturum (ekran kartı sınırlıyor): 3500 MHz denenir ({d1.CapMhz})");
+
+    // 2) İkinci oturum: sınır işe yaradı (ısı düştü, FPS neredeyse aynı) ama hâlâ sıcak -> 3200
+    var s2 = R("gpu", 45, 5, 58, 96, 88, 3500);
+    var d2 = D(3500, false, s2, s1);
+    Check(d2.Changed && d2.CapMhz == 3200 && !d2.Locked, $"Zararsız ama hâlâ sıcak: bir kademe daha, 3200 ({d2.CapMhz})");
+
+    // 3) Üçüncü oturum: ısı normale döndü -> kilitle, değiştirme
+    var s3 = R("gpu", 5, 0, 57, 96, 80, 3200);
+    var d3 = D(3200, false, s3, s2);
+    Check(!d3.Changed && d3.Locked && d3.CapMhz == 3200, "Isı normale döndü: ayar kilitlendi, değişmedi");
+    Check(D(3200, true, R("gpu", 90, 50, 57, 96, 95, 3200), s3) is { Changed: false, Locked: true }, "Kilitliyken sıcak olsa da değişmez");
+
+    // 4) FPS belirgin düştü -> geri al ve kilitle
+    var bad = R("gpu", 40, 5, 52, 96, 87, 3500);                   // 60 -> 52 = %13 kayıp
+    var d4 = D(3500, false, bad, s1);
+    Check(d4.Changed && d4.CapMhz is null && d4.Locked, $"FPS %13 düştü: sınırsıza dönüldü ve kilitlendi ({d4.Note})");
+
+    // 5) Sınır sınırda: %5 FPS kaybı zararsız sayılır
+    var ok5 = R("gpu", 40, 5, 57, 96, 88, 3500);                   // 60 -> 57 = %5
+    Check(D(3500, false, ok5, s1) is { Changed: true, CapMhz: 3200 }, "%5 FPS kaybı zararsız: devam edilir");
+
+    // 6) Oyunu işlemci sınırlıyor -> dokunma
+    var cpuBound = R("cpu", 90, 50, 70, 60, 96, null);
+    Check(D(null, false, cpuBound) is { Changed: false, Locked: false } && D(null, false, cpuBound).Note.Contains("işlemci sınırlıyor"), "İşlemciye bağlı oyun: sınırlanmaz, soğutma önerilir");
+
+    // 7) FPS ölçülemiyorsa ekran kartı kullanımına bak
+    var noFpsBefore = R("gpu", 88, 40, null, 97, 93, null);
+    var noFpsHarm = R("gpu", 40, 5, null, 80, 87, 3500);           // ekran kartı 97 -> 80: işlemci darboğaz oldu
+    Check(D(3500, false, noFpsHarm, noFpsBefore) is { Changed: true, CapMhz: null, Locked: true }, "FPS yok, ekran kartı kullanımı 17 puan düştü: geri alınır");
+    var noFpsOk = R("gpu", 40, 5, null, 95, 87, 3500);
+    Check(D(3500, false, noFpsOk, noFpsBefore) is { Changed: true, CapMhz: 3200 }, "FPS yok ama ekran kartı hâlâ dolu: devam");
+    var noData = R("gpu", 40, 5, null, null, 87, 3500);
+    Check(D(3500, false, noData, R("gpu", 88, 40, null, null, 93, null)) is { Changed: false, Locked: true }, "FPS de ekran kartı verisi de yok: daha ileri gidilmez");
+
+    // 8) Kısa oturum, ısı normal, elle sınır, en düşük kademe
+    Check(D(null, false, R("gpu", 95, 60, 60, 97, 97, null, minutes: 3)) is { Changed: false }, "3 dakikalık oturumda karar verilmez");
+    Check(D(null, false, R("gpu", 3, 0, 120, 70, 70, null)) is { Changed: false, Locked: false }, "Isı normal: ayar gerekmedi");
+    Check(D(3400, false, R("gpu", 90, 50, 60, 97, 95, 3400)) is { Changed: false }, "Elle yazılmış 3400 MHz'e otomatik ayar dokunmaz");
+    var floor = D(3000, false, R("gpu", 80, 30, 58, 96, 92, 3000), R("gpu", 85, 35, 60, 96, 93, 3200));
+    Check(!floor.Changed && floor.Locked && floor.Note.Contains("donanım soğutması"), "En düşük kademede hâlâ sıcak: donanım soğutması önerilir ve kilitlenir");
+
+    // 9) Başka oyunun geçmişi karıştırılmaz
+    var other = R("gpu", 88, 40, 60, 97, 93, null, game: "BaskaOyun");
+    Check(D(3500, false, R("gpu", 45, 5, 40, 96, 88, 3500), other) is { CapMhz: 3200 }, "Başka oyunun oturumu etkiyi ölçmek için kullanılmaz (ilk oturum gibi davranır)");
+
+    Console.WriteLine(fails == 0 ? "OTOMATİK AYAR TESTİ GEÇTİ" : $"{fails} TEST KALDI");
+    return fails == 0 ? 0 : 1;
+}
+
 if (cmd == "dup-scan")
 {
     // Gerçek klasörlerde salt-okunur kopya taraması (hiçbir şeyi silmez).

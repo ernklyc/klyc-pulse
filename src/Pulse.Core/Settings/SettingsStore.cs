@@ -8,6 +8,8 @@ public sealed class AppSettings
 {
     public bool ChangeBrightness { get; set; } = true;
     public bool AutoGameMode { get; set; } = false;
+    /// <summary>Oyunlara göre kendini ayarla: oyun raporlarına bakıp işlemci hız sınırını dener, ölçer, zararlıysa geri alır.</summary>
+    public bool AutoTuneGames { get; set; } = true;
     public bool AutoQuietOnBattery { get; set; } = false;
     public bool CloseConflictingApps { get; set; } = false;
     public bool MinimizeToTray { get; set; } = true;
@@ -63,6 +65,9 @@ public sealed class GameProfile
     public string? ExePath { get; set; }                // oyunun tam yolu (biliniyorsa); ekran kartı tercihi için
     public bool HighPriority { get; set; } = true;      // oyun açılınca süreç önceliği "Yüksek"
     public int? CpuMaxMhz { get; set; }                 // oyun açıkken işlemcinin en yüksek hızı (MHz); null = sınırsız
+    public bool AutoTune { get; set; } = true;          // bu oyun için kendi kendine ayar (raporlara bakıp işlemci sınırını dener/geri alır)
+    public bool AutoTuneLocked { get; set; }            // ayar öğrenildi: artık değiştirilmez
+    public string? AutoTuneNote { get; set; }           // son otomatik kararın açıklaması
 }
 
 public sealed class SettingsStore

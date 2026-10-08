@@ -23,6 +23,8 @@ public partial class GameProfileVm : ObservableObject
         _modeKey = profile.ModeKey;
         // Eski sürümde kaydedilen 144 de "ekranın en yükseği" sayılır (sabit 144 artık yok).
         _cpuCapIndex = Math.Max(0, Array.IndexOf(CpuCaps, profile.CpuMaxMhz));
+        _autoTune = profile.AutoTune;
+        _autoTuneNote = profile.AutoTuneNote ?? "";
         _refreshIndex = profile.RefreshHz switch { 60 => 1, Core.Modes.Modes.MaxHz or 144 => 2, _ => 0 };
         _enabled = profile.Enabled;
         _loading = false;
@@ -53,12 +55,31 @@ public partial class GameProfileVm : ObservableObject
     [ObservableProperty] private string _modeKey;
     [ObservableProperty] private int _refreshIndex;
     [ObservableProperty] private int _cpuCapIndex;
+    [ObservableProperty] private bool _autoTune;
+    [ObservableProperty] private string _autoTuneNote = "";
+
+    /// <summary>Raporlardan sonra otomatik ayar sınırı/notu değiştirdiyse kartı yeniler.</summary>
+    public void SyncAuto()
+    {
+        _loading = true;
+        CpuCapIndex = Math.Max(0, Array.IndexOf(CpuCaps, _profile.CpuMaxMhz));
+        AutoTuneNote = _profile.AutoTuneNote ?? "";
+        _loading = false;
+    }
     [ObservableProperty] private bool _enabled;
 
     partial void OnModeKeyChanged(string value) => Apply(p => p.ModeKey = value);
     partial void OnRefreshIndexChanged(int value) => Apply(p => p.RefreshHz = value switch { 1 => 60, 2 => Core.Modes.Modes.MaxHz, _ => null });
     partial void OnEnabledChanged(bool value) => Apply(p => p.Enabled = value);
-    partial void OnCpuCapIndexChanged(int value) => Apply(p => p.CpuMaxMhz = CpuCaps[Math.Clamp(value, 0, CpuCaps.Length - 1)]);
+    // Elle seçilen sınıra otomatik ayar dokunmaz (Otomatik ayarı kapatıp açınca yeniden öğrenir).
+    partial void OnCpuCapIndexChanged(int value) => Apply(p =>
+    {
+        p.CpuMaxMhz = CpuCaps[Math.Clamp(value, 0, CpuCaps.Length - 1)];
+        p.AutoTuneLocked = true;
+        p.AutoTuneNote = "Elle seçildi; otomatik ayar dokunmuyor. Otomatik ayarı kapatıp açarsan yeniden öğrenir.";
+        AutoTuneNote = p.AutoTuneNote;
+    });
+    partial void OnAutoTuneChanged(bool value) => Apply(p => { p.AutoTune = value; if (value) p.AutoTuneLocked = false; });
 
     private void Apply(Action<GameProfile> change)
     {
@@ -99,7 +120,8 @@ public partial class GamesViewModel : ObservableObject, IDisposable
         AutoGameMode = _store.Current.AutoGameMode;
         Reload();
         LoadGameSettings();
-        _timer.Tick += (_, _) => { Reload(); GameText = Detected(); foreach (var g in Games) g.RefreshGpu(); };
+        AutoTuneGames = _store.Current.AutoTuneGames;
+        _timer.Tick += (_, _) => { Reload(); GameText = Detected(); foreach (var g in Games) { g.RefreshGpu(); g.SyncAuto(); } };
         _timer.Start();
         GameText = Detected();
         ShowReport(AppServices.GameReport.Last);
@@ -180,6 +202,12 @@ public partial class GamesViewModel : ObservableObject, IDisposable
     }
 
     [ObservableProperty] private bool _autoGameMode;
+    [ObservableProperty] private bool _autoTuneGames;
+    partial void OnAutoTuneGamesChanged(bool value)
+    {
+        _store.Current.AutoTuneGames = value;
+        _store.Save();
+    }
     [ObservableProperty] private string _gameText = "";
     [ObservableProperty] private bool _isEmpty;
 

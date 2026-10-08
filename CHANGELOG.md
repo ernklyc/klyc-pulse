@@ -2,6 +2,12 @@
 
 Biçim [Keep a Changelog](https://keepachangelog.com/tr/) esaslıdır; sürümleme [SemVer](https://semver.org/lang/tr/).
 
+## [1.2.0] — 2026-10-08
+
+### Eklenenler
+- **Akıllı oyun ayarı (oyuna göre kendini ayarlama):** Her oyun oturumundan sonra rapor incelenir. İşlemci çok ısınıyor ve oyunu ekran kartı/kare sınırı belirliyorsa işlemci hız sınırı bir kademe düşürülür (3,5 → 3,2 → 3,0 GHz); sonraki oturumda ısı ve FPS önceki oturumla karşılaştırılır. FPS %7'den fazla düşerse (FPS ölçülemiyorsa ekran kartı kullanımı 8 puan düşerse) ayar geri alınır ve o oyun için kilitlenir; yararlıysa ve ısı hâlâ yüksekse bir kademe daha iner; ısı normale dönünce kilitlenir. Oyunu işlemci sınırlıyorsa dokunmaz. 8 dakikadan kısa oturumlarda karar vermez. Elle seçilen sınıra dokunmaz. Genel ve oyun başına kapatılabilir.
+- Oyun algılama genişledi: elle eklenen (ya da önceden öğrenilen) oyunlar klasör kuralına uymasa da algılanır; `\Games\`, `\SteamLibrary\`, `\Battle.net\Games\`, `\Blizzard\` klasörleri eklendi.
+
 ## [1.1.0] — 2026-10-08
 
 ### Eklenenler

@@ -98,7 +98,8 @@ public partial class App : Application
         AppServices.Auto.GameStarted += game => AppServices.GameReport.Start(game);
         AppServices.Auto.GameStopped += _ => AppServices.GameReport.Stop();
         AppServices.GameReport.Ready += r => Dispatcher.Invoke(() =>
-            NoticeChip.Show(r.Severity == 0 ? "Oyun raporu hazır: sorun görülmedi (Oyunlar sayfası)." : "Oyun raporu hazır: dikkat edilecek şeyler var (Oyunlar sayfası).", r.Severity > 0));
+            NoticeChip.Show(r.AutoTuneChanged ? "Oyun raporu hazır. Otomatik ayar bu oyun için işlemci sınırını güncelledi (Oyunlar sayfası)."
+                : r.Severity == 0 ? "Oyun raporu hazır: sorun görülmedi (Oyunlar sayfası)." : "Oyun raporu hazır: dikkat edilecek şeyler var (Oyunlar sayfası).", r.Severity > 0 && !r.AutoTuneChanged));
         AppServices.Companion.Start();
         AppServices.Keeper.Notice += text => Dispatcher.Invoke(() => _tray?.ShowBalloonTip(4000, "KLYC-Pulse", text, System.Windows.Forms.ToolTipIcon.Info));
         _ = Task.Run(async () => { await Task.Delay(4000); await AppServices.Modes.ReapplyGpuAsync(); });

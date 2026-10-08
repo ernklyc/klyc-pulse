@@ -52,8 +52,24 @@ public sealed class GameReportService : IDisposable
             var previous = GameReportStore.LastFor(rec.Game);
             var hz = Pulse.Core.Platform.DisplayService.GetRefreshRate();
             var cap = AppServices.Modes.ActiveDefinition?.CpuMaxMhz;
-            var report = rec.Build(AppServices.Sensors.BaseMhz, displayHz: hz, cpuCapMhz: cap, previous: previous);
+            var settings = AppServices.Settings;
+            var profile = settings.FindProfile(rec.Game);
+            var auto = settings.Current.AutoTuneGames && profile is { AutoTune: true, Enabled: true };
+            var report = rec.Build(AppServices.Sensors.BaseMhz, displayHz: hz, cpuCapMhz: cap, previous: previous, suggestCap: !auto);
             if (report is null) { Journal.Write($"Oyun raporu: oturum çok kısa ({rec.Count} sn), rapor yok."); return; }
+
+            // Kendi kendine ayar: raporu inceleyip işlemci sınırını dener / geri alır
+            if (auto && profile is not null)
+            {
+                var d = Pulse.Core.Automation.GameAutoTuner.Decide(profile.CpuMaxMhz, profile.AutoTuneLocked, report, previous);
+                profile.AutoTuneNote = d.Note;
+                profile.AutoTuneLocked = d.Locked;
+                if (d.Changed) { profile.CpuMaxMhz = d.CapMhz; report.AutoTuneChanged = true; }
+                settings.Save();
+                report.Findings.Add("Otomatik ayar: " + d.Note);
+                Journal.Write($"Otomatik ayar ({rec.Game}): {(d.Changed ? "değişti → " + Pulse.Core.Automation.GameAutoTuner.Describe(d.CapMhz) : "değişmedi")}; {d.Note}");
+            }
+
             Last = report;
             GameReportStore.Save(report);
             Journal.Write($"Oyun raporu: {report.Title}");

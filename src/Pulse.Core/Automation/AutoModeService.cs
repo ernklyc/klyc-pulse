@@ -49,7 +49,7 @@ public sealed class AutoModeService : IDisposable
         var s = _settings.Current;
 
         // Oyun algılama her zaman çalışır (listeyi öğrenmek için); mod geçişi yalnızca ayar açıksa.
-        var game = GameDetector.FindRunningGameInfo();
+        var game = GameDetector.FindRunningGameInfo(IsKnownProfile);
         var previous = DetectedGame;
         DetectedGame = game?.Name;
         try
@@ -105,6 +105,12 @@ public sealed class AutoModeService : IDisposable
             }
         }
     }
+
+    /// <summary>Elle eklenmiş (ya da daha önce öğrenilmiş) bir oyun profiliyle eşleşiyor mu?</summary>
+    private bool IsKnownProfile(string path, string fileLower) =>
+        _settings.Current.GameProfiles.Any(p => p.Enabled &&
+            (!string.IsNullOrEmpty(p.ExePath) && string.Equals(p.ExePath, path, StringComparison.OrdinalIgnoreCase)
+             || string.IsNullOrEmpty(p.ExePath) && string.Equals(p.ExeName, fileLower, StringComparison.OrdinalIgnoreCase)));
 
     private readonly HashSet<string> _gpuDone = new(StringComparer.OrdinalIgnoreCase);
     private readonly HashSet<int> _priorityDone = new();

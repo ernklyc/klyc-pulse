@@ -11,6 +11,7 @@ public static class GameDetector
     [
         @"\steamapps\common\", @"\Epic Games\", @"\Riot Games\", @"\EA Games\", @"\Origin Games\",
         @"\Ubisoft Game Launcher\games\", @"\GOG Galaxy\Games\", @"\GOG Games\", @"\XboxGames\", @"\Rockstar Games\",
+        @"\Games\", @"\SteamLibrary\", @"\Battle.net\Games\", @"\Blizzard\",
     ];
 
     // Oyun klasöründe olup oyun olmayanlar (yükleyici, hata raporlayıcı, anti-cheat, başlatıcı)
@@ -24,7 +25,8 @@ public static class GameDetector
 
     public static string? FindRunningGame() => FindRunningGameInfo()?.Name;
 
-    public static DetectedGame? FindRunningGameInfo()
+    /// <param name="isKnownGame">Kullanıcının elle eklediği oyunları tanımak için: (tam yol, küçük harfli ad) → bilinen oyun mu? Klasör kuralına uymasa da algılanır.</param>
+    public static DetectedGame? FindRunningGameInfo(Func<string, string, bool>? isKnownGame = null)
     {
         foreach (var p in Process.GetProcesses())
         {
@@ -32,8 +34,9 @@ public static class GameDetector
             {
                 var path = GetImagePath(p.Id);
                 if (path is null) continue;
-                if (!LibraryMarkers.Any(m => path.Contains(m, StringComparison.OrdinalIgnoreCase))) continue;
                 var file = Path.GetFileNameWithoutExtension(path).ToLowerInvariant();
+                var known = isKnownGame?.Invoke(path, file) == true;      // elle eklenen oyun (pencere/bellek kuralı aşağıda yine uygulanır)
+                if (!known && !LibraryMarkers.Any(m => path.Contains(m, StringComparison.OrdinalIgnoreCase))) continue;
                 if (IgnoreNames.Any(file.Contains)) continue;
                 if (p.MainWindowHandle == IntPtr.Zero && p.WorkingSet64 < 400L * 1024 * 1024) continue; // pencere ya da büyük bellek yoksa oyun değildir
                 return new DetectedGame(Path.GetFileNameWithoutExtension(path), path, p.Id);
