@@ -2,6 +2,19 @@
 
 Biçim [Keep a Changelog](https://keepachangelog.com/tr/) esaslıdır; sürümleme [SemVer](https://semver.org/lang/tr/).
 
+## [1.1.0] — 2026-10-08
+
+### Eklenenler
+- **Oyun raporu:** Oyun boyunca ısı, işlemci hızı, ekran kartı kısılması, bellek ve FPS kaydedilir; oyun kapanınca Oyunlar sayfasında "neden takıldı?" sade dille gösterilir. Oyunu işlemcinin mi ekran kartının mı sınırladığı da söylenir.
+- **Eski kalıntılar:** Daha önce silinmiş uygulamaların AppData/ProgramData'da bıraktığı klasörleri temkinli bulur. Kurulu uygulama, yayıncı, çalışan süreç/servis, Store paketi, Başlat Menüsü, Steam/Epic oyunu, sistem klasörü ve son 90 günde kullanılanlar hiç gösterilmez. Hiçbir şey kendiliğinden silinmez; seçilenler onayla Geri Dönüşüm Kutusu'na gider.
+- **Oyun başına işlemci hızı sınırı:** Oyunlar listesinde her oyuna "İşlemci hızı" seçilir (3,8 / 3,5 / 3,2 / 3,0 GHz). Rapor, ekran kartı oyunu sınırlarken işlemci çok ısındıysa bunu önerir ve tek tıkla uygular; bir sonraki oturumda ısı ve FPS değişimini önceki oturumla karşılaştırır.
+- Rapor, oyun ekranın hızından fazla FPS üretip ısındıysa FPS sınırı önerir; oturum geçmişi (son 20) tutulur.
+- **Kopya dosyalar:** Belgeler, Masaüstü, Resimler, Videolar, Müzik, İndirilenler içinde birebir aynı büyük dosyaları bulur (boyut → kısmi özet → tam özet). Her grupta en eski kopya korunur; seçilen fazlalıklar Geri Dönüşüm Kutusu'na gider. Buluttan indirilmemiş (OneDrive) dosyalara dokunmaz.
+- Yeni temizlik kategorileri: Firefox, Steam, Epic Games Launcher, Discord kod önbelleği, NVIDIA sürücü kurulum artıkları, LiveKernelReports ve kullanıcı hata raporları.
+
+### Değişenler
+- **Sıcaklık sınırı artık frekansla çalışır:** İşlemcinin en yüksek hızını ~300 MHz'lik küçük adımlarla düşürür. Eski yöntem (üst sınır %) Windows'ta turbo'yu tamamen kapatıyordu (bu bilgisayarda ölçüldü: %99'da 4,1 → 2,5 GHz tek adımda); yeni yöntem 3000 MHz sınırında 2995 MHz, 2400 MHz sınırında 2300 MHz ölçüldü. Sınır, mod değişince ve uygulama kapanınca/açılınca temizlenir.
+- Her mod, "frekans sınırı yok"tan başlar.
 ## [1.0.3] — 2026-10-08
 
 ### Değişenler

@@ -64,7 +64,7 @@ public partial class SettingsViewModel : ObservableObject, IDisposable
 
     private static string HeatInfo(int? t) => t is null
         ? "Kapalı. Bilgisayarın fanı yazılımla ayarlanamıyor; bunun yerine bir sıcaklık sınırı koyabilirsin."
-        : $"Sınır {t} °C. İşlemci bu sıcaklığı geçerse yavaşça kısılır, ekran kartı{Math.Max(65, t.Value - 5)}°C'yi geçerse hızı düşürülür. Soğuyunca eski hızına döner.";
+        : $"Sınır {t} °C. İşlemci bu sıcaklığı geçerse en yüksek hızı küçük adımlarla (her seferinde ~300 MHz) düşürülür, ekran kartı {Math.Max(65, t.Value - 5)}°C'yi geçerse hızı kısılır. Soğuyunca eski hızına döner. Ani düşüş olmaz.";
     [ObservableProperty] private string _autoCleanText = "";
     [ObservableProperty] private string _startupMessage = "";
     [ObservableProperty] private string _conflictsText = "";

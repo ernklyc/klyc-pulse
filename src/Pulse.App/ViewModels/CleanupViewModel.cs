@@ -49,10 +49,185 @@ public sealed class FolderVm
     public static string Format(long b) => b >= 1L << 30 ? $"{b / 1073741824.0:N1} GB" : b >= 1L << 20 ? $"{b / 1048576.0:N0} MB" : $"{b / 1024.0:N0} KB";
 }
 
+/// <summary>Eski kalıntı adayı: kullanıcı inceler, seçerse Geri Dönüşüm Kutusu'na gider. Varsayılan: seçili değil.</summary>
+public sealed partial class OrphanVm : ObservableObject
+{
+    public OrphanVm(OrphanFolder f)
+    {
+        Folder = f;
+        Detail = $"{f.Where}  ·  son kullanım {f.LastActivity:dd.MM.yyyy}  ·  {f.Path}";
+        SizeText = FolderVm.Format(f.Bytes);
+    }
+
+    public OrphanFolder Folder { get; }
+    public string Name => Folder.Name;
+    public string Detail { get; }
+    public string SizeText { get; }
+    [ObservableProperty] private bool _isSelected;
+}
+
+public sealed partial class DupFileVm : ObservableObject
+{
+    public DupFileVm(DupFile f, bool keeper)
+    {
+        File = f;
+        IsKeeper = keeper;
+        Path = f.Path;
+        Detail = $"{f.Modified:dd.MM.yyyy}" + (keeper ? "  ·  KORUNUR (asıl kopya)" : "");
+    }
+
+    public DupFile File { get; }
+    public bool IsKeeper { get; }
+    public bool CanSelect => !IsKeeper;
+    public string Path { get; }
+    public string Detail { get; }
+    [ObservableProperty] private bool _isSelected;
+}
+
+public sealed class DupGroupVm
+{
+    public DupGroupVm(DuplicateGroup g)
+    {
+        Group = g;
+        Header = $"{g.Files.Count} aynı dosya  ·  {FolderVm.Format(g.Size)} × {g.Files.Count - 1} fazla = {FolderVm.Format(g.WastedBytes)} boşa";
+        Name = System.IO.Path.GetFileName(g.Keeper.Path);
+        Files = g.Files.Select((f, i) => new DupFileVm(f, i == 0)).ToList();
+    }
+
+    public DuplicateGroup Group { get; }
+    public string Header { get; }
+    public string Name { get; }
+    public List<DupFileVm> Files { get; }
+}
+
 public partial class CleanupViewModel : ObservableObject
 {
     private readonly CleanupEngine _engine = new();
+
+    // ---- Kopya dosyalar ----------------------------------------------------
+    public ObservableCollection<DupGroupVm> DupGroups { get; } = new();
+    [ObservableProperty] private bool _hasDups;
+    [ObservableProperty] private string _dupNote = "Belgeler, Masaüstü, Resimler, Videolar, Müzik ve İndirilenler klasörlerinde birebir aynı büyük dosyaları bulur. Hiçbir şeyi kendiliğinden silmez.";
+
+    [RelayCommand]
+    private async Task FindDuplicates()
+    {
+        if (IsBusy) return;
+        IsBusy = true;
+        Op.Begin("Kopya dosyalar aranıyor…");
+        DupNote = "Aranıyor…";
+        try
+        {
+            var progress = new Progress<string>(m => { Op.Message(m); });
+            var found = await Task.Run(() => DuplicateFinder.Find(DuplicateFinder.DefaultRoots(), progress: progress));
+            DupGroups.Clear();
+            foreach (var g in found) DupGroups.Add(new DupGroupVm(g));
+            HasDups = DupGroups.Count > 0;
+            DupNote = DupGroups.Count == 0
+                ? "Birebir aynı büyük dosya bulunamadı."
+                : $"{DupGroups.Count} grup, fazladan {FolderVm.Format(found.Sum(g => g.WastedBytes))}. Her grupta en eski kopya korunur, silinmez. Hiçbiri seçili değil.";
+        }
+        finally { IsBusy = false; Op.End(); }
+    }
+
+    [RelayCommand]
+    private void SelectDupExtras()
+    {
+        foreach (var g in DupGroups) foreach (var f in g.Files) f.IsSelected = !f.IsKeeper;
+        DupNote = "Her grubun korunan kopyası dışındakiler seçildi. Gözden geçirip gönderebilirsin.";
+    }
+
+    [RelayCommand]
+    private async Task RemoveDuplicates()
+    {
+        if (IsBusy) return;
+        var chosen = DupGroups.SelectMany(g => g.Files.Where(f => f.IsSelected && !f.IsKeeper).Select(f => (g, f))).ToList();
+        if (chosen.Count == 0) { DupNote = "Hiçbir dosya seçili değil."; return; }
+        var total = chosen.Sum(c => c.f.File.Bytes);
+        var ok = System.Windows.MessageBox.Show(
+            $"{chosen.Count} fazlalık kopya ({FolderVm.Format(total)}) Geri Dönüşüm Kutusu'na gönderilecek. Her grubun asıl kopyası yerinde kalır. Kutudan geri alabilirsin. Devam edilsin mi?",
+            "Kopyaları onayla", System.Windows.MessageBoxButton.YesNo, System.Windows.MessageBoxImage.Question);
+        if (ok != System.Windows.MessageBoxResult.Yes) return;
+
+        IsBusy = true;
+        Op.Begin("Geri Dönüşüm Kutusu'na gönderiliyor…", chosen.Count);
+        try
+        {
+            long freed = 0; var done = 0;
+            foreach (var (g, f) in chosen)
+            {
+                Op.Step($"Gönderiliyor: {System.IO.Path.GetFileName(f.Path)}");
+                var sent = await Task.Run(() => DuplicateFinder.Remove(g.Group, f.File));
+                Pulse.Core.Diagnostics.Journal.Write($"Kopya dosya Geri Dönüşüm Kutusu'na {(sent ? "gönderildi" : "gönderilemedi")}: {f.Path}");
+                if (sent) { freed += f.File.Bytes; done++; }
+            }
+            DupNote = $"{done}/{chosen.Count} kopya Geri Dönüşüm Kutusu'na gönderildi ({FolderVm.Format(freed)}). Alan, kutuyu boşaltınca açılır. Listeyi yenilemek için “Kopyaları bul”a bas.";
+        }
+        finally { IsBusy = false; Op.End(); }
+    }
     private readonly QuarantineStore _quarantine = new();
+
+    // ---- Eski kalıntılar ---------------------------------------------------
+    public ObservableCollection<OrphanVm> Orphans { get; } = new();
+    [ObservableProperty] private bool _hasOrphans;
+    [ObservableProperty] private string _orphanNote = "Eskiden silinmiş uygulamaların bıraktığı klasörleri bulur. Hiçbir şeyi kendiliğinden silmez.";
+
+    [RelayCommand]
+    private async Task FindOrphans()
+    {
+        if (IsBusy) return;
+        IsBusy = true;
+        Op.Begin("Eski kalıntılar aranıyor…");
+        OrphanNote = "Aranıyor…";
+        try
+        {
+            var found = await Task.Run(() => OrphanScanner.Scan(Core.Apps.InstalledAppsReader.Read()));
+            Orphans.Clear();
+            foreach (var f in found) Orphans.Add(new OrphanVm(f));
+            HasOrphans = Orphans.Count > 0;
+            OrphanNote = Orphans.Count == 0
+                ? "Kalıntı bulunamadı."
+                : $"{Orphans.Count} aday, toplam {FolderVm.Format(found.Sum(o => o.Bytes))}. Hiçbiri seçili değil; emin olduklarını işaretle. Silinenler Geri Dönüşüm Kutusu'na gider, geri alabilirsin.";
+        }
+        finally { IsBusy = false; Op.End(); }
+    }
+
+    [RelayCommand]
+    private async Task RemoveOrphans()
+    {
+        if (IsBusy) return;
+        var chosen = Orphans.Where(o => o.IsSelected).ToList();
+        if (chosen.Count == 0) { OrphanNote = "Hiçbir klasör seçili değil."; return; }
+
+        var list = string.Join("\n", chosen.Select(o => $"• {o.Name}  ({o.SizeText})"));
+        var ok = System.Windows.MessageBox.Show(
+            $"Şu klasörler Geri Dönüşüm Kutusu'na gönderilecek:\n\n{list}\n\nİçlerinde işine yarayan bir şey (oyun kayıtları, ayarlar) olabilir. Emin değilsen “Hayır” de. Kutudan geri alabilirsin. Devam edilsin mi?",
+            "Kalıntıları onayla", System.Windows.MessageBoxButton.YesNo, System.Windows.MessageBoxImage.Warning);
+        if (ok != System.Windows.MessageBoxResult.Yes) return;
+
+        IsBusy = true;
+        Op.Begin("Geri Dönüşüm Kutusu'na gönderiliyor…", chosen.Count);
+        try
+        {
+            long freed = 0; var done = 0;
+            foreach (var o in chosen)
+            {
+                Op.Step($"Gönderiliyor: {o.Name}");
+                var sent = await Task.Run(() => OrphanScanner.Remove(o.Folder));
+                Pulse.Core.Diagnostics.Journal.Write($"Kalıntı klasör Geri Dönüşüm Kutusu'na {(sent ? "gönderildi" : "gönderilemedi")}: {o.Folder.Path} ({o.SizeText})");
+                if (sent) { freed += o.Folder.Bytes; done++; Orphans.Remove(o); }
+            }
+            HasOrphans = Orphans.Count > 0;
+            OrphanNote = $"{done}/{chosen.Count} klasör Geri Dönüşüm Kutusu'na gönderildi ({FolderVm.Format(freed)}). Alan, kutuyu boşaltınca açılır.";
+        }
+        finally { IsBusy = false; Op.End(); }
+    }
+
+    [RelayCommand]
+    private void OpenOrphan(OrphanVm? o)
+    {
+        if (o is not null) Process.Start(new ProcessStartInfo("explorer.exe", $"\"{o.Folder.Path}\"") { UseShellExecute = true });
+    }
 
     public CleanupViewModel()
     {

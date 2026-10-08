@@ -45,7 +45,8 @@ public static class CleanupCatalog
             {
                 Id = "error-reports", Name = "Hata raporları ve çökme dökümleri",
                 Description = "Windows hata raporları, mini dökümler, kurulum günlükleri. 7 günden eski olanlar.",
-                Roots = [@"C:\ProgramData\Microsoft\Windows\WER", @"C:\Windows\Minidump", @"C:\Windows\Logs\CBS", Path.Combine(Local, "CrashDumps")],
+                Roots = [@"C:\ProgramData\Microsoft\Windows\WER", @"C:\Windows\Minidump", @"C:\Windows\LiveKernelReports", @"C:\Windows\Logs\CBS",
+                         Path.Combine(Local, "CrashDumps"), Path.Combine(Local, "Microsoft", "Windows", "WER")],
                 MinAgeDays = 7, NeedsAdmin = true, AutoSafe = true,
             },
             new()
@@ -111,10 +112,62 @@ public static class CleanupCatalog
             });
         }
 
+        // Firefox: tüm profillerin cache2 klasörü
+        var ffProfiles = Path.Combine(Local, "Mozilla", "Firefox", "Profiles");
+        if (Directory.Exists(ffProfiles))
+        {
+            var roots = Directory.EnumerateDirectories(ffProfiles).Select(p => Path.Combine(p, "cache2")).ToList();
+            if (roots.Count > 0)
+                list.Add(new CleanupCategory
+                {
+                    Id = "browser-firefox", Name = "Firefox önbelleği",
+                    Description = "Firefox sayfa önbelleği. Oturumların, şifrelerin ve yer imlerin silinmez.",
+                    Roots = roots,
+                });
+        }
+
+        // Oyun başlatıcıları: tarayıcı önbelleği, çökme kayıtları, eski günlükler. Oyun dosyalarına ve shader önbelleğine dokunulmaz.
+        var steam = SteamRoots().Where(Directory.Exists).ToList();
+        if (steam.Count > 0)
+        {
+            var roots = new List<string>();
+            foreach (var s in steam) { roots.Add(Path.Combine(s, "htmlcache")); roots.Add(Path.Combine(s, "dumps")); roots.Add(Path.Combine(s, "logs")); }
+            roots.Add(Path.Combine(Local, "Steam", "htmlcache"));
+            list.Add(new CleanupCategory
+            {
+                Id = "app-steam", Name = "Steam önbelleği ve günlükleri",
+                Description = "Steam'in tarayıcı önbelleği, çökme kayıtları ve 7 günden eski günlükleri. Oyunların ve oyun shader önbelleği silinmez.",
+                Roots = roots, MinAgeDays = 7, SelectedByDefault = false,
+            });
+        }
+        var epicSaved = Path.Combine(Local, "EpicGamesLauncher", "Saved");
+        if (Directory.Exists(epicSaved))
+        {
+            var roots = Directory.EnumerateDirectories(epicSaved, "webcache*").ToList();
+            roots.Add(Path.Combine(epicSaved, "Logs"));
+            list.Add(new CleanupCategory
+            {
+                Id = "app-epic", Name = "Epic Games Launcher önbelleği",
+                Description = "Epic'in tarayıcı önbelleği ve günlükleri. Oyunların silinmez.",
+                Roots = roots, MinAgeDays = 2, SelectedByDefault = false,
+            });
+        }
+
+        // NVIDIA sürücü kurulum artıkları: kurulum bitince gerekmez; gerekirse yeniden iner. Yine de silinmeden önce karantinada beklerler.
+        var nvidiaRoots = new[] { @"C:\NVIDIA", @"C:\ProgramData\NVIDIA Corporation\Downloader" }.Where(Directory.Exists).ToList();
+        if (nvidiaRoots.Count > 0)
+            list.Add(new CleanupCategory
+            {
+                Id = "nvidia-installers", Name = "NVIDIA sürücü kurulum artıkları",
+                Description = "Sürücü kurulumundan kalan açılmış kurulum dosyaları. Kurulum bittikten sonra gerekmez. 7 gün karantinada tutulur.",
+                Roots = nvidiaRoots, NeedsAdmin = true, Safety = CleanupSafety.Quarantine, SelectedByDefault = false,
+            });
+
         // Uygulama önbellekleri: yalnızca bilgisayarda gerçekten olanlar
         var apps = new (string Name, string Path)[]
         {
             ("Discord", Path.Combine(Roaming, "discord", "Cache")),
+            ("Discord kod", Path.Combine(Roaming, "discord", "Code Cache")),
             ("Spotify", Path.Combine(Local, "Spotify", "Storage")),
             ("Slack", Path.Combine(Roaming, "Slack", "Cache")),
             ("Microsoft Teams", Path.Combine(Local, "Microsoft", "Teams", "Cache")),
@@ -124,5 +177,19 @@ public static class CleanupCatalog
                 list.Add(new CleanupCategory { Id = $"app-{name.ToLowerInvariant().Replace(' ', '-')}", Name = $"{name} önbelleği", Description = $"{name} geçici verileri.", Roots = [path], SelectedByDefault = false });
 
         return list;
+    }
+
+    /// <summary>Steam kurulum klasörleri (kayıt defterinden ve varsayılan yol).</summary>
+    private static IEnumerable<string> SteamRoots()
+    {
+        var paths = new List<string>();
+        try
+        {
+            using var k = Microsoft.Win32.Registry.CurrentUser.OpenSubKey(@"Software\Valve\Steam");
+            if (k?.GetValue("SteamPath") is string sp && sp.Length > 3) paths.Add(sp.Replace('/', '\\'));
+        }
+        catch { }
+        paths.Add(@"C:\Program Files (x86)\Steam");
+        return paths.Distinct(StringComparer.OrdinalIgnoreCase);
     }
 }

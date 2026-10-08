@@ -92,6 +92,13 @@ public partial class App : Application
         AppServices.Guard.Notice += (text, warn) => Dispatcher.Invoke(() => NoticeChip.Show(text, warn));
         AppServices.Guard.Enabled = AppServices.Settings.Current.ThermalGuard;
         AppServices.Heat.Configure(AppServices.Settings.Current.HeatTarget);
+        // Önceki oturumdan (çökme vb.) kalmış frekans sınırı varsa ve sıcaklık sınırı kapalıysa temizle; sessizce yavaş kalmasın.
+        if (AppServices.Settings.Current.HeatTarget is null) _ = Task.Run(() => HeatTargetService.ClearStaleFrequencyCap());
+        // Oyun raporu: oyun açılınca kayıt başlar, kapanınca küçük bir bilgi yazısı çıkar.
+        AppServices.Auto.GameStarted += game => AppServices.GameReport.Start(game);
+        AppServices.Auto.GameStopped += _ => AppServices.GameReport.Stop();
+        AppServices.GameReport.Ready += r => Dispatcher.Invoke(() =>
+            NoticeChip.Show(r.Severity == 0 ? "Oyun raporu hazır: sorun görülmedi (Oyunlar sayfası)." : "Oyun raporu hazır: dikkat edilecek şeyler var (Oyunlar sayfası).", r.Severity > 0));
         AppServices.Companion.Start();
         AppServices.Keeper.Notice += text => Dispatcher.Invoke(() => _tray?.ShowBalloonTip(4000, "KLYC-Pulse", text, System.Windows.Forms.ToolTipIcon.Info));
         _ = Task.Run(async () => { await Task.Delay(4000); await AppServices.Modes.ReapplyGpuAsync(); });

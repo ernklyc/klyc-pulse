@@ -8,16 +8,19 @@ namespace Pulse.App;
 
 /// <summary>
 /// Sıcaklık sınırı: fan eğrisi bu modelde donanım tarafından kilitli olduğu için aynı sonucu yazılımla sağlar.
-/// İşlemcinin üst sınırını (%100 → %60, 5'er kademe) ve ekran kartının saat sınırını sıcaklığa göre kademeli ayarlar;
+/// İşlemcinin en yüksek frekansını (MHz, ~300 MHz'lik küçük kademeler) ve ekran kartının saat sınırını sıcaklığa göre kademeli ayarlar;
 /// sıcaklık düşünce geri verir. Mod değişince sıfırlanır. Yönetici ve işlemci sıcaklığı sensörü gerekir.
+/// Neden frekans: Windows'ta "üst sınır %"ı 100'ün altına çekmek turbo'yu tamamen kapatır (bu bilgisayarda ölçüldü: 4,1 → 2,5 GHz tek adımda).
+/// Frekans sınırı ise MHz olarak kademeli çalışır (ölçüldü: 3000 sınırı → 2995, 2400 sınırı → 2300 MHz).
 /// </summary>
 public sealed class HeatTargetService : IDisposable
 {
-    private static readonly int[] CpuSteps = [0, 5, 10, 15, 20, 25, 30, 35, 40];       // üst sınırdan düşülecek %
+    /// <summary>Kademe 0 = sınırsız (0), sonra sırayla düşen en yüksek frekanslar (MHz). Son kademe taban hıza yakındır.</summary>
+    public static readonly int[] CpuCapMhz = [0, 3800, 3500, 3200, 2900, 2700, 2500];
     private const int GpuStepMhz = 150;
     private const int GpuMaxLevel = 6;
 
-    private readonly StepGovernor _cpu = new(CpuSteps.Length - 1);
+    private readonly StepGovernor _cpu = new(CpuCapMhz.Length - 1);
     private readonly StepGovernor _gpu = new(GpuMaxLevel);
     private IDisposable? _subscription;
     private int _busy;
@@ -74,16 +77,43 @@ public sealed class HeatTargetService : IDisposable
     {
         var mode = CurrentMode();
         if (mode is null) return;
-        var value = Math.Max(60, mode.MaxState - CpuSteps[Math.Min(level, CpuSteps.Length - 1)]);
+        // Oyun profili zaten bir sınır koyduysa (baseline) sıcaklık sınırı ondan daha gevşek olamaz; kademe 0 = o taban sınır.
+        var baseline = AppServices.Modes.ActiveDefinition?.CpuMaxMhz ?? 0;
+        var ladder = CpuCapMhz[Math.Min(level, CpuCapMhz.Length - 1)];
+        var value = ladder == 0 ? baseline : baseline == 0 ? ladder : Math.Min(baseline, ladder);
         var scheme = Powercfg.ActiveScheme();
         if (scheme is null) return;
-        Powercfg.SetAc(scheme, Powercfg.SubProcessor, Powercfg.MaxProcessorState, value);
-        Powercfg.SetActive(scheme);
-        var read = Powercfg.GetAc(scheme, Powercfg.SubProcessor, Powercfg.MaxProcessorState);
-        Journal.Write($"Sıcaklık sınırı: işlemci {temp:0}°C → üst sınır %{value} (okunan %{read}).");
+        WriteFrequencyCap(scheme, value);
+        var read = Powercfg.GetAc(scheme, Powercfg.SubProcessor, Powercfg.MaxFrequency);
+        var text = value == 0 ? "sınırsız" : $"{value} MHz";
+        Journal.Write($"Sıcaklık sınırı: işlemci {temp:0}°C → en yüksek frekans {text} (okunan {read}).");
         Notice?.Invoke(read == value
-            ? $"Sıcaklık sınırı: işlemci {temp:0}°C, üst sınır %{value}."
-            : $"Sıcaklık sınırı: işlemci üst sınırı %{value} yazıldı ama %{read} okundu.");
+            ? $"Sıcaklık sınırı: işlemci {temp:0}°C, en yüksek frekans {text}."
+            : $"Sıcaklık sınırı: frekans sınırı {text} yazıldı ama {read} okundu.");
+    }
+
+    /// <summary>Açılışta: sıcaklık sınırı kapalıyken kalmış bir frekans sınırı varsa kaldırır (çökme sonrası sessizce yavaş kalmasın).</summary>
+    public static void ClearStaleFrequencyCap()
+    {
+        try
+        {
+            var scheme = Powercfg.ActiveScheme();
+            if (scheme is null) return;
+            var ac = Powercfg.GetAc(scheme, Powercfg.SubProcessor, Powercfg.MaxFrequency);
+            var dc = Powercfg.GetDc(scheme, Powercfg.SubProcessor, Powercfg.MaxFrequency);
+            if (ac is null or 0 && dc is null or 0) return;
+            WriteFrequencyCap(scheme, 0);
+            Journal.Write($"Önceden kalmış işlemci frekans sınırı kaldırıldı (prizde {ac}, pilde {dc} MHz).");
+        }
+        catch (Exception ex) { Journal.Write("Frekans sınırı temizlenemedi: " + ex.Message); }
+    }
+
+    /// <summary>Frekans sınırını (MHz, 0 = yok) prizde ve pilde yazar, planı yeniden etkinleştirir.</summary>
+    private static void WriteFrequencyCap(string scheme, int mhz)
+    {
+        Powercfg.SetAc(scheme, Powercfg.SubProcessor, Powercfg.MaxFrequency, mhz);
+        Powercfg.SetDc(scheme, Powercfg.SubProcessor, Powercfg.MaxFrequency, mhz);
+        Powercfg.SetActive(scheme);
     }
 
     private void ApplyGpu(int level, double? temp)
@@ -115,11 +145,7 @@ public sealed class HeatTargetService : IDisposable
             try
             {
                 var scheme = Powercfg.ActiveScheme();
-                if (scheme is not null)
-                {
-                    Powercfg.SetAc(scheme, Powercfg.SubProcessor, Powercfg.MaxProcessorState, mode.MaxState);
-                    Powercfg.SetActive(scheme);
-                }
+                if (scheme is not null) WriteFrequencyCap(scheme, AppServices.Modes.ActiveDefinition?.CpuMaxMhz ?? 0);
                 if (mode.GpuCapMhz is { } c) GpuClocks.Cap(c); else GpuClocks.Release();
             }
             catch (Exception ex) { Journal.Write("Isı hedefi geri verme hatası: " + ex.Message); }

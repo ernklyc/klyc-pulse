@@ -32,6 +32,30 @@
                 </Grid>
             </Border>
 
+            <!-- Son oyun raporu -->
+            <TextBlock Style="{StaticResource PulseLabel}" Text="SON OYUN RAPORU" Margin="0,16,0,8" />
+            <Border Style="{StaticResource PulseCard}" Padding="16,12">
+                <StackPanel>
+                    <TextBlock Style="{StaticResource PulseMuted}" TextWrapping="Wrap"
+                               Visibility="{Binding NoReport, Converter={StaticResource BoolToVis}}"
+                               Text="Henüz rapor yok. Bir oyunu en az 2 dakika oynayıp kapatınca burada kasma/ısı/bellek durumu sade dille görünür." />
+                    <StackPanel Visibility="{Binding HasReport, Converter={StaticResource BoolToVis}}">
+                        <TextBlock Text="{Binding ReportTitle}" Style="{StaticResource PulseBody}" FontWeight="Medium" Foreground="{Binding ReportBrush}" />
+                        <ItemsControl ItemsSource="{Binding ReportLines}" Margin="0,6,0,0" x:Name="ReportItems">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <TextBlock Text="{Binding}" Style="{StaticResource PulseBody}" TextWrapping="Wrap" Margin="0,0,0,5" />
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                        <Button Content="{Binding SuggestionText}" Style="{StaticResource PulseGhostButton}" Margin="0,4,0,2" HorizontalAlignment="Left"
+                                Visibility="{Binding ShowSuggestion, Converter={StaticResource BoolToVis}}" Command="{Binding ApplySuggestionCommand}" />
+                        <TextBlock Text="{Binding ReportNote}" Style="{StaticResource PulseMuted}" TextWrapping="Wrap" Margin="0,4,0,0"
+                                   Visibility="{Binding ReportNote, Converter={StaticResource StringToVis}}" />
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+
             <TextBlock Style="{StaticResource PulseLabel}" Text="WINDOWS'UN OYUN AYARLARI" Margin="0,16,0,8" />
             <Border Style="{StaticResource PulseCard}" Padding="0">
                 <StackPanel>
@@ -77,39 +101,54 @@
                     <DataTemplate>
                         <Border Style="{StaticResource PulseCard}" Padding="14,12" Margin="0,0,0,8">
                             <Grid>
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*" />
-                                    <ColumnDefinition Width="170" />
-                                    <ColumnDefinition Width="170" />
-                                    <ColumnDefinition Width="Auto" />
-                                    <ColumnDefinition Width="Auto" />
-                                </Grid.ColumnDefinitions>
-                                <StackPanel VerticalAlignment="Center">
-                                    <TextBlock Text="{Binding Name}" FontFamily="{StaticResource DisplayFont}" FontSize="22" Foreground="{StaticResource InkBrush}" />
-                                    <TextBlock Text="{Binding ExeText}" Style="{StaticResource PulseMuted}" />
-                                    <StackPanel Orientation="Horizontal" Margin="0,2,0,0">
-                                        <TextBlock Text="{Binding GpuText}" Style="{StaticResource PulseMuted}" VerticalAlignment="Center" />
-                                        <Button Content="NVIDIA'da çalıştır" Style="{StaticResource PulseGhostButton}" Height="24" Margin="10,0,0,0"
-                                                Visibility="{Binding GpuNeedsFix, Converter={StaticResource BoolToVis}}"
-                                                Command="{Binding DataContext.FixGpuCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}" CommandParameter="{Binding}" />
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                </Grid.RowDefinitions>
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <StackPanel VerticalAlignment="Center" Margin="0,0,12,0">
+                                        <TextBlock Text="{Binding Name}" FontFamily="{StaticResource DisplayFont}" FontSize="22" Foreground="{StaticResource InkBrush}" TextTrimming="CharacterEllipsis" />
+                                        <TextBlock Text="{Binding ExeText}" Style="{StaticResource PulseMuted}" />
+                                        <StackPanel Orientation="Horizontal" Margin="0,2,0,0">
+                                            <TextBlock Text="{Binding GpuText}" Style="{StaticResource PulseMuted}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
+                                            <Button Content="NVIDIA'da çalıştır" Style="{StaticResource PulseGhostButton}" Height="24" Margin="10,0,0,0"
+                                                    Visibility="{Binding GpuNeedsFix, Converter={StaticResource BoolToVis}}"
+                                                    Command="{Binding DataContext.FixGpuCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}" CommandParameter="{Binding}" />
+                                        </StackPanel>
                                     </StackPanel>
-                                </StackPanel>
-                                <StackPanel Grid.Column="1" Margin="0,0,10,0">
-                                    <TextBlock Style="{StaticResource PulseLabel}" Text="MOD" Margin="0,0,0,3" />
-                                    <ComboBox ItemsSource="{x:Static vm:GameProfileVm.Modes}" DisplayMemberPath="Title" SelectedValuePath="Key"
-                                              SelectedValue="{Binding ModeKey, Mode=TwoWay}" />
-                                </StackPanel>
-                                <StackPanel Grid.Column="2" Margin="0,0,14,0">
-                                    <TextBlock Style="{StaticResource PulseLabel}" Text="EKRAN HIZI (HZ)" Margin="0,0,0,3" />
-                                    <ComboBox ItemsSource="{x:Static vm:GameProfileVm.RefreshOptions}" SelectedIndex="{Binding RefreshIndex, Mode=TwoWay}" />
-                                </StackPanel>
-                                <StackPanel Grid.Column="3" Margin="0,0,14,0" VerticalAlignment="Bottom">
-                                    <TextBlock Style="{StaticResource PulseLabel}" Text="AÇIK" Margin="0,0,0,3" />
-                                    <ui:ToggleSwitch IsChecked="{Binding Enabled}" />
-                                </StackPanel>
-                                <Button Grid.Column="4" Content="Kaldır" Style="{StaticResource PulseGhostButton}" VerticalAlignment="Bottom"
-                                        Command="{Binding DataContext.RemoveGameCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
-                                        CommandParameter="{Binding}" />
+                                    <StackPanel Grid.Column="1" Margin="0,0,14,0" VerticalAlignment="Center">
+                                        <TextBlock Style="{StaticResource PulseLabel}" Text="AÇIK" Margin="0,0,0,3" />
+                                        <ui:ToggleSwitch IsChecked="{Binding Enabled}" />
+                                    </StackPanel>
+                                    <Button Grid.Column="2" Content="Kaldır" Style="{StaticResource PulseGhostButton}" VerticalAlignment="Center"
+                                            Command="{Binding DataContext.RemoveGameCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
+                                            CommandParameter="{Binding}" />
+                                </Grid>
+                                <Grid Grid.Row="1" Margin="0,10,0,0">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="*" />
+                                    </Grid.ColumnDefinitions>
+                                    <StackPanel Margin="0,0,10,0">
+                                        <TextBlock Style="{StaticResource PulseLabel}" Text="MOD" Margin="0,0,0,3" />
+                                        <ComboBox HorizontalAlignment="Stretch" ItemsSource="{x:Static vm:GameProfileVm.Modes}" DisplayMemberPath="Title" SelectedValuePath="Key"
+                                                  SelectedValue="{Binding ModeKey, Mode=TwoWay}" />
+                                    </StackPanel>
+                                    <StackPanel Grid.Column="1" Margin="0,0,10,0">
+                                        <TextBlock Style="{StaticResource PulseLabel}" Text="EKRAN HIZI (HZ)" Margin="0,0,0,3" />
+                                        <ComboBox HorizontalAlignment="Stretch" ItemsSource="{x:Static vm:GameProfileVm.RefreshOptions}" SelectedIndex="{Binding RefreshIndex, Mode=TwoWay}" />
+                                    </StackPanel>
+                                    <StackPanel Grid.Column="2">
+                                        <TextBlock Style="{StaticResource PulseLabel}" Text="İŞLEMCİ HIZI" Margin="0,0,0,3" />
+                                        <ComboBox HorizontalAlignment="Stretch" ItemsSource="{x:Static vm:GameProfileVm.CpuCapOptions}" SelectedIndex="{Binding CpuCapIndex, Mode=TwoWay}" />
+                                    </StackPanel>
+                                </Grid>
                             </Grid>
                         </Border>
                     </DataTemplate>

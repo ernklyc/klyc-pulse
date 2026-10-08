@@ -12,6 +12,8 @@ public static class Powercfg
     public const string BoostMode = "be337238-0d82-4146-a960-4f3749d470c7";
     public const string MaxProcessorState = "bc5038f7-23e0-4960-96da-33abaf5935ec";
     public const string EnergyPerformancePref = "36687f9e-e3a5-4dbf-b1dc-15eb381c6863";
+    /// <summary>İşlemci en yüksek frekansı (MHz, 0 = sınırsız). "Üst sınır %"dan farkı: %100'ün altı turbo'yu tamamen kapatabilir, bu ise hızı MHz olarak kademeli sınırlar.</summary>
+    public const string MaxFrequency = "75b0ae3f-bce0-45a7-8c89-c9611c25e100";
     public const string SubVideo = "7516b95f-f776-4464-8c53-06167f40cc99";
     public const string VideoIdle = "3c0bc021-c8a8-4e07-a973-6b14cbcb2b7e";
     public const string SubSleep = "238c9fa8-0aad-41ed-83f4-97be242c8f20";

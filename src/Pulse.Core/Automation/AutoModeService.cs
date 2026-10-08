@@ -22,6 +22,12 @@ public sealed class AutoModeService : IDisposable
 
     public string? DetectedGame { get; private set; }
 
+    /// <summary>Oyun algılanınca (ad). Mod geçişi ayarından bağımsız tetiklenir.</summary>
+    public event Action<string>? GameStarted;
+
+    /// <summary>Oyun kapanınca (ad).</summary>
+    public event Action<string>? GameStopped;
+
     public AutoModeService(ModeController controller, SettingsStore settings, TimeSpan? period = null)
     {
         _controller = controller;
@@ -44,7 +50,14 @@ public sealed class AutoModeService : IDisposable
 
         // Oyun algılama her zaman çalışır (listeyi öğrenmek için); mod geçişi yalnızca ayar açıksa.
         var game = GameDetector.FindRunningGameInfo();
+        var previous = DetectedGame;
         DetectedGame = game?.Name;
+        try
+        {
+            if (previous is null && game is not null) GameStarted?.Invoke(game.Name);
+            else if (previous is not null && game is null) GameStopped?.Invoke(previous);
+        }
+        catch (Exception ex) { Journal.Write("Oyun olayı işlenemedi: " + ex.Message); }
         if (game is not null)
         {
             _settings.EnsureProfile(game.Name, null, game.Path);
@@ -63,8 +76,8 @@ public sealed class AutoModeService : IDisposable
                 else
                 {
                     var key = profile?.ModeKey ?? Modes.Modes.Game;
-                    var overrides = profile is null ? null : new ModeOverrides(profile.RefreshHz == 144 ? Modes.Modes.MaxHz : profile.RefreshHz, profile.Brightness);
-                    var hasOverrides = overrides is { RefreshHz: not null } or { Brightness: not null };
+                    var overrides = profile is null ? null : new ModeOverrides(profile.RefreshHz == 144 ? Modes.Modes.MaxHz : profile.RefreshHz, profile.Brightness, profile.CpuMaxMhz);
+                    var hasOverrides = overrides is { RefreshHz: not null } or { Brightness: not null } or { CpuMaxMhz: not null };
                     // Oyun bitince masaüstünde Turbo/yüksek fanla kalmamak için Oyun modundan Günlük'e dönülür.
                     _restoreTo = _controller.CurrentKey is null or Modes.Modes.Game ? Modes.Modes.Daily : _controller.CurrentKey;
                     Journal.Write($"Oyun algılandı ({game.Name}): '{key}' profili uygulanıyor, önceki mod {_restoreTo}.");

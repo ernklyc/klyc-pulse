@@ -14,7 +14,8 @@ public sealed record ModeDefinition(
     int RefreshHz,      // 0 = ekranın desteklediği en yüksek hız (Modes.MaxHz)
     int Brightness,     // %
     bool IdlePower,     // ekran 1 dk'da kapanır, uyku kapalı
-    int? GpuCapMhz = null);   // ekran kartı çekirdek saat sınırı; null = sınırsız
+    int? GpuCapMhz = null,    // ekran kartı çekirdek saat sınırı; null = sınırsız
+    int? CpuMaxMhz = null);   // işlemci en yüksek frekansı (MHz); null = sınırsız. Oyun profilinden gelir.
 
 public static class Modes
 {

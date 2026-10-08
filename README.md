@@ -36,8 +36,8 @@ Tasarım ilkesi: **uygula → geri oku → doğrula.** Bir ayar yazıldıktan so
 | Sayfa | Ne yapar |
 |---|---|
 | **Ana ekran** | 4 mod: **Oyun, Günlük, Sessiz, Boşta**. Tek tıkla ASUS profili, işlemci ek hızı (turbo), üst sınır, hız/güç dengesi (prizde ve pilde), ekran hızı (Hz), parlaklık ve ekran kartı hız sınırı uygulanır; her adım kontrol edilir. Canlı sıcaklık/yük kartı. **Hızlandır**: geçici dosya temizliği + bellek rahatlatma + önce/sonra raporu. |
-| **Oyunlar** | Oyun açılınca modu kendiliğinden değiştirir, kapanınca eskisine döner. Oyun başına profil, ekran kartı tercihi (NVIDIA'da çalışsın), süreç önceliği. Windows'un oyun ayarlarını (HAGS, Oyun Modu, oyun kaydı) denetler ve düzeltir. |
-| **Temizlik** | Zararsız geçici dosyaları bulur ve siler; riskli olanlar silinmeden önce 7 gün karantinada bekler. Disk analizi ve Geri Yükleme Noktaları. Hiçbir şeyi onaysız silmez. |
+| **Oyunlar** | Oyun açılınca modu kendiliğinden değiştirir, kapanınca eskisine döner. Oyun başına profil, ekran kartı tercihi (NVIDIA'da çalışsın), süreç önceliği. Windows'un oyun ayarlarını (HAGS, Oyun Modu, oyun kaydı) denetler ve düzeltir. **Oyun raporu:** oyun boyunca ısı, işlemci hızı, ekran kartı kısılması, bellek ve FPS kaydedilir; kapanınca "neden takıldı?" sade dille söylenir, oyunu neyin sınırladığı gösterilir ve uygunsa oyun başına işlemci hızı sınırı önerilir (sonraki oturumla karşılaştırılır). |
+| **Temizlik** | Zararsız geçici dosyaları bulur ve siler; riskli olanlar silinmeden önce 7 gün karantinada bekler. Tarayıcı, Steam, Epic, Discord ve NVIDIA kurulum artıkları. **Kopya dosyalar:** birebir aynı büyük dosyaları bulur, her grupta en eskisini korur, fazlalıkları onayınla Geri Dönüşüm Kutusu'na gönderir. **Eski kalıntılar:** daha önce silinmiş uygulamaların AppData/ProgramData'da bıraktığı klasörleri temkinli bulur (kurulu uygulama, oyun, sistem klasörü ve yakın zamanda kullanılanlar hiç gösterilmez); hiçbiri kendiliğinden silinmez, seçtiklerin Geri Dönüşüm Kutusu'na gider. Disk analizi ve Geri Yükleme Noktaları. Hiçbir şeyi onaysız silmez. |
 | **Süreçler** | Programları gruplayarak işlemci/bellek gösterir; kapat, öncelik ayarla, **Eko mod** (EcoQoS). Windows, güvenlik ve anti-hile süreçleri korumalıdır. |
 | **Uygulamalar** | winget ile güncelleme, kaldırma (artık klasörler Geri Dönüşüm Kutusu'na), açılışta başlayanlar, arka plan servisleri ve zamanlanmış görevler. |
 | **Sağlık** | Pil (aşınma, geçmiş), ısı, fan, disk sağlığı. Sorunları sade dille söyler. |
@@ -60,8 +60,8 @@ Tasarım ilkesi: **uygula → geri oku → doğrula.** Bir ayar yazıldıktan so
 
 | Dosya | Boyut | Ne zaman |
 |---|---|---|
-| `KLYC-Pulse-v1.0.3-win-x64.zip` | ~11 MB (zip) | [.NET 8 Masaüstü Çalışma Zamanı](https://dotnet.microsoft.com/download/dotnet/8.0) kuruluysa |
-| `KLYC-Pulse-v1.0.3-win-x64-self-contained.zip` | ~68 MB (zip) | Hiçbir şey kurmak istemiyorsanız (her şey içinde) |
+| `KLYC-Pulse-v1.1.0-win-x64.zip` | ~11 MB (zip) | [.NET 8 Masaüstü Çalışma Zamanı](https://dotnet.microsoft.com/download/dotnet/8.0) kuruluysa |
+| `KLYC-Pulse-v1.1.0-win-x64-self-contained.zip` | ~68 MB (zip) | Hiçbir şey kurmak istemiyorsanız (her şey içinde) |
 
 1. Zip'i açın, `KLYC-Pulse.exe`'yi istediğiniz bir klasöre koyun (ör. `C:\Programlar\KLYC-Pulse`).
 2. Çift tıklayın, **yönetici izni** isteyecektir (sensörler, ekran kartı ve servis ayarları için gerekir).
@@ -71,7 +71,7 @@ Tasarım ilkesi: **uygula → geri oku → doğrula.** Bir ayar yazıldıktan so
 
 ```powershell
 # özet kontrolü
-Get-FileHash .\KLYC-Pulse-v1.0.3-win-x64.zip -Algorithm SHA256
+Get-FileHash .\KLYC-Pulse-v1.1.0-win-x64.zip -Algorithm SHA256
 ```
 
 ## İlk kullanım

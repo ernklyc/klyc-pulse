@@ -62,6 +62,7 @@ public sealed class GameProfile
     public bool Enabled { get; set; } = true;           // false = bu oyunda otomatik geçiş yapma
     public string? ExePath { get; set; }                // oyunun tam yolu (biliniyorsa); ekran kartı tercihi için
     public bool HighPriority { get; set; } = true;      // oyun açılınca süreç önceliği "Yüksek"
+    public int? CpuMaxMhz { get; set; }                 // oyun açıkken işlemcinin en yüksek hızı (MHz); null = sınırsız
 }
 
 public sealed class SettingsStore

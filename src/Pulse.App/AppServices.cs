@@ -18,6 +18,7 @@ public static class AppServices
 
     public static ThermalGuardService Guard { get; } = new();
     public static HeatTargetService Heat { get; } = new();
+    public static GameReportService GameReport { get; } = new();
     private static ModeKeeperService? _keeper;
     public static ModeKeeperService Keeper => _keeper ??= new ModeKeeperService();
     public static CompanionService Companion { get; } = new(Settings);
@@ -32,6 +33,7 @@ public static class AppServices
         _keeper?.Dispose();
         // Güvenlik: Pulse kapanırken ekran kartı hızlandırması fabrika hızına döner (kalıcı kalmasın).
         try { if (Pulse.Core.Hardware.GpuOverclock.Read() is { } oc && (oc.CoreMhz != 0 || oc.MemMhz != 0)) Pulse.Core.Hardware.GpuOverclock.Reset(); } catch { }
+        GameReport.Dispose();
         Heat.Dispose();
         Guard.Dispose();
         Overlay.Set(false);

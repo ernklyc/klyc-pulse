@@ -125,6 +125,9 @@ public sealed class ModeEngine : IDisposable
                 Powercfg.SetDc(scheme, Powercfg.SubProcessor, Powercfg.BoostMode, mode.Boost);
                 Powercfg.SetDc(scheme, Powercfg.SubProcessor, Powercfg.MaxProcessorState, mode.MaxState);
                 Powercfg.SetDc(scheme, Powercfg.SubProcessor, Powercfg.EnergyPerformancePref, mode.Epp);
+                // Her mod "frekans sınırı yok"tan (ya da oyun profilinin seçtiği sınırdan) başlar; sıcaklık sınırı gerekirse üstüne koyar (eski sınır kalıntısı kalmasın).
+                Powercfg.SetAc(scheme, Powercfg.SubProcessor, Powercfg.MaxFrequency, mode.CpuMaxMhz ?? 0);
+                Powercfg.SetDc(scheme, Powercfg.SubProcessor, Powercfg.MaxFrequency, mode.CpuMaxMhz ?? 0);
             }
             Powercfg.SetActive(active);
             Thread.Sleep(attempt == 0 ? 900 : 1500);
@@ -139,6 +142,7 @@ public sealed class ModeEngine : IDisposable
         yield return Verify("İşlemci üst sınırı", mode.MaxState, Powercfg.GetAc(active, Powercfg.SubProcessor, Powercfg.MaxProcessorState), v => $"%{v}");
         yield return Verify("Hız / güç dengesi", mode.Epp, Powercfg.GetAc(active, Powercfg.SubProcessor, Powercfg.EnergyPerformancePref), v => v.ToString());
         yield return Verify("Pilde de aynı (ek hız)", mode.Boost, Powercfg.GetDc(active, Powercfg.SubProcessor, Powercfg.BoostMode), v => v == 0 ? "kapalı" : "açık");
+        yield return Verify("İşlemci en yüksek hızı", mode.CpuMaxMhz ?? 0, Powercfg.GetAc(active, Powercfg.SubProcessor, Powercfg.MaxFrequency), v => v == 0 ? "sınırsız" : $"{v} MHz");
     }
 
     /// <summary>İstenen hızı çözer: MaxHz ise ekranın desteklediği en yüksek; liste boşsa MaxHz (belirlenemedi) döner.</summary>

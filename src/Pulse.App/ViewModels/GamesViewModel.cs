@@ -22,6 +22,7 @@ public partial class GameProfileVm : ObservableObject
         _store = store;
         _modeKey = profile.ModeKey;
         // Eski sürümde kaydedilen 144 de "ekranın en yükseği" sayılır (sabit 144 artık yok).
+        _cpuCapIndex = Math.Max(0, Array.IndexOf(CpuCaps, profile.CpuMaxMhz));
         _refreshIndex = profile.RefreshHz switch { 60 => 1, Core.Modes.Modes.MaxHz or 144 => 2, _ => 0 };
         _enabled = profile.Enabled;
         _loading = false;
@@ -45,15 +46,19 @@ public partial class GameProfileVm : ObservableObject
     }
 
     public static IReadOnlyList<ModeOption> Modes { get; } = Core.Modes.Modes.All.Select(m => new ModeOption(m.Key, m.Title + " modu")).ToList();
+    public static IReadOnlyList<string> CpuCapOptions { get; } = ["Sınırsız (en hızlı)", "En çok 3,8 GHz", "En çok 3,5 GHz (daha serin)", "En çok 3,2 GHz (serin)", "En çok 3,0 GHz (en serin)"];
+    private static readonly int?[] CpuCaps = [null, 3800, 3500, 3200, 3000];
     public static IReadOnlyList<string> RefreshOptions { get; } = ["Modun varsayılanı", "60 Hz", "Ekranın en yükseği"];
 
     [ObservableProperty] private string _modeKey;
     [ObservableProperty] private int _refreshIndex;
+    [ObservableProperty] private int _cpuCapIndex;
     [ObservableProperty] private bool _enabled;
 
     partial void OnModeKeyChanged(string value) => Apply(p => p.ModeKey = value);
     partial void OnRefreshIndexChanged(int value) => Apply(p => p.RefreshHz = value switch { 1 => 60, 2 => Core.Modes.Modes.MaxHz, _ => null });
     partial void OnEnabledChanged(bool value) => Apply(p => p.Enabled = value);
+    partial void OnCpuCapIndexChanged(int value) => Apply(p => p.CpuMaxMhz = CpuCaps[Math.Clamp(value, 0, CpuCaps.Length - 1)]);
 
     private void Apply(Action<GameProfile> change)
     {
@@ -97,6 +102,50 @@ public partial class GamesViewModel : ObservableObject, IDisposable
         _timer.Tick += (_, _) => { Reload(); GameText = Detected(); foreach (var g in Games) g.RefreshGpu(); };
         _timer.Start();
         GameText = Detected();
+        ShowReport(AppServices.GameReport.Last);
+        AppServices.GameReport.Ready += OnReportReady;
+    }
+
+    // ---- Son oyun raporu -------------------------------------------------
+    public ObservableCollection<string> ReportLines { get; } = new();
+    [ObservableProperty] private string _reportTitle = "";
+    [ObservableProperty] private bool _hasReport;
+    [ObservableProperty] private bool _noReport = true;
+    [ObservableProperty] private bool _showSuggestion;
+    [ObservableProperty] private string _suggestionText = "";
+    [ObservableProperty] private string _reportNote = "";
+    private Core.Diagnostics.GameSessionReport? _report;
+
+    [RelayCommand]
+    private void ApplySuggestion()
+    {
+        if (_report?.SuggestedCpuCapMhz is not { } cap) return;
+        _store.EnsureProfile(_report.Game, null, null);
+        if (_store.FindProfile(_report.Game) is not { } profile) return;
+        profile.CpuMaxMhz = cap;
+        _store.Save();
+        foreach (var g in Games.ToList()) if (ReferenceEquals(g.Profile, profile)) g.CpuCapIndex = Math.Max(0, Array.IndexOf(new int?[] { null, 3800, 3500, 3200, 3000 }, cap));
+        ShowSuggestion = false;
+        ReportNote = $"Uygulandı: {_report.Game} için işlemci en çok {cap / 1000.0:0.0} GHz. Bir sonraki oyunda geçerli olur; rapor önceki oturumla karşılaştırır. İstersen aşağıdaki listeden değiştirebilirsin.";
+    }
+    [ObservableProperty] private System.Windows.Media.Brush _reportBrush = System.Windows.Media.Brushes.Gray;
+
+    private void OnReportReady(Core.Diagnostics.GameSessionReport r) =>
+        System.Windows.Application.Current?.Dispatcher.BeginInvoke(() => ShowReport(r));
+
+    private void ShowReport(Core.Diagnostics.GameSessionReport? r)
+    {
+        _report = r;
+        ReportLines.Clear();
+        ReportNote = "";
+        ShowSuggestion = r?.SuggestedCpuCapMhz is not null;
+        SuggestionText = r?.SuggestedCpuCapMhz is { } sc ? $"Bu oyun için işlemciyi en çok {sc / 1000.0:0.0} GHz'e sınırla" : "";
+        HasReport = r is not null;
+        NoReport = r is null;
+        if (r is null) return;
+        ReportTitle = r.Title;
+        ReportBrush = (System.Windows.Media.Brush)System.Windows.Application.Current.FindResource(r.Severity switch { 2 => "BadBrush", 1 => "WarnBrush", _ => "GoodBrush" });
+        foreach (var f in r.Findings) ReportLines.Add(f);
     }
 
     public ObservableCollection<GameProfileVm> Games { get; } = new();
@@ -180,5 +229,9 @@ public partial class GamesViewModel : ObservableObject, IDisposable
         Reload();
     }
 
-    public void Dispose() => _timer.Stop();
+    public void Dispose()
+    {
+        _timer.Stop();
+        AppServices.GameReport.Ready -= OnReportReady;
+    }
 }

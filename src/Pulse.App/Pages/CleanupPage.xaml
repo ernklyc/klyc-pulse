@@ -81,6 +81,93 @@
                 </DockPanel>
             </Border>
 
+            <!-- Eski kalıntılar -->
+            <DockPanel Margin="0,18,0,8">
+                <Button DockPanel.Dock="Right" Content="Kalıntıları bul" Style="{StaticResource PulseGhostButton}" Command="{Binding FindOrphansCommand}"
+                        IsEnabled="{Binding IsBusy, Converter={StaticResource InvertBool}}" />
+                <TextBlock Style="{StaticResource PulseLabel}" Text="ESKİ KALINTILAR" VerticalAlignment="Center" />
+            </DockPanel>
+            <Border Style="{StaticResource PulseCard}" Padding="0">
+                <StackPanel>
+                    <TextBlock Text="{Binding OrphanNote}" Style="{StaticResource PulseMuted}" TextWrapping="Wrap" Margin="14,10" />
+                    <ItemsControl ItemsSource="{Binding Orphans}" Visibility="{Binding HasOrphans, Converter={StaticResource BoolToVis}}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <StackPanel>
+                                    <Border Style="{StaticResource PulseHairline}" />
+                                    <Grid Margin="14,8">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="80" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+                                        <CheckBox IsChecked="{Binding IsSelected}" VerticalAlignment="Top" MinWidth="0" Margin="0,2,10,0" />
+                                        <StackPanel Grid.Column="1">
+                                            <TextBlock Text="{Binding Name}" Style="{StaticResource PulseBody}" FontWeight="Medium" />
+                                            <TextBlock Text="{Binding Detail}" Style="{StaticResource PulseMuted}" TextTrimming="CharacterEllipsis" />
+                                        </StackPanel>
+                                        <TextBlock Grid.Column="2" Text="{Binding SizeText}" Style="{StaticResource PulseBody}" FontWeight="SemiBold" VerticalAlignment="Center" TextAlignment="Right" Margin="0,0,10,0" />
+                                        <Button Grid.Column="3" Content="Aç" Style="{StaticResource PulseGhostButton}" MinWidth="50" Height="26" VerticalAlignment="Center"
+                                                Command="{Binding DataContext.OpenOrphanCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
+                                                CommandParameter="{Binding}" />
+                                    </Grid>
+                                </StackPanel>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                    <Border Style="{StaticResource PulseHairline}" Visibility="{Binding HasOrphans, Converter={StaticResource BoolToVis}}" />
+                    <Button Content="Seçilenleri Geri Dönüşüm Kutusu'na gönder" Style="{StaticResource PulseGhostButton}" Margin="14,10" HorizontalAlignment="Left"
+                            Visibility="{Binding HasOrphans, Converter={StaticResource BoolToVis}}"
+                            Command="{Binding RemoveOrphansCommand}" IsEnabled="{Binding IsBusy, Converter={StaticResource InvertBool}}" />
+                </StackPanel>
+            </Border>
+
+            <!-- Kopya dosyalar -->
+            <DockPanel Margin="0,18,0,8">
+                <Button DockPanel.Dock="Right" Content="Kopyaları bul" Style="{StaticResource PulseGhostButton}" Command="{Binding FindDuplicatesCommand}"
+                        IsEnabled="{Binding IsBusy, Converter={StaticResource InvertBool}}" />
+                <TextBlock Style="{StaticResource PulseLabel}" Text="KOPYA DOSYALAR" VerticalAlignment="Center" />
+            </DockPanel>
+            <Border Style="{StaticResource PulseCard}" Padding="0">
+                <StackPanel>
+                    <TextBlock Text="{Binding DupNote}" Style="{StaticResource PulseMuted}" TextWrapping="Wrap" Margin="14,10" />
+                    <ItemsControl ItemsSource="{Binding DupGroups}" Visibility="{Binding HasDups, Converter={StaticResource BoolToVis}}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <StackPanel>
+                                    <Border Style="{StaticResource PulseHairline}" />
+                                    <StackPanel Margin="14,8,14,6">
+                                        <TextBlock Text="{Binding Name}" Style="{StaticResource PulseBody}" FontWeight="Medium" />
+                                        <TextBlock Text="{Binding Header}" Style="{StaticResource PulseMuted}" />
+                                        <ItemsControl ItemsSource="{Binding Files}" Margin="0,4,0,0">
+                                            <ItemsControl.ItemTemplate>
+                                                <DataTemplate>
+                                                    <Grid Margin="0,2">
+                                                        <Grid.ColumnDefinitions><ColumnDefinition Width="Auto" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
+                                                        <CheckBox IsChecked="{Binding IsSelected}" IsEnabled="{Binding CanSelect}" MinWidth="0" Margin="0,0,10,0" VerticalAlignment="Top" />
+                                                        <StackPanel Grid.Column="1">
+                                                            <TextBlock Text="{Binding Path}" Style="{StaticResource PulseMuted}" TextTrimming="CharacterEllipsis" />
+                                                            <TextBlock Text="{Binding Detail}" Style="{StaticResource PulseMuted}" FontSize="11" />
+                                                        </StackPanel>
+                                                    </Grid>
+                                                </DataTemplate>
+                                            </ItemsControl.ItemTemplate>
+                                        </ItemsControl>
+                                    </StackPanel>
+                                </StackPanel>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                    <Border Style="{StaticResource PulseHairline}" Visibility="{Binding HasDups, Converter={StaticResource BoolToVis}}" />
+                    <StackPanel Orientation="Horizontal" Margin="14,10" Visibility="{Binding HasDups, Converter={StaticResource BoolToVis}}">
+                        <Button Content="Fazlalıkları seç" Style="{StaticResource PulseGhostButton}" Command="{Binding SelectDupExtrasCommand}" Margin="0,0,8,0" />
+                        <Button Content="Seçilenleri Geri Dönüşüm Kutusu'na gönder" Style="{StaticResource PulseGhostButton}" Command="{Binding RemoveDuplicatesCommand}"
+                                IsEnabled="{Binding IsBusy, Converter={StaticResource InvertBool}}" />
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+
             <!-- Geri Yükleme Noktaları -->
             <TextBlock Style="{StaticResource PulseLabel}" Text="GERİ YÜKLEME NOKTALARI" Margin="0,18,0,8" />
             <Border Style="{StaticResource PulseCard}" Padding="0">

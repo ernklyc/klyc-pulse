@@ -4,7 +4,7 @@ using Pulse.Core.Settings;
 namespace Pulse.Core.Modes;
 
 /// <summary>Bir modun ekran ayarlarını geçici olarak değiştirir (null = modun kendi değeri).</summary>
-public sealed record ModeOverrides(int? RefreshHz, int? Brightness);
+public sealed record ModeOverrides(int? RefreshHz, int? Brightness, int? CpuMaxMhz = null);
 
 /// <summary>
 /// Mod uygulamanın tek giriş noktası: ana ekran, tepsi menüsü ve otomatik mod aynı denetleyiciyi kullanır.
@@ -19,6 +19,13 @@ public sealed class ModeController : IDisposable
     public ModeController(SettingsStore settings) => _settings = settings;
 
     public string? CurrentKey => _engine.CurrentModeKey;
+
+    /// <summary>Şu an uygulanmış modun gerçek tanımı (oyun profilinin geçici ayarları dahil). Henüz mod uygulanmadıysa null.</summary>
+    public ModeDefinition? ActiveDefinition { get; private set; }
+
+    /// <summary>Etkin tanım bu moda aitse onu (profil ayarlarıyla), değilse modun varsayılan tanımını verir.</summary>
+    private ModeDefinition? DefinitionFor(string key) =>
+        ActiveDefinition is { } a && string.Equals(a.Key, key, StringComparison.OrdinalIgnoreCase) ? a : Modes.Get(key);
     public bool HasAsusDriver => _engine.HasAsusDriver;
     public bool IsBusy => _gate.CurrentCount == 0;
 
@@ -34,7 +41,7 @@ public sealed class ModeController : IDisposable
         var def = Modes.Get(key);
         if (def is null) return null;
         if (overrides is not null)
-            def = def with { RefreshHz = overrides.RefreshHz ?? def.RefreshHz, Brightness = overrides.Brightness ?? def.Brightness };
+            def = def with { RefreshHz = overrides.RefreshHz ?? def.RefreshHz, Brightness = overrides.Brightness ?? def.Brightness, CpuMaxMhz = overrides.CpuMaxMhz ?? def.CpuMaxMhz };
         if (!await _gate.WaitAsync(0)) return null; // başka bir işlem sürüyor
 
         try
@@ -42,6 +49,7 @@ public sealed class ModeController : IDisposable
             Busy?.Invoke(key);
             if (_settings.Current.CloseConflictingApps) ConflictService.CloseAll();
             var result = await _engine.ApplyAsync(def, new ModeOptions { ChangeBrightness = _settings.Current.ChangeBrightness, GpuOcCore = _settings.Current.GpuOcCore ?? 0, GpuOcMem = _settings.Current.GpuOcMem ?? 0 });
+            ActiveDefinition = def;
             Applied?.Invoke(result);
             return result;
         }
@@ -61,7 +69,7 @@ public sealed class ModeController : IDisposable
     /// <summary>Açılışta: ekran kartı ayarları yeniden başlatmada sıfırlandığı için seçili modun GPU adımlarını yeniden uygular.</summary>
     public async Task ReapplyGpuAsync()
     {
-        if (CurrentKey is not { } key || Modes.Get(key) is not { } def) return;
+        if (CurrentKey is not { } key || DefinitionFor(key) is not { } def) return;
         if (!await _gate.WaitAsync(0)) return;
         try { foreach (var s in await Task.Run(() => _engine.ReapplyGpu(def, Options()))) Journal.Write($"  [açılış] {s.Name}: {s.Detail}"); }
         catch (Exception ex) { Journal.Write("GPU ayarları yeniden uygulanamadı: " + ex.Message); }
@@ -71,7 +79,7 @@ public sealed class ModeController : IDisposable
     /// <summary>Başka bir program güç planını bozduysa mod değerlerini geri yazar. Bozulma varsa true.</summary>
     public async Task<bool> RepairPowerAsync(bool ignoreMaxState)
     {
-        if (CurrentKey is not { } key || Modes.Get(key) is not { } def) return false;
+        if (CurrentKey is not { } key || DefinitionFor(key) is not { } def) return false;
         if (!await _gate.WaitAsync(0)) return false;
         try
         {

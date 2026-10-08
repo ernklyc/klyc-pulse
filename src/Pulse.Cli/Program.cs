@@ -660,6 +660,319 @@ if (cmd == "fps-test")
     return 0;
 }
 
+if (cmd == "dup-scan")
+{
+    // Gerçek klasörlerde salt-okunur kopya taraması (hiçbir şeyi silmez).
+    var sw = System.Diagnostics.Stopwatch.StartNew();
+    var roots = Pulse.Core.Cleanup.DuplicateFinder.DefaultRoots().ToList();
+    Console.WriteLine("Klasörler: " + string.Join("; ", roots.Select(Path.GetFileName)));
+    var found = Pulse.Core.Cleanup.DuplicateFinder.Find(roots);
+    Console.WriteLine($"{sw.Elapsed.TotalSeconds:0.0} sn, {found.Count} grup, boşa giden toplam {found.Sum(g => g.WastedBytes) / 1048576.0:0.0} MB");
+    foreach (var g in found.Take(12))
+        Console.WriteLine($"  {g.Files.Count} kopya x {g.Size / 1048576.0:0.0} MB (boşa {g.WastedBytes / 1048576.0:0.0} MB): {Path.GetFileName(g.Keeper.Path)}  [{string.Join(" | ", g.Files.Select(f => Path.GetFileName(Path.GetDirectoryName(f.Path))))}]");
+    return 0;
+}
+
+if (cmd == "dup-test")
+{
+    // Kopya dosya bulucu: geçici klasörde sahte dosyalarla (gerçek klasörlere dokunmaz).
+    var fails = 0;
+    void Check(bool ok, string what) { Console.WriteLine($"  [{(ok ? "GEÇTİ" : "KALDI")}] {what}"); if (!ok) fails++; }
+    var root = Path.Combine(Path.GetTempPath(), "pulse-dup-" + Guid.NewGuid().ToString("N")[..6]);
+    Directory.CreateDirectory(Path.Combine(root, "a")); Directory.CreateDirectory(Path.Combine(root, "b", "deep")); Directory.CreateDirectory(Path.Combine(root, "node_modules"));
+    var rnd = new Random(7);
+    byte[] Bytes(int n, int seed) { var b = new byte[n]; new Random(seed).NextBytes(b); return b; }
+    void Put(string rel, byte[] data, int ageDays) { var p = Path.Combine(root, rel); File.WriteAllBytes(p, data); File.SetLastWriteTime(p, DateTime.Now.AddDays(-ageDays)); }
+
+    var content = Bytes(3 * 1024 * 1024, 1);
+    Put(@"a\photo.jpg", content, 100);                     // en eski: asıl kopya olmalı
+    Put(@"b\photo (1).jpg", content, 10);
+    Put(@"b\deep\photo copy.jpg", content, 5);
+    var almost = (byte[])content.Clone(); almost[almost.Length - 1] ^= 0xFF;      // aynı boyut, sonu farklı: kopya DEĞİL
+    Put(@"a\almost.jpg", almost, 50);
+    var mid = (byte[])content.Clone(); mid[mid.Length / 2] ^= 0xFF;                  // aynı boyut, ortası farklı (kısmi özet kaçırır, tam özet yakalar)
+    Put(@"a\middle.jpg", mid, 50);
+    Put(@"a\small1.txt", Bytes(1000, 2), 1); Put(@"b\small2.txt", Bytes(1000, 2), 1);   // küçük: yok sayılır
+    Put(@"node_modules\dup.bin", content, 1);                                       // atlanan klasör
+    var other = Bytes(2 * 1024 * 1024, 3);
+    Put(@"a\other.bin", other, 20); Put(@"b\other2.bin", other, 20);                // ikinci grup
+
+    var groups = DuplicateFinder.Find([root]);
+    Console.WriteLine("  Gruplar: " + string.Join(" | ", groups.Select(g => $"{g.Files.Count} dosya, {g.Size / 1048576.0:0.0} MB, korunan {Path.GetFileName(g.Keeper.Path)}")));
+    Check(groups.Count == 2, $"2 kopya grubu bulundu (bulunan {groups.Count})");
+    var photo = groups.FirstOrDefault(g => g.Files.Count == 3);
+    Check(photo is not null && Path.GetFileName(photo.Keeper.Path) == "photo.jpg", "3'lü grupta en eski dosya korunan kopya");
+    Check(photo is not null && !photo.Files.Any(f => f.Path.Contains("almost") || f.Path.Contains("middle") || f.Path.Contains("node_modules")), "Sonu/ortası farklı dosyalar ve atlanan klasör gruba girmedi");
+    Check(!groups.Any(g => g.Files.Any(f => f.Path.EndsWith("small1.txt"))), "1 MB'dan küçük dosyalar yok sayıldı");
+    Check(groups[0].WastedBytes >= groups[1].WastedBytes, "Gruplar boşa giden alana göre sıralı");
+
+    // Silme güvenliği (gerçek Geri Dönüşüm Kutusu yerine sahte gönderici)
+    var sent = new List<string>();
+    bool Fake(string p) { sent.Add(p); File.Delete(p); return true; }
+    var extra = photo!.Files[1];
+    Check(!DuplicateFinder.Remove(photo, photo.Keeper, Fake) && sent.Count == 0, "Korunan kopya silinmeyi reddeder");
+    Check(!DuplicateFinder.Remove(photo, new DupFile(Path.Combine(root, "a", "almost.jpg"), DateTime.Now, photo.Size), Fake) && sent.Count == 0, "Gruba ait olmayan dosya silinmeyi reddeder");
+    Check(DuplicateFinder.Remove(photo, extra, Fake) && sent.SequenceEqual([extra.Path]) && !File.Exists(extra.Path), "Fazlalık kopya gönderildi, korunan kopya yerinde");
+    Check(File.Exists(photo.Keeper.Path), "Asıl kopya hâlâ var");
+    File.Delete(photo.Keeper.Path);
+    Check(!DuplicateFinder.Remove(photo, photo.Files[2], Fake), "Korunan kopya kaybolmuşsa son kopyayı silmeyi reddeder");
+    try { Directory.Delete(root, true); } catch { }
+    Console.WriteLine(fails == 0 ? "KOPYA DOSYA TESTİ GEÇTİ" : $"{fails} TEST KALDI");
+    return fails == 0 ? 0 : 1;
+}
+
+if (cmd == "cpucap-test")
+{
+    // Oyun profilindeki işlemci hızı sınırı gerçekten güç planına yazılıyor mu? Sonunda Günlük moduna döner.
+    var fails = 0;
+    void Check(bool ok, string what) { Console.WriteLine($"  [{(ok ? "GEÇTİ" : "KALDI")}] {what}"); if (!ok) fails++; }
+    var settings = Pulse.Core.Settings.SettingsStore.Load(Path.Combine(Path.GetTempPath(), "pulse-cap-settings-" + Guid.NewGuid().ToString("N")[..6] + ".json"));
+    settings.Current.CloseConflictingApps = false; settings.Current.ChangeBrightness = false;
+    using var controller = new ModeController(settings);
+    var scheme = Pulse.Core.Platform.Powercfg.ActiveScheme()!;
+    int? Cap() => Pulse.Core.Platform.Powercfg.GetAc(scheme, Pulse.Core.Platform.Powercfg.SubProcessor, Pulse.Core.Platform.Powercfg.MaxFrequency);
+
+    var r = await controller.ApplyAsync("oyun", new ModeOverrides(null, null, 3200));
+    Check(Cap() == 3200, $"Oyun modu + profil sınırı: güç planında 3200 MHz (okunan {Cap()})");
+    Check(controller.ActiveDefinition?.CpuMaxMhz == 3200, "Etkin tanım sınırı biliyor");
+    Check(r is not null && r.Steps.Any(s => s.Name == "İşlemci en yüksek hızı" && s.Status == StepStatus.Verified), "Adım listesinde sınır doğrulandı olarak görünüyor");
+
+    await controller.ApplyAsync("oyun");
+    Check(Cap() == 0, $"Sınırsız profile geçince sınır kalktı (okunan {Cap()})");
+    await controller.ApplyAsync("oyun", new ModeOverrides(null, null, 3000));
+    await controller.ApplyAsync("gunluk");
+    Check(Cap() == 0 && controller.ActiveDefinition?.CpuMaxMhz is null, $"Oyun bitip Günlük'e dönünce sınır temizlendi (okunan {Cap()})");
+    Console.WriteLine(fails == 0 ? "İŞLEMCİ SINIRI PROFİL TESTİ GEÇTİ" : $"{fails} TEST KALDI");
+    return fails == 0 ? 0 : 1;
+}
+
+if (cmd == "orphan-scan")
+{
+    // Gerçek bilgisayarda salt-okunur tarama; hiçbir şeyi silmez. Çıktı: bulunan klasörler.
+    var apps = Pulse.Core.Apps.InstalledAppsReader.Read();
+    var known = Pulse.Core.Cleanup.OrphanScanner.KnownNamesFromSystem();
+    Console.WriteLine($"Kurulu uygulama: {apps.Count}, bilinen ad: {known.Count}");
+    var sw = System.Diagnostics.Stopwatch.StartNew();
+    var found = Pulse.Core.Cleanup.OrphanScanner.Scan(apps, known);
+    Console.WriteLine($"Tarama {sw.Elapsed.TotalSeconds:0.0} sn, {found.Count} aday:");
+    foreach (var o in found)
+        Console.WriteLine($"  {o.Bytes / 1048576.0,8:0.0} MB  son kullanım {o.LastActivity:yyyy-MM-dd}  [{o.Where}] {o.Name}");
+    return 0;
+}
+
+if (cmd == "orphan-test")
+{
+    // Kalıntı tarayıcı: sahte klasörlerle (gerçek AppData'ya dokunmaz). Yalnızca kendi geçici klasörümüzü Geri Dönüşüm Kutusu'na gönderir.
+    var fails = 0;
+    void Check(bool ok, string what) { Console.WriteLine($"  [{(ok ? "GEÇTİ" : "KALDI")}] {what}"); if (!ok) fails++; }
+    var root = Path.Combine(Path.GetTempPath(), "pulse-orphan-" + Guid.NewGuid().ToString("N")[..6]);
+    Directory.CreateDirectory(root);
+    void Make(string name, int mb, int ageDays)
+    {
+        var d = Path.Combine(root, name);
+        Directory.CreateDirectory(d);
+        var f = Path.Combine(d, "data.bin");
+        File.WriteAllBytes(f, new byte[Math.Max(1, mb) * (mb == 0 ? 1024 : 1024 * 1024)]);
+        File.SetLastWriteTime(f, DateTime.Now.AddDays(-ageDays));
+        Directory.SetLastWriteTime(d, DateTime.Now.AddDays(-ageDays));
+    }
+    Make("Zzquxapp", 6, 200);                                     // kalıntı: eski, büyük, eşleşmiyor
+    Make("AnotherDeadApp", 8, 400);                               // kalıntı
+    Make("Known App Data", 6, 200);                               // kurulu uygulama adıyla eşleşir
+    Make("VendorX", 6, 200);                                      // kurulu uygulamanın yayıncısı
+    Make("SteamLikeGame", 6, 200);                                // Steam/Epic oyun listesinde
+    Make("Microsoft", 6, 200);                                    // korumalı
+    Make("{3F2504E0-4F89-11D3-9A0C-0305E82C3301}", 6, 200);       // GUID: sistem/bileşen
+    Make("RecentThing", 6, 5);                                    // yakın zamanda kullanılmış
+    Make("TinyOld", 0, 400);                                      // küçük
+    var apps = new[]
+    {
+        new Pulse.Core.Apps.InstalledApp("Known App", "Some Publisher", "1.0", null, 0, null, null, null, "k1"),
+        new Pulse.Core.Apps.InstalledApp("Tool Y", "VendorX Ltd", "2.0", null, 0, null, null, null, "k2"),
+    };
+    var found = Pulse.Core.Cleanup.OrphanScanner.Scan(apps, ["SteamLikeGame"], [root]);
+    var names = found.Select(o => o.Name).ToList();
+    Console.WriteLine("  Bulunanlar: " + string.Join(", ", names));
+    Check(names.SequenceEqual(["AnotherDeadApp", "Zzquxapp"]), "Yalnızca eski, büyük ve hiçbir şeyle eşleşmeyen 2 klasör bulundu (büyükten küçüğe)");
+    Check(!names.Contains("Known App Data") && !names.Contains("VendorX") && !names.Contains("SteamLikeGame"), "Kurulu uygulama, yayıncı ve oyun adıyla eşleşenler gösterilmedi");
+    Check(!names.Contains("Microsoft") && !names.Any(n => n.StartsWith('{')), "Sistem ve GUID klasörleri gösterilmedi");
+    Check(!names.Contains("RecentThing") && !names.Contains("TinyOld"), "Yakın zamanda kullanılan ve küçük klasörler gösterilmedi");
+    Check(found[0].Bytes >= 8L * 1024 * 1024, "Boyut doğru hesaplandı");
+
+    // Silme: sığ yol reddedilir; gerçek Geri Dönüşüm Kutusu'nu kirletmemek için sahte gönderici kullanılır
+    var sentTo = new List<string>();
+    bool FakeSend(string p) { sentTo.Add(p); Directory.Delete(p, true); return true; }
+    Check(!Pulse.Core.Cleanup.OrphanScanner.Remove(new Pulse.Core.Cleanup.OrphanFolder(@"C:\Users", "Users", 1, DateTime.Now, ""), FakeSend) && sentTo.Count == 0, "Çok sığ yol (C:\\Users) silinmeyi reddeder");
+    var target = found[0];
+    Check(Pulse.Core.Cleanup.OrphanScanner.Remove(target, FakeSend) && sentTo.SequenceEqual([target.Path]) && !Directory.Exists(target.Path), "Seçilen kalıntı silme işlemine yalnızca kendi yoluyla gönderildi");
+    Check(Directory.Exists(Path.Combine(root, "Zzquxapp")), "Seçilmeyen diğer kalıntıya dokunulmadı");
+    try { Directory.Delete(root, true); } catch { }
+    Console.WriteLine(fails == 0 ? "KALINTI TARAYICI TESTİ GEÇTİ" : $"{fails} TEST KALDI");
+    return fails == 0 ? 0 : 1;
+}
+
+if (cmd == "report-test")
+{
+    // Oyun raporu: sahte oturumlarla (donanıma dokunmaz) bulguların doğru çıktığını sınar.
+    var fails = 0;
+    void Check(bool ok, string what) { Console.WriteLine($"  [{(ok ? "GEÇTİ" : "KALDI")}] {what}"); if (!ok) fails++; }
+    const long Gb = 1L << 30;
+    Pulse.Core.Diagnostics.GameSessionReport? Run(int seconds, Func<int, (double cpu, double mhz, double temp, int gpu, ulong thr, double ramGb, double? fps, double? low)> f,
+        int? displayHz = null, int? cap = null, Pulse.Core.Diagnostics.GameSessionReport? previous = null)
+    {
+        var rec = new Pulse.Core.Diagnostics.GameSessionRecorder("FakeGame", new DateTime(2026, 1, 1, 20, 0, 0));
+        for (var i = 0; i < seconds; i++)
+        {
+            var x = f(i);
+            var snap = new Pulse.Core.Monitoring.SensorSnapshot(DateTime.Now, x.cpu, x.mhz, x.temp,
+                new Pulse.Core.Monitoring.GpuReading(60, x.gpu, 0, 1500, 4000, 40, 2L * Gb, 4L * Gb, x.thr),
+                (long)(x.ramGb * Gb), 16 * Gb, 4000, 4000);
+            rec.Add(snap, x.fps is { } fp ? new Pulse.Core.Monitoring.FpsReading(1, "FakeGame", fp, 1000 / fp, x.low ?? fp) : null);
+        }
+        return rec.Build(2496, displayHz: displayHz, cpuCapMhz: cap, previous: previous);
+    }
+
+    // 1) Çok sıcak, işlemci hız kaybediyor, ekran kartı az çalışıyor (işlemci sınırı)
+    var hot = Run(600, i => (60, i < 60 ? 4100 : 2900, 96, 55, 0, 9, 70, 40));
+    Check(hot is not null, "Yeterli veri varsa rapor üretilir");
+    Check(hot!.Severity == 2, $"Sıcak oturum: sorun var (önem {hot.Severity})");
+    Check(hot.Findings.Any(t => t.Contains("90 °C'nin üstündeydi")), "Isı bulgusu var");
+    Check(hot.Findings.Any(t => t.Contains("Isı yüzünden yavaşlamış")), "Isı yüzünden hız düşüşü bulgusu var");
+    Check(hot.Bottleneck == "cpu", $"Ekran kartı %55: oyunu işlemci sınırlıyor (bulundu: {hot.Bottleneck})");
+    Check(hot.Findings.Any(t => t.Contains("Takılma var")), "FPS düşük %1 çok düşük: takılma uyarısı");
+
+    // 2) Ekran kartı sınırlıyor + güç sınırı kısması
+    var gpuBound = Run(600, i => (35, 3900, 78, 98, 0x4, 8, 60, 55));
+    Check(gpuBound!.Bottleneck == "gpu", "Ekran kartı %98: oyunu ekran kartı sınırlıyor");
+    Check(gpuBound.Findings.Any(t => t.Contains("Güç sınırı")), "Ekran kartı güç sınırı kısması bulgusu var");
+    Check(gpuBound.Findings.Any(t => t.Contains("FPS'i az etkiler")), "İşlemciyi kısmanın etkisi anlatılıyor");
+
+    // 3) Bellek dolu
+    var ram = Run(300, i => (30, 3800, 70, 80, 0, 15, null, null));
+    Check(ram!.Severity == 2 && ram.Findings.Any(t => t.Contains("Bellek %94")), "Bellek %94: sorun olarak işaretlendi");
+
+    // 4) Temiz oturum
+    var clean = Run(300, i => (30, 3800, 72, 70, 0, 7, 144, 110));
+    Check(clean!.Severity == 0 && clean.Findings[0].Contains("sorun görülmedi"), "Temiz oturum: sorun görülmedi");
+    Check(clean.Bottleneck == "cpu" || clean.Bottleneck == "other", "Ekran kartı %70, işlemci %30: kare sınırı olabilir");
+
+    // 4b) Isı + ekran kartı sınırlıyor: işlemci hızı sınırı önerilir
+    var hotGpu = Run(600, i => (35, 3900, 96, 98, 0, 8, 60, 55));
+    Check(hotGpu!.SuggestedCpuCapMhz == 3500 && hotGpu.Findings.Any(t => t.StartsWith("Öneri")), "Sıcak + ekran kartı sınırlıyor: 3,5 GHz sınırı önerildi");
+    Check(hot.SuggestedCpuCapMhz is null && hot.Findings.Any(t => t.Contains("işlemci sınırladığı")), "Sıcak + işlemci sınırlıyor: sınır önerilmez, soğutma önerilir");
+    var capped = Run(600, i => (35, 3500, 90, 98, 0, 8, 60, 55), cap: 3500);
+    Check(capped!.SuggestedCpuCapMhz is null, "Zaten sınır varsa yeniden önerilmez");
+
+    // 4c) Ekranın gösterebileceğinden fazla FPS ve ısı
+    var fpsHigh = Run(600, i => (40, 3800, 93, 90, 0, 8, 220, 180), displayHz: 144);
+    Check(fpsHigh!.Findings.Any(t => t.Contains("FPS sınırını 144")), "FPS ekran hızını aşıp ısındıysa FPS sınırı önerilir");
+    var fpsOk = Run(600, i => (40, 3800, 72, 90, 0, 8, 100, 90), displayHz: 144);
+    Check(!fpsOk!.Findings.Any(t => t.Contains("FPS sınırı")), "Serin ve FPS düşükse FPS sınırı önerilmez");
+
+    // 4d) Önceki oturumla karşılaştırma (ayarın işe yaradığı ölçülür)
+    var before = Run(600, i => (35, 3900, 96, 98, 0, 8, 60, 55));
+    var after = Run(600, i => (35, 3500, 88, 98, 0, 8, 56, 52), cap: 3500, previous: before);
+    var cmpLine = after!.Findings.FirstOrDefault(t => t.StartsWith("Önceki oturuma göre"));
+    Check(cmpLine is not null && cmpLine.Contains("96 → 88") && cmpLine.Contains("60 → 56") && cmpLine.Contains("yok → 3500 MHz"), $"Karşılaştırma ısı, FPS ve sınır değişimini söylüyor ({cmpLine})");
+    var other = Run(600, i => (35, 3500, 88, 98, 0, 8, 56, 52), previous: new Pulse.Core.Diagnostics.GameSessionReport { Game = "BaskaOyun", Start = DateTime.Now, CpuTempAvg = 70 });
+    Check(!other!.Findings.Any(t => t.StartsWith("Önceki oturuma göre")), "Başka oyunun oturumuyla karşılaştırılmaz");
+
+    // 4e) Geçmiş: aynı oyunun son oturumu bulunur
+    var hp = Path.Combine(Path.GetTempPath(), "pulse-hist-" + Guid.NewGuid().ToString("N")[..6], "last.json");
+    Pulse.Core.Diagnostics.GameReportStore.Save(before!, hp);
+    Pulse.Core.Diagnostics.GameReportStore.Save(after, hp);
+    var lastFor = Pulse.Core.Diagnostics.GameReportStore.LastFor("fakegame", hp);
+    Check(Pulse.Core.Diagnostics.GameReportStore.LoadHistory(hp).Count == 2 && lastFor?.CpuCapMhz == 3500, "Geçmişte iki oturum var, son oturum doğru bulunuyor");
+    Check(Pulse.Core.Diagnostics.GameReportStore.LastFor("yok-oyun", hp) is null, "Olmayan oyun için geçmiş yok");
+    try { Directory.Delete(Path.GetDirectoryName(hp)!, true); } catch { }
+
+    // 5) Kısa oturum raporlanmaz
+    Check(Run(30, i => (30, 3800, 72, 70, 0, 7, null, null)) is null, "90 sn'den kısa oturumda rapor yok");
+
+    // 6) Kaydet / yükle
+    var tmp = Path.Combine(Path.GetTempPath(), "pulse-report-" + Guid.NewGuid().ToString("N")[..6] + ".json");
+    Pulse.Core.Diagnostics.GameReportStore.Save(hot, tmp);
+    var back = Pulse.Core.Diagnostics.GameReportStore.Load(tmp);
+    Check(back is not null && back.Game == "FakeGame" && back.Findings.Count == hot.Findings.Count && back.Severity == 2, "Rapor kaydedilip geri okunuyor");
+    try { File.Delete(tmp); } catch { }
+    Check(Pulse.Core.Diagnostics.GameReportStore.Load(tmp) is null, "Dosya yokken null döner");
+
+    Console.WriteLine(fails == 0 ? "OYUN RAPORU TESTİ GEÇTİ" : $"{fails} TEST KALDI");
+    return fails == 0 ? 0 : 1;
+}
+
+if (cmd == "freqcap-test")
+{
+    // İşlemci frekans sınırı (powercfg) gerçekten uygulanıyor mu? Tüm çekirdekleri yorup gerçek hızı ölçer. Ayarları sonunda geri koyar.
+    var fails = 0;
+    void Check(bool ok, string what) { Console.WriteLine($"  [{(ok ? "GEÇTİ" : "KALDI")}] {what}"); if (!ok) fails++; }
+    var scheme = Powercfg.ActiveScheme()!;
+    var sub = Powercfg.SubProcessor;
+    var pkeys = new[] { Powercfg.BoostMode, Powercfg.MaxProcessorState, Powercfg.EnergyPerformancePref, Powercfg.MaxFrequency };
+    var saved = pkeys.ToDictionary(k => k, k => (Ac: Powercfg.GetAc(scheme, sub, k), Dc: Powercfg.GetDc(scheme, sub, k)));
+    Console.WriteLine("  Özgün değerler: " + string.Join(", ", saved.Select(kv => $"{kv.Key[..4]}={kv.Value.Ac}/{kv.Value.Dc}")));
+    using var hub = new Pulse.Core.Monitoring.SensorHub();
+    Console.WriteLine($"  Taban hız: {hub.BaseMhz} MHz, {Environment.ProcessorCount} mantıksal işlemci");
+
+    void SetBoth(string key, int v) { Powercfg.SetAc(scheme, sub, key, v); Powercfg.SetDc(scheme, sub, key, v); }
+    (double Max, double Median) Measure(int capMhz)
+    {
+        SetBoth(Powercfg.MaxFrequency, capMhz);
+        Powercfg.SetActive(scheme);
+        Thread.Sleep(600);
+        var readBack = Powercfg.GetAc(scheme, sub, Powercfg.MaxFrequency);
+        using var cts = new CancellationTokenSource();
+        var workers = Enumerable.Range(0, Environment.ProcessorCount).Select(_ => Task.Run(() => { double x = 1; while (!cts.IsCancellationRequested) x = Math.Sqrt(x + 1.0001) * 1.0000001; return x; })).ToArray();
+        Thread.Sleep(2500);                                    // ısınma ve hız oturması
+        var samples = new List<double>();
+        for (var i = 0; i < 10; i++) { if (hub.Read().CpuMhz is { } f) samples.Add(f); Thread.Sleep(500); }
+        cts.Cancel(); Task.WaitAll(workers);
+        samples.Sort();
+        var med = samples.Count == 0 ? 0 : samples[samples.Count / 2];
+        Console.WriteLine($"  Sınır {(capMhz == 0 ? "yok" : capMhz + " MHz")} (geri okunan {readBack}): ölçülen en yüksek {samples.LastOrDefault():0} MHz, ortanca {med:0} MHz");
+        return (samples.LastOrDefault(), med);
+    }
+
+    try
+    {
+        SetBoth(Powercfg.BoostMode, 2); SetBoth(Powercfg.MaxProcessorState, 100); SetBoth(Powercfg.EnergyPerformancePref, 20);
+        var none = Measure(0);
+        Thread.Sleep(4000);
+        var c3000 = Measure(3000);
+        Thread.Sleep(4000);
+        var c2400 = Measure(2400);
+        // Bilgi amaçlı: eski yöntem (üst sınır %) turbo'yu nasıl etkiliyor?
+        SetBoth(Powercfg.MaxFrequency, 0);
+        foreach (var pct in new[] { 99, 90 })
+        {
+            Thread.Sleep(4000);
+            SetBoth(Powercfg.MaxProcessorState, pct);
+            var r = Measure(0);
+            Console.WriteLine($"    (bilgi) Üst sınır %{pct}: ortanca {r.Median:0} MHz");
+        }
+        SetBoth(Powercfg.MaxProcessorState, 100);
+        Check(none.Median > 2600, $"Sınırsız: işlemci taban hızın üstüne çıkıyor (ortanca {none.Median:0} MHz)");
+        Check(c3000.Median <= 3150, $"3000 MHz sınırı uygulandı (ortanca {c3000.Median:0} MHz)");
+        Check(c2400.Median <= 2550, $"2400 MHz sınırı uygulandı (ortanca {c2400.Median:0} MHz)");
+        Check(none.Median > c3000.Median && c3000.Median > c2400.Median, "Sınır düştükçe hız kademeli düşüyor");
+    }
+    finally
+    {
+        foreach (var (k, v) in saved)
+        {
+            if (v.Ac is { } a) Powercfg.SetAc(scheme, sub, k, a);
+            if (v.Dc is { } d) Powercfg.SetDc(scheme, sub, k, d);
+        }
+        Powercfg.SetActive(scheme);
+        Thread.Sleep(500);
+        var ok = pkeys.All(k => Powercfg.GetAc(scheme, sub, k) == saved[k].Ac && Powercfg.GetDc(scheme, sub, k) == saved[k].Dc);
+        Console.WriteLine("  Geri yükleme: " + (ok ? "tüm değerler eski haline döndü" : "UYARI: bazı değerler farklı!"));
+        if (!ok) fails++;
+    }
+    Console.WriteLine(fails == 0 ? "FREKANS SINIRI TESTİ GEÇTİ" : $"{fails} TEST KALDI");
+    return fails == 0 ? 0 : 1;
+}
+
 if (cmd == "sensors")
 {
     using var hub = new Pulse.Core.Monitoring.SensorHub();
