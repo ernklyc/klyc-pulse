@@ -1,3 +1,4 @@
+using Pulse.Core.Localization;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.IO;
@@ -19,7 +20,7 @@ public sealed class ParityVm
     public ParityVm(string status, string text)
     {
         Text = text;
-        (Label, var key) = status switch { "ok" => ("VAR", "GoodBrush"), "link" => ("ORTAK", "InfoBrush"), _ => ("KISMEN", "WarnBrush") };
+        (Label, var key) = status switch { "ok" => (Loc.T("VAR"), "GoodBrush"), "link" => (Loc.T("ORTAK"), "InfoBrush"), _ => (Loc.T("KISMEN"), "WarnBrush") };
         Brush = (Brush)Application.Current.FindResource(key);
     }
 
@@ -38,7 +39,7 @@ public sealed partial class ModeProfileVm : ObservableObject
     {
         _owner = owner;
         ModeKey = mode.Key;
-        Title = mode.Title + " modunda";
+        Title = Loc.F("{0} modunda", Loc.T(mode.Title));
         Options = options;
         _selectedIndex = selected;
         _loading = false;
@@ -69,7 +70,7 @@ public sealed partial class ToolLinkVm : ObservableObject
         _startWithPulse = link.StartWithPulse;
         if (profiles is not null)
         {
-            var options = new[] { "Dokunma" }.Concat(profiles).ToList();
+            var options = new[] { Loc.T("Dokunma") }.Concat(profiles).ToList();
             foreach (var m in Modes.All)
                 Rows.Add(new ModeProfileVm(this, m, options, link.ModeProfiles.TryGetValue(m.Key, out var p) && p < options.Count ? p : 0));
         }
@@ -107,7 +108,7 @@ public partial class ToolVm : ObservableObject
     private readonly Func<string?> _extraNote;
 
     public ToolVm(string name, string what, GHelperExit exit, Func<bool> installed, IEnumerable<ParityVm> parity, string? caution = null, Func<string?>? extraNote = null,
-        ToolLink? link = null, IReadOnlyList<string>? profiles = null, string linkTitle = "", string linkHelp = "", Action? open = null, string openText = "Aracı aç")
+        ToolLink? link = null, IReadOnlyList<string>? profiles = null, string linkTitle = "", string linkHelp = "", Action? open = null, string? openText = null)
     {
         Name = name;
         What = what;
@@ -117,7 +118,7 @@ public partial class ToolVm : ObservableObject
         Caution = caution ?? "";
         LinkTitle = linkTitle;
         LinkHelp = linkHelp;
-        OpenText = openText;
+        OpenText = openText ?? Loc.T("Aracı aç");
         if (link is not null) Link = new ToolLinkVm(name, link, profiles);
         if (open is not null) OpenCommand = new RelayCommand(open);
         foreach (var p in parity) Parity.Add(p);
@@ -150,7 +151,7 @@ public partial class ToolVm : ObservableObject
         var probe = _exit.Probe();
         IsActive = probe.Any(s => !s.Ok);
         var key = !IsInstalled ? "MutedBrush" : IsActive ? "WarnBrush" : "GoodBrush";
-        State = !IsInstalled ? "Kurulu değil" : IsActive ? "Çalışıyor / açılışta başlıyor" : "Çalışmıyor";
+        State = !IsInstalled ? Loc.T("Kurulu değil") : IsActive ? Loc.T("Çalışıyor / açılışta başlıyor") : Loc.T("Çalışmıyor");
         StateBrush = (Brush)Application.Current.FindResource(key);
         var detail = string.Join("  ·  ", probe.Where(s => !s.Ok).Select(s => s.Name));
         var extra = _extraNote();
@@ -173,34 +174,34 @@ public partial class ToolsViewModel : ObservableObject
         var settings = AppServices.Settings.Current;
 
         Tools.Add(new ToolVm("G-Helper",
-            "ASUS dizüstüler için performans modu, pil sınırı, klavye ışığı ve ekran ayarı programı.",
+            Loc.T("ASUS dizüstüler için performans modu, pil sınırı, klavye ışığı ve ekran ayarı programı."),
             new GHelperExit(),
             () => GHelperControl.IsInstalled,
             [
-                new("ok", "Oyun, Günlük, Sessiz ve Boşta modları; her ayarın tuttuğu kontrol edilir"),
-                new("ok", "Pil şarj sınırı, klavye ışığı ve rengi (Dizüstü sayfası)"),
-                new("ok", "Ekran hızı, parlaklık ve ekran kartı hız sınırı (modlarla birlikte)"),
-                new("ok", "Canlı sıcaklık ve fan hızı (İzleme sayfası)"),
-                new("link", "Fan hızı ayarı: bu bilgisayarın fanı yazılımla ayarlanamıyor (G-Helper da yapamaz). Onun yerine Pulse'ın “Sıcaklık sınırı” özelliği (Ayarlar) bilgisayarı serin tutar"),
-                new("link", "Fn tuşları: ASUS bu tuşları yalnızca kendi programına veriyor. Pulse'ta her işe istediğin başka bir tuşu atarsın (Dizüstü > Kısayollar)"),
-                new("link", "Ekran kartı Eco/MUX anahtarı: bu bilgisayarda yok. Ekran kartı Windows'un grafik tercihi ve hız sınırıyla yönetilir"),
+                new("ok", Loc.T("Oyun, Günlük, Sessiz ve Boşta modları; her ayarın tuttuğu kontrol edilir")),
+                new("ok", Loc.T("Pil şarj sınırı, klavye ışığı ve rengi (Dizüstü sayfası)")),
+                new("ok", Loc.T("Ekran hızı, parlaklık ve ekran kartı hız sınırı (modlarla birlikte)")),
+                new("ok", Loc.T("Canlı sıcaklık ve fan hızı (İzleme sayfası)")),
+                new("link", Loc.T("Fan hızı ayarı: bu bilgisayarın fanı yazılımla ayarlanamıyor (G-Helper da yapamaz). Onun yerine Pulse'ın “Sıcaklık sınırı” özelliği (Ayarlar) bilgisayarı serin tutar")),
+                new("link", Loc.T("Fn tuşları: ASUS bu tuşları yalnızca kendi programına veriyor. Pulse'ta her işe istediğin başka bir tuşu atarsın (Dizüstü > Kısayollar)")),
+                new("link", Loc.T("Ekran kartı Eco/MUX anahtarı: bu bilgisayarda yok. Ekran kartı Windows'un grafik tercihi ve hız sınırıyla yönetilir")),
             ],
-            "İkisi aynı anda açıksa birbirinin ayarını bozabilir. G-Helper'ı kullanmayacaksan kapalı tut; Pulse onun yaptığı her şeyi yapıyor.",
+            Loc.T("İkisi aynı anda açıksa birbirinin ayarını bozabilir. G-Helper'ı kullanmayacaksan kapalı tut; Pulse onun yaptığı her şeyi yapıyor."),
             link: settings.GHelperLink,
-            linkTitle: "G-Helper'ı Pulse ile birlikte aç",
-            linkHelp: "Normalde gerek yok. G-Helper'ın kendi ekranını da kullanmak istersen aç.",
+            linkTitle: Loc.T("G-Helper'ı Pulse ile birlikte aç"),
+            linkHelp: Loc.T("Normalde gerek yok. G-Helper'ın kendi ekranını da kullanmak istersen aç."),
             open: () => { var exe = GHelperControl.FindExe(); if (exe is not null) Process.Start(new ProcessStartInfo(exe) { UseShellExecute = true }); },
-            openText: "G-Helper'ı aç"));
+            openText: Loc.T("G-Helper'ı aç")));
 
         Tools.Add(new ToolVm("MSI Afterburner",
-            "Ekran kartını izleyen, oyun sırasında ekranda bilgi gösteren ve ekran kartını hızlandıran program.",
+            Loc.T("Ekran kartını izleyen, oyun sırasında ekranda bilgi gösteren ve ekran kartını hızlandıran program."),
             new GHelperExit("MSIAfterburner", "MSIAfterburner", [], Backup("afterburner")),
             () => AfterburnerControl.IsInstalled,
             [
-                new("ok", "Canlı sıcaklık, hız, güç, bellek ve kullanım (İzleme sayfası)"),
-                new("ok", "Oyun sırasında ekranda gösterge ve kare hızı (FPS)"),
-                new("ok", "Ekran kartı hız sınırı (güç ve ısı için) Pulse'ın kendisinde"),
-                new("link", "Ekran kartını hızlandırma: Pulse kendisi de yapabiliyor (Dizüstü sayfası). Afterburner'da kaydettiğin özel bir profilin varsa Pulse hangi modda hangisinin kullanılacağını yönetir"),
+                new("ok", Loc.T("Canlı sıcaklık, hız, güç, bellek ve kullanım (İzleme sayfası)")),
+                new("ok", Loc.T("Oyun sırasında ekranda gösterge ve kare hızı (FPS)")),
+                new("ok", Loc.T("Ekran kartı hız sınırı (güç ve ısı için) Pulse'ın kendisinde")),
+                new("link", Loc.T("Ekran kartını hızlandırma: Pulse kendisi de yapabiliyor (Dizüstü sayfası). Afterburner'da kaydettiğin özel bir profilin varsa Pulse hangi modda hangisinin kullanılacağını yönetir")),
             ],
             null,
             () =>
@@ -208,51 +209,51 @@ public partial class ToolsViewModel : ObservableObject
                 try
                 {
                     var n = AfterburnerControl.SavedProfileCount();
-                    return n > 0 ? $"{n} kayıtlı profilin var; aşağıdan hangi modda hangisinin kullanılacağını seç." : "Afterburner'da kayıtlı profilin yok. Gerekmiyor: Pulse ekran kartını kendisi de hızlandırabiliyor. İstersen Afterburner'da bir profil kaydedip burada bir moda bağlayabilirsin.";
+                    return n > 0 ? Loc.F("{0} kayıtlı profilin var; aşağıdan hangi modda hangisinin kullanılacağını seç.", n) : Loc.T("Afterburner'da kayıtlı profilin yok. Gerekmiyor: Pulse ekran kartını kendisi de hızlandırabiliyor. İstersen Afterburner'da bir profil kaydedip burada bir moda bağlayabilirsin.");
                 }
                 catch { return null; }
             },
             link: settings.AfterburnerLink,
             profiles: ["Profil 1", "Profil 2", "Profil 3", "Profil 4", "Profil 5"],
-            linkTitle: "Afterburner'ı Pulse ile birlikte aç",
-            linkHelp: "Seçtiğin moda geçince Pulse, Afterburner'a o profili uygulamasını söyler. Afterburner cevap vermediği için burada “komut gönderildi” yazar.",
+            linkTitle: Loc.T("Afterburner'ı Pulse ile birlikte aç"),
+            linkHelp: Loc.T("Seçtiğin moda geçince Pulse, Afterburner'a o profili uygulamasını söyler. Afterburner cevap vermediği için burada “komut gönderildi” yazar."),
             open: () => AfterburnerControl.Launch(),
-            openText: "Afterburner'ı aç"));
+            openText: Loc.T("Afterburner'ı aç")));
 
         Tools.Add(new ToolVm("ThrottleStop",
-            "İşlemciyi izleyen, voltajını düşürüp güç sınırını ayarlayan program.",
+            Loc.T("İşlemciyi izleyen, voltajını düşürüp güç sınırını ayarlayan program."),
             new GHelperExit("ThrottleStop", "ThrottleStop", [], Backup("throttlestop")),
             () => ThrottleStopControl.IsInstalled,
             [
-                new("ok", "İşlemci sıcaklığı, hızı, yükü ve yavaşlama nedeni (İzleme sayfası)"),
-                new("link", "İşlemciyi daha az voltajla çalıştırma (undervolt) ve güç sınırı: bu bilgisayarın BIOS'u bunları kilitlemiş, ThrottleStop dahil hiçbir program değiştiremiyor (denedik). Başka bir bilgisayarda mümkünse: ThrottleStop'ta bir kez ayarlarsın, Pulse onu başlatır ve moda göre profilini seçer"),
+                new("ok", Loc.T("İşlemci sıcaklığı, hızı, yükü ve yavaşlama nedeni (İzleme sayfası)")),
+                new("link", Loc.T("İşlemciyi daha az voltajla çalıştırma (undervolt) ve güç sınırı: bu bilgisayarın BIOS'u bunları kilitlemiş, ThrottleStop dahil hiçbir program değiştiremiyor (denedik). Başka bir bilgisayarda mümkünse: ThrottleStop'ta bir kez ayarlarsın, Pulse onu başlatır ve moda göre profilini seçer")),
             ],
-            "Bu bilgisayarda ThrottleStop'tan kazanacağın bir şey yok: ayarların hepsi kilitli. Kapalı tutmak en iyisi.",
+            Loc.T("Bu bilgisayarda ThrottleStop'tan kazanacağın bir şey yok: ayarların hepsi kilitli. Kapalı tutmak en iyisi."),
             link: settings.ThrottleStopLink,
             profiles: ThrottleStopControl.ProfileNames(),
-            linkTitle: "ThrottleStop'u Pulse ile birlikte aç",
-            linkHelp: "Mod değişince Pulse, ThrottleStop'un profilini seçer. Bu bilgisayarda bir etkisi olmaz, başka bir bilgisayar için var.",
+            linkTitle: Loc.T("ThrottleStop'u Pulse ile birlikte aç"),
+            linkHelp: Loc.T("Mod değişince Pulse, ThrottleStop'un profilini seçer. Bu bilgisayarda bir etkisi olmaz, başka bir bilgisayar için var."),
             open: () => { var exe = ThrottleStopControl.FindExe(); if (exe is not null) Process.Start(new ProcessStartInfo(exe) { UseShellExecute = true }); },
-            openText: "ThrottleStop'u aç"));
+            openText: Loc.T("ThrottleStop'u aç")));
 
         Tools.Add(new ToolVm("Intel Driver & Support Assistant",
-            "Intel sürücülerini denetleyip güncelleyen, sürekli arka planda çalışan yardımcı.",
+            Loc.T("Intel sürücülerini denetleyip güncelleyen, sürekli arka planda çalışan yardımcı."),
             new GHelperExit("DSATray", "DSATray", ["DSAService", "DSAUpdateService"], Backup("intel_dsa")),
             () => ServiceExists("DSAService"),
             [
-                new("ok", "BIOS ve sürücü sürümleri, eskiyenlerin işaretlenmesi (Sürücüler sayfası)"),
-                new("ok", "Windows Update'te bekleyen sürücü taraması; gerçekten yeni olanı ayırır"),
-                new("link", "Kurulumu Windows Update ya da NVIDIA App yapar (güvenli, geri alınabilir). Pulse seni oraya götürür"),
+                new("ok", Loc.T("BIOS ve sürücü sürümleri, eskiyenlerin işaretlenmesi (Sürücüler sayfası)")),
+                new("ok", Loc.T("Windows Update'te bekleyen sürücü taraması; gerçekten yeni olanı ayırır")),
+                new("link", Loc.T("Kurulumu Windows Update ya da NVIDIA App yapar (güvenli, geri alınabilir). Pulse seni oraya götürür")),
             ]));
 
         Tools.Add(new ToolVm("Microsoft PC Manager",
-            "Temizlik, hızlandırma, süreç ve başlangıç yönetimi aracı.",
+            Loc.T("Temizlik, hızlandırma, süreç ve başlangıç yönetimi aracı."),
             new GHelperExit("MSPCManager", "MSPCManager", ["MSPCManagerService"], Backup("pcmanager")),
             () => ServiceExists("MSPCManagerService") || Process.GetProcessesByName("MSPCManager").Length > 0,
             [
-                new("ok", "Geçici dosya temizliği ve derin temizlik (Temizlik sayfası)"),
-                new("ok", "Tek tuşla hızlandır, açılış ve arka plan yönetimi, sağlık raporu"),
-                new("ok", "Süreç yöneticisi: kapat, öncelik, Eko mod (Süreçler sayfası)"),
+                new("ok", Loc.T("Geçici dosya temizliği ve derin temizlik (Temizlik sayfası)")),
+                new("ok", Loc.T("Tek tuşla hızlandır, açılış ve arka plan yönetimi, sağlık raporu")),
+                new("ok", Loc.T("Süreç yöneticisi: kapat, öncelik, Eko mod (Süreçler sayfası)")),
             ]));
 
         AppServices.Companion.StatusChanged += () => Application.Current.Dispatcher.BeginInvoke(() => { foreach (var t in Tools) t.Link?.RefreshStatus(); });
@@ -273,34 +274,34 @@ public partial class ToolsViewModel : ObservableObject
     private async Task Leave(ToolVm? tool)
     {
         if (tool is null || tool.Busy) return;
-        if (!Admin) { Note = "Bu işlem için KLYC-Pulse'ın yönetici olarak çalışması gerekir."; return; }
+        if (!Admin) { Note = Loc.T("Bu işlem için KLYC-Pulse'ın yönetici olarak çalışması gerekir."); return; }
         var warn = tool.Caution.Length > 0 ? $"\n\nDikkat: {tool.Caution}" : "";
         var ask = MessageBox.Show(
-            $"{tool.Name} kapatılacak ve Windows ile başlamayacak.\n\nHiçbir şey silinmez. \"Geri al\" ile eski haline döner.{warn}\n\nDevam edilsin mi?",
-            $"{tool.Name}'ı kapat", MessageBoxButton.YesNo, MessageBoxImage.Question);
+            Loc.F("{0} kapatılacak ve Windows ile başlamayacak.\n\nHiçbir şey silinmez. \"Geri al\" ile eski haline döner.{1}\n\nDevam edilsin mi?", tool.Name, warn),
+            Loc.F("{0}'ı kapat", tool.Name), MessageBoxButton.YesNo, MessageBoxImage.Question);
         if (ask != MessageBoxResult.Yes) return;
 
         tool.Busy = true;
-        Op.Begin($"{tool.Name} kapatılıyor ve doğrulanıyor…");
+        Op.Begin(Loc.F("{0} kapatılıyor ve doğrulanıyor…", tool.Name));
         var steps = await tool.ApplyAsync();
         await Task.Run(tool.Refresh);
         Op.End();
         tool.Busy = false;
-        Note = steps.All(s => s.Ok) ? $"{tool.Name}: tamam, her adım doğrulandı." : $"{tool.Name}: {steps.Count(s => !s.Ok)} adım doğrulanamadı.";
+        Note = steps.All(s => s.Ok) ? Loc.F("{0}: tamam, her adım doğrulandı.", tool.Name) : Loc.F("{0}: {1} adım doğrulanamadı.", tool.Name, steps.Count(s => !s.Ok));
     }
 
     [RelayCommand]
     private async Task Revert(ToolVm? tool)
     {
         if (tool is null || tool.Busy) return;
-        if (!Admin) { Note = "Bu işlem için KLYC-Pulse'ın yönetici olarak çalışması gerekir."; return; }
+        if (!Admin) { Note = Loc.T("Bu işlem için KLYC-Pulse'ın yönetici olarak çalışması gerekir."); return; }
         tool.Busy = true;
-        Op.Begin($"{tool.Name} eski haline döndürülüyor…");
+        Op.Begin(Loc.F("{0} eski haline döndürülüyor…", tool.Name));
         var steps = await tool.RevertAsync();
         await Task.Delay(1200);
         await Task.Run(tool.Refresh);
         Op.End();
         tool.Busy = false;
-        Note = steps.All(s => s.Ok) ? $"{tool.Name}: geri alındı." : $"{tool.Name}: {steps.Count(s => !s.Ok)} adım geri alınamadı.";
+        Note = steps.All(s => s.Ok) ? Loc.F("{0}: geri alındı.", tool.Name) : Loc.F("{0}: {1} adım geri alınamadı.", tool.Name, steps.Count(s => !s.Ok));
     }
 }

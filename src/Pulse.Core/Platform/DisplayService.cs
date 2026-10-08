@@ -1,3 +1,4 @@
+using Pulse.Core.Localization;
 using System.Runtime.InteropServices;
 
 namespace Pulse.Core.Platform;
@@ -59,7 +60,7 @@ public static class DisplayService
     {
         var o = RunPowerShell("(Get-CimInstance -Namespace root/wmi -ClassName WmiMonitorBrightness | Select-Object -First 1).CurrentBrightness");
         if (int.TryParse(o.Trim(), out var v)) return v;
-        LastError = "Parlaklık okunamadı: " + o.Trim();
+        LastError = Loc.T("Parlaklık okunamadı: ") + o.Trim();
         return null;
     }
 
@@ -70,7 +71,7 @@ public static class DisplayService
             "Get-CimInstance -Namespace root/wmi -ClassName WmiMonitorBrightnessMethods | " +
             $"Invoke-CimMethod -MethodName WmiSetBrightness -Arguments @{{Timeout=[uint32]1;Brightness=[byte]{percent}}} | Out-Null; 'ok'");
         if (o.Contains("ok")) return true;
-        LastError = "Parlaklık yazılamadı: " + o.Trim();
+        LastError = Loc.T("Parlaklık yazılamadı: ") + o.Trim();
         return false;
     }
 

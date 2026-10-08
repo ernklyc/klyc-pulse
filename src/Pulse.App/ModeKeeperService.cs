@@ -1,3 +1,4 @@
+using Pulse.Core.Localization;
 using Pulse.Core.Diagnostics;
 
 namespace Pulse.App;
@@ -38,7 +39,7 @@ public sealed class ModeKeeperService : IDisposable
             // Sıcaklık sınırı açıksa işlemci üst sınırını kendisi değiştirir; onu "bozulma" sayma.
             var ignoreMax = false;     // sıcaklık sınırı artık yalnızca frekans sınırını değiştirir; üst sınır % mod değerinde kalır
             if (await AppServices.Modes.RepairPowerAsync(ignoreMax))
-                Notice?.Invoke("Başka bir program güç ayarlarını değiştirmişti. Seçtiğin modun ayarlarını geri düzelttim.");
+                Notice?.Invoke(Loc.T("Başka bir program güç ayarlarını değiştirmişti. Seçtiğin modun ayarlarını geri düzelttim."));
         }
         catch (Exception ex) { Journal.Write("Mod koruyucu hatası: " + ex.Message); }
         finally { Interlocked.Exchange(ref _running, 0); }

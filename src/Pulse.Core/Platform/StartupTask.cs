@@ -1,3 +1,4 @@
+using Pulse.Core.Localization;
 using System.Diagnostics;
 using System.Security;
 
@@ -37,7 +38,7 @@ public static class StartupTask
         try
         {
             var r = Run("/Create", "/TN", TaskName, "/XML", tmp, "/F");
-            return (r.Code == 0, r.Code == 0 ? "Açılışta otomatik başlatma etkin." : r.Output.Trim());
+            return (r.Code == 0, r.Code == 0 ? Loc.T("Açılışta otomatik başlatma etkin.") : r.Output.Trim());
         }
         finally { try { File.Delete(tmp); } catch { } }
     }
@@ -45,7 +46,7 @@ public static class StartupTask
     public static (bool Ok, string Message) Disable()
     {
         var r = Run("/Delete", "/TN", TaskName, "/F");
-        return (r.Code == 0, r.Code == 0 ? "Açılışta başlatma kapatıldı." : r.Output.Trim());
+        return (r.Code == 0, r.Code == 0 ? Loc.T("Açılışta başlatma kapatıldı.") : r.Output.Trim());
     }
 
     private static (int Code, string Output) Run(params string[] args)

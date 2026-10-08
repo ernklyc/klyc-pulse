@@ -1,3 +1,4 @@
+using Pulse.Core.Localization;
 using System.Diagnostics;
 using Pulse.Core.Diagnostics;
 
@@ -25,7 +26,7 @@ public static class RestorePoint
             var error = p.StandardError.ReadToEnd();
             p.WaitForExit(30000);
             if (p.ExitCode != 0 && output.Length == 0)
-                return (Array.Empty<Info>(), error.Contains("Access", StringComparison.OrdinalIgnoreCase) || error.Contains("erişim", StringComparison.OrdinalIgnoreCase) ? "Listeyi okumak için KLYC-Pulse'ın yönetici olarak çalışması gerekir." : "Liste okunamadı.");
+                return (Array.Empty<Info>(), error.Contains("Access", StringComparison.OrdinalIgnoreCase) || error.Contains("erişim", StringComparison.OrdinalIgnoreCase) ? Loc.T("Listeyi okumak için KLYC-Pulse'ın yönetici olarak çalışması gerekir.") : Loc.T("Liste okunamadı."));
             if (output.Length == 0 || output == "[]") return (Array.Empty<Info>(), null);
 
             using var doc = System.Text.Json.JsonDocument.Parse(output);
@@ -62,9 +63,9 @@ public static class RestorePoint
             var output = p.StandardOutput.ReadToEnd() + p.StandardError.ReadToEnd();
             p.WaitForExit(60000);
             Journal.Write("Geri yükleme noktası: " + output.Trim());
-            if (output.Contains("CREATED")) return new Result(true, "Geri Yükleme Noktası oluşturuldu.");
-            if (output.Contains("LIMIT")) return new Result(false, "Son 24 saatte zaten bir nokta var, o geçerli.");
-            return new Result(false, "Geri Yükleme Noktası oluşturulamadı (yönetici izni ya da Sistem Koruması kapalı olabilir).");
+            if (output.Contains("CREATED")) return new Result(true, Loc.T("Geri Yükleme Noktası oluşturuldu."));
+            if (output.Contains("LIMIT")) return new Result(false, Loc.T("Son 24 saatte zaten bir nokta var, o geçerli."));
+            return new Result(false, Loc.T("Geri Yükleme Noktası oluşturulamadı (yönetici izni ya da Sistem Koruması kapalı olabilir)."));
         }
         catch (Exception ex) { return new Result(false, ex.Message); }
     });

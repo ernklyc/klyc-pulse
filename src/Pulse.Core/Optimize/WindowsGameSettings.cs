@@ -1,3 +1,4 @@
+using Pulse.Core.Localization;
 using Microsoft.Win32;
 using Pulse.Core.Diagnostics;
 
@@ -20,7 +21,7 @@ public sealed class GameSetting
 
     public int? Current { get; set; }
     public bool IsGood => Current is null ? DefaultIsGood : Current == Desired;
-    public string CurrentText => Current is null ? "varsayılan" : Current == Desired ? "uygun" : $"değer {Current}";
+    public string CurrentText => Current is null ? Loc.T("varsayılan") : Current == Desired ? Loc.T("uygun") : Loc.F("değer {0}", Current);
 }
 
 /// <summary>
@@ -40,25 +41,25 @@ public static class WindowsGameSettings
     [
         new()
         {
-            Id = "hags", Name = "Ekran kartı zamanlayıcısı (HAGS)", Why = "Ekran kartı kendi iş sırasını yönetir, işlemci rahatlar. Açık olması iyi.",
+            Id = "hags", Name = Loc.T("Ekran kartı zamanlayıcısı (HAGS)"), Why = Loc.T("Ekran kartı kendi iş sırasını yönetir, işlemci rahatlar. Açık olması iyi."),
             Hive = RegistryHive.LocalMachine, KeyPath = @"SYSTEM\CurrentControlSet\Control\GraphicsDrivers", ValueName = "HwSchMode",
             Desired = 2, NeedsAdmin = true, NeedsReboot = true,
         },
         new()
         {
-            Id = "gamemode", Name = "Windows Oyun Modu", Why = "Oyun açıkken Windows arka plandaki işleri geri çeker. Açık olması iyi.",
+            Id = "gamemode", Name = Loc.T("Windows Oyun Modu"), Why = Loc.T("Oyun açıkken Windows arka plandaki işleri geri çeker. Açık olması iyi."),
             Hive = RegistryHive.CurrentUser, KeyPath = @"Software\Microsoft\GameBar", ValueName = "AutoGameModeEnabled",
             Desired = 1, DefaultIsGood = true,
         },
         new()
         {
-            Id = "dvr", Name = "Arka planda oyun kaydı", Why = "Kapalıyken Windows oyun sırasında sürekli video kaydetmez. Ekran kartı ve disk rahatlar. Kapalı olması iyi.",
+            Id = "dvr", Name = Loc.T("Arka planda oyun kaydı"), Why = Loc.T("Kapalıyken Windows oyun sırasında sürekli video kaydetmez. Ekran kartı ve disk rahatlar. Kapalı olması iyi."),
             Hive = RegistryHive.CurrentUser, KeyPath = @"Software\Microsoft\Windows\CurrentVersion\GameDVR", ValueName = "AppCaptureEnabled",
             Desired = 0, DefaultIsGood = false,
         },
         new()
         {
-            Id = "dvrstore", Name = "Oyun kaydı (ikinci ayar)", Why = "Yukarıdakiyle birlikte çalışır; ikisi de kapalı olmalı.",
+            Id = "dvrstore", Name = Loc.T("Oyun kaydı (ikinci ayar)"), Why = Loc.T("Yukarıdakiyle birlikte çalışır; ikisi de kapalı olmalı."),
             Hive = RegistryHive.CurrentUser, KeyPath = @"System\GameConfigStore", ValueName = "GameDVR_Enabled",
             Desired = 0, DefaultIsGood = false,
         },
@@ -78,7 +79,7 @@ public static class WindowsGameSettings
     /// <summary>Ayarı istenen değere getirir ve geri okuyarak doğrular.</summary>
     public static (bool Ok, string Message) Fix(GameSetting s, bool isAdmin)
     {
-        if (s.NeedsAdmin && !isAdmin) return (false, "Bu ayar için KLYC-Pulse'ın yönetici olarak çalışması gerekir.");
+        if (s.NeedsAdmin && !isAdmin) return (false, Loc.T("Bu ayar için KLYC-Pulse'ın yönetici olarak çalışması gerekir."));
         try
         {
             var old = ReadValue(s);
@@ -87,8 +88,8 @@ public static class WindowsGameSettings
             key.SetValue(s.ValueName, s.Desired, RegistryValueKind.DWord);
             var now = ReadValue(s);
             Journal.Write($"Oyun ayarı {s.Id}: {old?.ToString() ?? "yok"} -> {now}");
-            if (now != s.Desired) return (false, "Yazıldı ama geri okunan değer farklı.");
-            return (true, s.NeedsReboot ? "Düzeltildi ve doğrulandı. Etkisi için yeniden başlatma gerekir." : "Düzeltildi ve doğrulandı.");
+            if (now != s.Desired) return (false, Loc.T("Yazıldı ama geri okunan değer farklı."));
+            return (true, s.NeedsReboot ? Loc.T("Düzeltildi ve doğrulandı. Etkisi için yeniden başlatma gerekir.") : Loc.T("Düzeltildi ve doğrulandı."));
         }
         catch (Exception ex) { return (false, ex.Message); }
     }

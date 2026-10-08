@@ -1,3 +1,4 @@
+using Pulse.Core.Localization;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Diagnostics;
@@ -37,7 +38,7 @@ public partial class ProcRowVm : ObservableObject
     [ObservableProperty] private int _priorityIndex = 2;
     [ObservableProperty] private bool _ecoMode;
 
-    public static IReadOnlyList<string> Priorities { get; } = ["Düşük", "Normal altı", "Normal", "Normal üstü", "Yüksek"];
+    public static IReadOnlyList<string> Priorities { get; } = [Loc.T("Düşük"), Loc.T("Normal altı"), "Normal", Loc.T("Normal üstü"), Loc.T("Yüksek")];
     private static readonly ProcessPriorityClass[] Classes =
         [ProcessPriorityClass.Idle, ProcessPriorityClass.BelowNormal, ProcessPriorityClass.Normal, ProcessPriorityClass.AboveNormal, ProcessPriorityClass.High];
 
@@ -49,7 +50,7 @@ public partial class ProcRowVm : ObservableObject
         Title = g.Title.Length > 0 ? g.Title : (g.Path ?? "");
         CountText = g.Count > 1 ? $"×{g.Count}" : "";
         CpuPercent = g.CpuPercent;
-        CpuText = g.CpuPercent >= 0.1 ? $"%{g.CpuPercent:0.0}" : "—";
+        CpuText = g.CpuPercent >= 0.1 ? Loc.F("%{0:0.0}", g.CpuPercent) : "—";
         MemoryBytes = g.MemoryBytes;
         MemoryText = g.MemoryBytes >= 1073741824 ? $"{g.MemoryBytes / 1073741824.0:0.0} GB" : $"{g.MemoryBytes / 1048576} MB";
         IsProtected = g.Protected;
@@ -153,7 +154,7 @@ public partial class ProcessesViewModel : ObservableObject, IDisposable
                 _byName.Remove(gone);
             }
             var user = Rows.Where(r => !r.IsProtected).ToList();
-            Summary = $"{user.Count} program, toplam {user.Sum(r => r.MemoryBytes) / 1073741824.0:0.0} GB bellek";
+            Summary = Loc.F("{0} program, toplam {1:0.0} GB bellek", user.Count, user.Sum(r => r.MemoryBytes) / 1073741824.0);
         }
         catch (Exception ex) { Pulse.Core.Diagnostics.Journal.Write("Süreç listesi hatası: " + ex.Message); }
         finally { _busy = false; }
@@ -166,37 +167,37 @@ public partial class ProcessesViewModel : ObservableObject, IDisposable
     {
         if (row is null || row.IsProtected) return;
         var g = row.Group;
-        var many = g.Count > 1 ? $"{g.Count} süreç" : "süreç";
-        var ask = MessageBox.Show($"“{row.Name}” kapatılacak ({many}).\n\nÖnce nazikçe kapanması istenir; kaydedilmemiş işin varsa program sana sorar.", "Kapat", MessageBoxButton.YesNo, MessageBoxImage.Question);
+        var many = g.Count > 1 ? Loc.F("{0} süreç", g.Count) : Loc.T("süreç");
+        var ask = MessageBox.Show(Loc.F("“{0}” kapatılacak ({1}).\n\nÖnce nazikçe kapanması istenir; kaydedilmemiş işin varsa program sana sorar.", row.Name, many), "Kapat", MessageBoxButton.YesNo, MessageBoxImage.Question);
         if (ask != MessageBoxResult.Yes) return;
 
-        Op.Begin($"{row.Name} kapatılıyor…");
+        Op.Begin(Loc.F("{0} kapatılıyor…", row.Name));
         var (result, closed, remaining) = await Task.Run(() => _inspector.Close(g));
         Op.End();
 
-        if (result == ProcResult.Ok) { Status = $"{row.Name} kapatıldı."; await RefreshAsync(); return; }
+        if (result == ProcResult.Ok) { Status = Loc.F("{0} kapatıldı.", row.Name); await RefreshAsync(); return; }
 
         var force = MessageBox.Show(
-            $"{row.Name} kapanmadı ({remaining} süreç hâlâ çalışıyor). Cevap vermiyor olabilir.\n\nZorla sonlandırılsın mı? Kaydedilmemiş veri kaybolur.",
-            "Zorla kapat", MessageBoxButton.YesNo, MessageBoxImage.Warning, MessageBoxResult.No);
-        if (force != MessageBoxResult.Yes) { Status = $"{row.Name} açık bırakıldı."; return; }
+            Loc.F("{0} kapanmadı ({1} süreç hâlâ çalışıyor). Cevap vermiyor olabilir.\n\nZorla sonlandırılsın mı? Kaydedilmemiş veri kaybolur.", row.Name, remaining),
+            Loc.T("Zorla kapat"), MessageBoxButton.YesNo, MessageBoxImage.Warning, MessageBoxResult.No);
+        if (force != MessageBoxResult.Yes) { Status = Loc.F("{0} açık bırakıldı.", row.Name); return; }
         var (r2, _) = await Task.Run(() => _inspector.ForceClose(row.Group with { Pids = g.Pids }));
-        Status = r2 == ProcResult.Ok ? $"{row.Name} sonlandırıldı." : $"{row.Name} tamamen sonlandırılamadı.";
+        Status = r2 == ProcResult.Ok ? Loc.F("{0} sonlandırıldı.", row.Name) : Loc.F("{0} tamamen sonlandırılamadı.", row.Name);
         await RefreshAsync();
     }
 
     public void ApplyPriority(ProcRowVm row, ProcessPriorityClass priority)
     {
         var (result, changed) = _inspector.SetPriority(row.Group, priority);
-        Status = result == ProcResult.Ok ? $"{row.Name}: öncelik {ProcRowVm.Priorities[Array.IndexOf(new[] { ProcessPriorityClass.Idle, ProcessPriorityClass.BelowNormal, ProcessPriorityClass.Normal, ProcessPriorityClass.AboveNormal, ProcessPriorityClass.High }, priority)]} yapıldı ve doğrulandı."
-            : $"{row.Name}: öncelik {changed}/{row.Group.Count} süreçte değişti.";
+        Status = result == ProcResult.Ok ? Loc.F("{0}: öncelik {1} yapıldı ve doğrulandı.", row.Name, ProcRowVm.Priorities[Array.IndexOf(new[] { ProcessPriorityClass.Idle, ProcessPriorityClass.BelowNormal, ProcessPriorityClass.Normal, ProcessPriorityClass.AboveNormal, ProcessPriorityClass.High }, priority)])
+            : Loc.F("{0}: öncelik {1}/{2} süreçte değişti.", row.Name, changed, row.Group.Count);
     }
 
     public void ApplyEco(ProcRowVm row, bool on)
     {
         var (result, changed) = _inspector.SetEcoMode(row.Group, on);
-        Status = result == ProcResult.Ok ? $"{row.Name}: Verimlilik Modu {(on ? "açıldı" : "kapatıldı")} ve doğrulandı."
-            : $"{row.Name}: Verimlilik Modu {changed}/{row.Group.Count} süreçte değişti.";
+        Status = result == ProcResult.Ok ? Loc.F("{0}: Verimlilik Modu {1} ve doğrulandı.", row.Name, Loc.T(on ? "açıldı" : "kapatıldı"))
+            : Loc.F("{0}: Verimlilik Modu {1}/{2} süreçte değişti.", row.Name, changed, row.Group.Count);
     }
 
     public void Dispose() => _timer.Stop();

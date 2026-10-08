@@ -10,6 +10,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <EmbeddedResource Include="Localization\en*.tsv" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Microsoft.Diagnostics.Tracing.TraceEvent" Version="3.2.8" ExcludeAssets="build;buildTransitive" />
     <PackageReference Include="NvAPIWrapper.Net" Version="0.8.1.101" />
     <PackageReference Include="System.Diagnostics.PerformanceCounter" Version="8.0.1" />

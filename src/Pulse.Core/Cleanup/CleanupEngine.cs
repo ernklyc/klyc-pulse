@@ -1,3 +1,4 @@
+using Pulse.Core.Localization;
 using System.Diagnostics;
 using System.Security.Principal;
 using Pulse.Core.Diagnostics;
@@ -38,7 +39,7 @@ public sealed class CleanupEngine
 
     public CategoryScan Scan(CleanupCategory c)
     {
-        if (c.NeedsAdmin && !IsAdmin) return new CategoryScan(c, 0, 0, "Yönetici izni gerekir");
+        if (c.NeedsAdmin && !IsAdmin) return new CategoryScan(c, 0, 0, Loc.T("Yönetici izni gerekir"));
         if (c.Special == "recycle") { var (b, n) = RecycleBin.Query(); return new CategoryScan(c, b, (int)n); }
         if (c.Special == "dism") return new CategoryScan(c, 0, 0, null);
 
@@ -66,12 +67,12 @@ public sealed class CleanupEngine
 
     public CategoryClean Clean(CleanupCategory c)
     {
-        if (c.NeedsAdmin && !IsAdmin) return new CategoryClean(c, 0, 0, 0, "Yönetici izni gerekir");
+        if (c.NeedsAdmin && !IsAdmin) return new CategoryClean(c, 0, 0, 0, Loc.T("Yönetici izni gerekir"));
 
         if (c.Special == "recycle")
         {
             var (before, n) = RecycleBin.Query();
-            return RecycleBin.Empty() ? new CategoryClean(c, before, (int)n, 0) : new CategoryClean(c, 0, 0, 0, "Boşaltılamadı");
+            return RecycleBin.Empty() ? new CategoryClean(c, before, (int)n, 0) : new CategoryClean(c, 0, 0, 0, Loc.T("Boşaltılamadı"));
         }
         if (c.Special == "dism") return RunDism(c);
 
@@ -108,7 +109,7 @@ public sealed class CleanupEngine
             }
 
             if (c.Safety == CleanupSafety.Regenerable) RemoveEmptyDirectories(c);
-            return new CategoryClean(c, freed, files, skipped, skipped > 0 ? $"{skipped} dosya kullanımda, atlandı" : null);
+            return new CategoryClean(c, freed, files, skipped, skipped > 0 ? Loc.F("{0} dosya kullanımda, atlandı", skipped) : null);
         }
         finally
         {
@@ -174,7 +175,7 @@ public sealed class CleanupEngine
             using var p = Process.Start(psi)!;
             p.StandardOutput.ReadToEnd();
             p.WaitForExit(15 * 60 * 1000);
-            return new CategoryClean(c, 0, 0, 0, p.ExitCode == 0 ? "Bileşen deposu temizlendi (alan kazancı sistem tarafından hesaplanır)" : $"DISM hata kodu {p.ExitCode}");
+            return new CategoryClean(c, 0, 0, 0, p.ExitCode == 0 ? Loc.T("Bileşen deposu temizlendi (alan kazancı sistem tarafından hesaplanır)") : $"DISM hata kodu {p.ExitCode}");
         }
         catch (Exception ex) { return new CategoryClean(c, 0, 0, 0, ex.Message); }
     }

@@ -1,3 +1,4 @@
+using Pulse.Core.Localization;
 using System.Net;
 using System.Net.Http.Headers;
 using System.Text.Json;
@@ -30,18 +31,18 @@ public static class UpdateChecker
 
             using var resp = await http.GetAsync(Endpoint, ct);
             if (resp.StatusCode == HttpStatusCode.NotFound)
-                return new(null, false, "Sürüm bilgisi alınamadı (depo gizli ya da henüz sürüm yok).");
+                return new(null, false, Loc.T("Sürüm bilgisi alınamadı (depo gizli ya da henüz sürüm yok)."));
             if (resp.StatusCode is HttpStatusCode.Forbidden or HttpStatusCode.TooManyRequests)
-                return new(null, false, "GitHub şu an çok istek aldığı için sürüm sorgusunu reddetti; daha sonra tekrar denenecek.");
+                return new(null, false, Loc.T("GitHub şu an çok istek aldığı için sürüm sorgusunu reddetti; daha sonra tekrar denenecek."));
             if (!resp.IsSuccessStatusCode)
-                return new(null, false, $"Sürüm sorgusu başarısız (HTTP {(int)resp.StatusCode}).");
+                return new(null, false, Loc.F("Sürüm sorgusu başarısız (HTTP {0}).", (int)resp.StatusCode));
 
             var latest = Parse(await resp.Content.ReadAsStringAsync(ct));
-            if (latest is null) return new(null, false, "Sürüm bilgisi okunamadı.");
+            if (latest is null) return new(null, false, Loc.T("Sürüm bilgisi okunamadı."));
             return new(latest, IsNewer(latest.Version, current), null);
         }
-        catch (OperationCanceledException) { return new(null, false, "Sürüm sorgusu zaman aşımına uğradı."); }
-        catch (Exception ex) when (ex is HttpRequestException or TaskCanceledException or JsonException) { return new(null, false, "İnternete bağlanılamadı; sürüm denetlenemedi."); }
+        catch (OperationCanceledException) { return new(null, false, Loc.T("Sürüm sorgusu zaman aşımına uğradı.")); }
+        catch (Exception ex) when (ex is HttpRequestException or TaskCanceledException or JsonException) { return new(null, false, Loc.T("İnternete bağlanılamadı; sürüm denetlenemedi.")); }
     }
 
     /// <summary>GitHub "releases/latest" cevabından sürüm bilgisi. Taslak/ön sürüm ya da anlaşılmaz etiket varsa null.</summary>

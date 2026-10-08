@@ -1,3 +1,4 @@
+using Pulse.Core.Localization;
 namespace Pulse.Core.Settings;
 
 /// <summary>Bir kısayol: değiştirici tuşlar (Ctrl=2, Alt=1, Shift=4, Win=8; RegisterHotKey değerleriyle aynı) ve sanal tuş kodu.</summary>
@@ -74,13 +75,13 @@ public static class HotkeyActions
 {
     public static readonly (string Id, string Title, string Default)[] All =
     [
-        ("mode:oyun", "Oyun modu", "Ctrl+Alt+1"),
-        ("mode:gunluk", "Günlük mod", "Ctrl+Alt+2"),
-        ("mode:sessiz", "Sessiz mod", "Ctrl+Alt+3"),
-        ("mode:bosta", "Boşta modu", "Ctrl+Alt+4"),
-        ("mode:next", "Sonraki mod (Oyun, Günlük, Sessiz sırayla)", ""),
-        ("kbd:cycle", "Klavye ışığı seviyesi", "Ctrl+Alt+K"),
-        ("overlay:toggle", "Oyun üstü gösterge", "Ctrl+Alt+O"),
+        ("mode:oyun", Loc.T("Oyun modu"), "Ctrl+Alt+1"),
+        ("mode:gunluk", Loc.T("Günlük mod"), "Ctrl+Alt+2"),
+        ("mode:sessiz", Loc.T("Sessiz mod"), "Ctrl+Alt+3"),
+        ("mode:bosta", Loc.T("Boşta modu"), "Ctrl+Alt+4"),
+        ("mode:next", Loc.T("Sonraki mod (Oyun, Günlük, Sessiz sırayla)"), ""),
+        ("kbd:cycle", Loc.T("Klavye ışığı seviyesi"), "Ctrl+Alt+K"),
+        ("overlay:toggle", Loc.T("Oyun üstü gösterge"), "Ctrl+Alt+O"),
     ];
 
     /// <summary>Kayıtlı atamalara varsayılanları ekleyip eylem → bağlama sözlüğü verir (boş = atanmamış).</summary>

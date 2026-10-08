@@ -1,3 +1,4 @@
+using Pulse.Core.Localization;
 using System.Text.Json;
 
 namespace Pulse.Core.Health;
@@ -27,8 +28,8 @@ public static class BatteryHistory
         var drop = 100.0 * (old.FullChargeMwh - b.FullChargeMwh.Value) / old.FullChargeMwh;
         var days = (int)(today - old.Date).TotalDays;
         return drop > 3
-            ? new(FindingLevel.Warning, "Pil hızlı yaşlanıyor", $"Son {days} günde tam şarj kapasitesi %{drop:N0} düştü. Sürekli prizde ve %100'de bırakmak bunu hızlandırır; Dizüstü sayfasından şarj limitini %60-80'e ayarla.")
-            : new(FindingLevel.Good, "Pil kapasitesi kararlı", $"Son {days} günde kapasite değişimi %{Math.Max(drop, 0):N1}.");
+            ? new(FindingLevel.Warning, Loc.T("Pil hızlı yaşlanıyor"), Loc.F("Son {0} günde tam şarj kapasitesi %{1:N0} düştü. Sürekli prizde ve %100'de bırakmak bunu hızlandırır; Dizüstü sayfasından şarj limitini %60-80'e ayarla.", days, drop))
+            : new(FindingLevel.Good, Loc.T("Pil kapasitesi kararlı"), Loc.F("Son {0} günde kapasite değişimi %{1:N1}.", days, Math.Max(drop, 0)));
     }
 
     private static List<Entry> Load(string path)

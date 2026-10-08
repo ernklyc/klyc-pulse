@@ -1,3 +1,4 @@
+using Pulse.Core.Localization;
 using Pulse.Core.Diagnostics;
 using Pulse.Core.Hardware;
 using Pulse.Core.Modes;
@@ -103,11 +104,11 @@ public sealed class HeatTargetService : IDisposable
         if (scheme is null) return;
         WriteFrequencyCap(scheme, value);
         var read = Powercfg.GetAc(scheme, Powercfg.SubProcessor, Powercfg.MaxFrequency);
-        var text = value == 0 ? "sınırsız" : $"{value} MHz";
+        var text = value == 0 ? Loc.T("sınırsız") : $"{value} MHz";
         Journal.Write($"Sıcaklık sınırı: işlemci {temp:0}°C → en yüksek frekans {text} (okunan {read}).");
         Notice?.Invoke(read == value
-            ? $"Sıcaklık sınırı: işlemci {temp:0}°C, en yüksek frekans {text}."
-            : $"Sıcaklık sınırı: frekans sınırı {text} yazıldı ama {read} okundu.");
+            ? Loc.F("Sıcaklık sınırı: işlemci {0:0}°C, en yüksek frekans {1}.", temp, text)
+            : Loc.F("Sıcaklık sınırı: frekans sınırı {0} yazıldı ama {1} okundu.", text, read));
     }
 
     /// <summary>Açılışta: sıcaklık sınırı kapalıyken kalmış bir frekans sınırı varsa kaldırır (çökme sonrası sessizce yavaş kalmasın).</summary>
@@ -147,7 +148,7 @@ public sealed class HeatTargetService : IDisposable
         var cap = Math.Max(900, top - level * GpuStepMhz);
         var r = GpuClocks.Cap(cap);
         Journal.Write($"Sıcaklık sınırı: ekran kartı {temp:0}°C → saat sınırı {cap} MHz ({r.Message}).");
-        Notice?.Invoke($"Sıcaklık sınırı: ekran kartı {temp:0}°C, saat sınırı {cap} MHz.");
+        Notice?.Invoke(Loc.F("Sıcaklık sınırı: ekran kartı {0:0}°C, saat sınırı {1} MHz.", temp, cap));
     }
 
     /// <summary>Kapatılınca (ya da mod değişince) sınırları modun kendi değerlerine döndürür.</summary>

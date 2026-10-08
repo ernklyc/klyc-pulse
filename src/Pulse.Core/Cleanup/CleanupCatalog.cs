@@ -1,3 +1,4 @@
+using Pulse.Core.Localization;
 namespace Pulse.Core.Cleanup;
 
 /// <summary>
@@ -16,71 +17,71 @@ public static class CleanupCatalog
         {
             new()
             {
-                Id = "temp-user", Name = "Kullanıcı geçici dosyaları",
-                Description = "Uygulamaların bıraktığı geçici dosyalar. 2 günden eski olanlar.",
+                Id = "temp-user", Name = Loc.T("Kullanıcı geçici dosyaları"),
+                Description = Loc.T("Uygulamaların bıraktığı geçici dosyalar. 2 günden eski olanlar."),
                 Roots = [Path.GetTempPath()], MinAgeDays = 2, AutoSafe = true,
                 SkipPathContains = [@"\claude\"],
             },
             new()
             {
-                Id = "temp-win", Name = "Windows geçici dosyaları",
-                Description = "Sistem geçici klasörü. 2 günden eski olanlar.",
+                Id = "temp-win", Name = Loc.T("Windows geçici dosyaları"),
+                Description = Loc.T("Sistem geçici klasörü. 2 günden eski olanlar."),
                 Roots = [@"C:\Windows\Temp"], MinAgeDays = 2, NeedsAdmin = true, AutoSafe = true,
             },
             new()
             {
-                Id = "wu-cache", Name = "Windows Update indirme önbelleği",
-                Description = "Kurulmuş güncellemelerin indirme kalıntıları. Gerekirse yeniden iner.",
+                Id = "wu-cache", Name = Loc.T("Windows Update indirme önbelleği"),
+                Description = Loc.T("Kurulmuş güncellemelerin indirme kalıntıları. Gerekirse yeniden iner."),
                 Roots = [@"C:\Windows\SoftwareDistribution\Download"], NeedsAdmin = true,
                 StopServices = ["wuauserv", "bits"],
             },
             new()
             {
-                Id = "delivery-opt", Name = "Teslim Optimizasyonu önbelleği",
-                Description = "Windows'un güncelleme paylaşım önbelleği.",
+                Id = "delivery-opt", Name = Loc.T("Teslim Optimizasyonu önbelleği"),
+                Description = Loc.T("Windows'un güncelleme paylaşım önbelleği."),
                 Roots = [@"C:\Windows\ServiceProfiles\NetworkService\AppData\Local\Microsoft\Windows\DeliveryOptimization\Cache"],
                 NeedsAdmin = true, StopServices = ["DoSvc"],
             },
             new()
             {
-                Id = "error-reports", Name = "Hata raporları ve çökme dökümleri",
-                Description = "Windows hata raporları, mini dökümler, kurulum günlükleri. 7 günden eski olanlar.",
+                Id = "error-reports", Name = Loc.T("Hata raporları ve çökme dökümleri"),
+                Description = Loc.T("Windows hata raporları, mini dökümler, kurulum günlükleri. 7 günden eski olanlar."),
                 Roots = [@"C:\ProgramData\Microsoft\Windows\WER", @"C:\Windows\Minidump", @"C:\Windows\LiveKernelReports", @"C:\Windows\Logs\CBS",
                          Path.Combine(Local, "CrashDumps"), Path.Combine(Local, "Microsoft", "Windows", "WER")],
                 MinAgeDays = 7, NeedsAdmin = true, AutoSafe = true,
             },
             new()
             {
-                Id = "prefetch", Name = "Prefetch (uygulama başlatma önbelleği)",
-                Description = "Windows'un uygulamaları hızlı açmak için tuttuğu kayıtlar. Silmek zararsızdır ama faydası yoktur: Windows yeniden oluşturur, silince ilk açılışlar biraz yavaşlar. Önerilmez.",
+                Id = "prefetch", Name = Loc.T("Prefetch (uygulama başlatma önbelleği)"),
+                Description = Loc.T("Windows'un uygulamaları hızlı açmak için tuttuğu kayıtlar. Silmek zararsızdır ama faydası yoktur: Windows yeniden oluşturur, silince ilk açılışlar biraz yavaşlar. Önerilmez."),
                 Roots = [@"C:\Windows\Prefetch"], MinAgeDays = 0, NeedsAdmin = true, SelectedByDefault = false,
                 Filter = f => f.Extension.Equals(".pf", StringComparison.OrdinalIgnoreCase),
             },
             new()
             {
-                Id = "recycle", Name = "Geri dönüşüm kutusu",
-                Description = "Silinmiş ama kutuda bekleyen dosyalar. Kalıcı olarak silinir.",
+                Id = "recycle", Name = Loc.T("Geri dönüşüm kutusu"),
+                Description = Loc.T("Silinmiş ama kutuda bekleyen dosyalar. Kalıcı olarak silinir."),
                 Roots = [], Special = "recycle", SelectedByDefault = true,
             },
             new()
             {
-                Id = "old-installers", Name = "İndirilenler: eski kurulum dosyaları",
-                Description = "30 günden eski .exe, .msi, .zip, .iso, .7z, .rar. Silinmez, 7 gün karantinada tutulur.",
+                Id = "old-installers", Name = Loc.T("İndirilenler: eski kurulum dosyaları"),
+                Description = Loc.T("30 günden eski .exe, .msi, .zip, .iso, .7z, .rar. Silinmez, 7 gün karantinada tutulur."),
                 Roots = [Path.Combine(Profile, "Downloads")], MinAgeDays = 30,
                 Safety = CleanupSafety.Quarantine, SelectedByDefault = false,
                 Filter = f => f.Extension.ToLowerInvariant() is ".exe" or ".msi" or ".zip" or ".iso" or ".7z" or ".rar" or ".msix" or ".appx",
             },
             new()
             {
-                Id = "dev-caches", Name = "Geliştirici önbellekleri",
-                Description = "Gradle, npm, pip ve NuGet önbellekleri. Sonraki derleme biraz yavaş olur.",
+                Id = "dev-caches", Name = Loc.T("Geliştirici önbellekleri"),
+                Description = Loc.T("Gradle, npm, pip ve NuGet önbellekleri. Sonraki derleme biraz yavaş olur."),
                 Roots = [Path.Combine(Profile, ".gradle", "caches"), Path.Combine(Local, "npm-cache"), Path.Combine(Local, "pip", "Cache"), Path.Combine(Local, "NuGet", "v3-cache")],
                 SelectedByDefault = false,
             },
             new()
             {
-                Id = "dism", Name = "Windows bileşen deposu temizliği",
-                Description = "Eski güncelleme kalıntılarını DISM ile temizler. Birkaç dakika sürer.",
+                Id = "dism", Name = Loc.T("Windows bileşen deposu temizliği"),
+                Description = Loc.T("Eski güncelleme kalıntılarını DISM ile temizler. Birkaç dakika sürer."),
                 Roots = [], Special = "dism", NeedsAdmin = true, SelectedByDefault = false,
             },
         };
@@ -106,8 +107,8 @@ public static class CleanupCatalog
             }
             list.Add(new CleanupCategory
             {
-                Id = $"browser-{name.ToLowerInvariant()}", Name = $"{name} önbelleği",
-                Description = $"{name} sayfa ve kod önbelleği. Oturumların, şifrelerin ve yer imlerin silinmez. Tarayıcı açıkken kısmen temizlenir.",
+                Id = $"browser-{name.ToLowerInvariant()}", Name = Loc.F("{0} önbelleği", name),
+                Description = Loc.F("{0} sayfa ve kod önbelleği. Oturumların, şifrelerin ve yer imlerin silinmez. Tarayıcı açıkken kısmen temizlenir.", name),
                 Roots = roots,
             });
         }
@@ -120,8 +121,8 @@ public static class CleanupCatalog
             if (roots.Count > 0)
                 list.Add(new CleanupCategory
                 {
-                    Id = "browser-firefox", Name = "Firefox önbelleği",
-                    Description = "Firefox sayfa önbelleği. Oturumların, şifrelerin ve yer imlerin silinmez.",
+                    Id = "browser-firefox", Name = Loc.T("Firefox önbelleği"),
+                    Description = Loc.T("Firefox sayfa önbelleği. Oturumların, şifrelerin ve yer imlerin silinmez."),
                     Roots = roots,
                 });
         }
@@ -135,8 +136,8 @@ public static class CleanupCatalog
             roots.Add(Path.Combine(Local, "Steam", "htmlcache"));
             list.Add(new CleanupCategory
             {
-                Id = "app-steam", Name = "Steam önbelleği ve günlükleri",
-                Description = "Steam'in tarayıcı önbelleği, çökme kayıtları ve 7 günden eski günlükleri. Oyunların ve oyun shader önbelleği silinmez.",
+                Id = "app-steam", Name = Loc.T("Steam önbelleği ve günlükleri"),
+                Description = Loc.T("Steam'in tarayıcı önbelleği, çökme kayıtları ve 7 günden eski günlükleri. Oyunların ve oyun shader önbelleği silinmez."),
                 Roots = roots, MinAgeDays = 7, SelectedByDefault = false,
             });
         }
@@ -147,8 +148,8 @@ public static class CleanupCatalog
             roots.Add(Path.Combine(epicSaved, "Logs"));
             list.Add(new CleanupCategory
             {
-                Id = "app-epic", Name = "Epic Games Launcher önbelleği",
-                Description = "Epic'in tarayıcı önbelleği ve günlükleri. Oyunların silinmez.",
+                Id = "app-epic", Name = Loc.T("Epic Games Launcher önbelleği"),
+                Description = Loc.T("Epic'in tarayıcı önbelleği ve günlükleri. Oyunların silinmez."),
                 Roots = roots, MinAgeDays = 2, SelectedByDefault = false,
             });
         }
@@ -158,8 +159,8 @@ public static class CleanupCatalog
         if (nvidiaRoots.Count > 0)
             list.Add(new CleanupCategory
             {
-                Id = "nvidia-installers", Name = "NVIDIA sürücü kurulum artıkları",
-                Description = "Sürücü kurulumundan kalan açılmış kurulum dosyaları. Kurulum bittikten sonra gerekmez. 7 gün karantinada tutulur.",
+                Id = "nvidia-installers", Name = Loc.T("NVIDIA sürücü kurulum artıkları"),
+                Description = Loc.T("Sürücü kurulumundan kalan açılmış kurulum dosyaları. Kurulum bittikten sonra gerekmez. 7 gün karantinada tutulur."),
                 Roots = nvidiaRoots, NeedsAdmin = true, Safety = CleanupSafety.Quarantine, SelectedByDefault = false,
             });
 
@@ -167,14 +168,14 @@ public static class CleanupCatalog
         var apps = new (string Name, string Path)[]
         {
             ("Discord", Path.Combine(Roaming, "discord", "Cache")),
-            ("Discord kod", Path.Combine(Roaming, "discord", "Code Cache")),
+            (Loc.T("Discord kod"), Path.Combine(Roaming, "discord", "Code Cache")),
             ("Spotify", Path.Combine(Local, "Spotify", "Storage")),
             ("Slack", Path.Combine(Roaming, "Slack", "Cache")),
             ("Microsoft Teams", Path.Combine(Local, "Microsoft", "Teams", "Cache")),
         };
         foreach (var (name, path) in apps)
             if (Directory.Exists(path))
-                list.Add(new CleanupCategory { Id = $"app-{name.ToLowerInvariant().Replace(' ', '-')}", Name = $"{name} önbelleği", Description = $"{name} geçici verileri.", Roots = [path], SelectedByDefault = false });
+                list.Add(new CleanupCategory { Id = $"app-{name.ToLowerInvariant().Replace(' ', '-')}", Name = Loc.F("{0} önbelleği", name), Description = Loc.F("{0} geçici verileri.", name), Roots = [path], SelectedByDefault = false });
 
         return list;
     }

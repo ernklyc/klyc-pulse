@@ -1,3 +1,4 @@
+using Pulse.Core.Localization;
 using System.Globalization;
 using System.Runtime.InteropServices;
 using Pulse.Core.Health;
@@ -71,7 +72,7 @@ public static class DriverCenter
         try
         {
             var type = Type.GetTypeFromProgID("Microsoft.Update.Session");
-            if (type is null) return ([], "Windows Update arayüzü bulunamadı.");
+            if (type is null) return ([], Loc.T("Windows Update arayüzü bulunamadı."));
             session = Activator.CreateInstance(type);
             searcher = ((dynamic)session!).CreateUpdateSearcher();
             result = ((dynamic)searcher!).Search("IsInstalled=0 and Type='Driver'");
@@ -84,7 +85,7 @@ public static class DriverCenter
             }
             return (list, null);
         }
-        catch (Exception ex) { return ([], "Windows Update sorgulanamadı: " + ex.Message); }
+        catch (Exception ex) { return ([], Loc.T("Windows Update sorgulanamadı: ") + ex.Message); }
         finally
         {
             foreach (var o in new[] { result, searcher, session })
@@ -99,10 +100,10 @@ public static class DriverCenter
         DateTime? current = update.Class.Equals("Firmware", StringComparison.OrdinalIgnoreCase)
             ? bios?.Date
             : installed.Where(d => d.Class.Equals(WmiClass(update.Class), StringComparison.OrdinalIgnoreCase) && d.Name.Contains(FirstWord(update.Manufacturer), StringComparison.OrdinalIgnoreCase)).Select(d => d.Date).Where(d => d is not null).DefaultIfEmpty(null).Max();
-        if (current is null) return (true, "Karşılaştırılacak kurulu sürüm bulunamadı.");
+        if (current is null) return (true, Loc.T("Karşılaştırılacak kurulu sürüm bulunamadı."));
         return date > current
-            ? (true, $"Kurulu sürümden yeni ({current:yyyy-MM-dd} yerine {date:yyyy-MM-dd}).")
-            : (false, $"Kurulu sürüm daha yeni ya da aynı ({current:yyyy-MM-dd}). Kurmana gerek yok.");
+            ? (true, Loc.F("Kurulu sürümden yeni ({0:yyyy-MM-dd} yerine {1:yyyy-MM-dd}).", current, date))
+            : (false, Loc.F("Kurulu sürüm daha yeni ya da aynı ({0:yyyy-MM-dd}). Kurmana gerek yok.", current));
     }
 
     /// <summary>Windows Update sınıf adını (Video, Net...) kurulu sürücü sınıfına (DISPLAY, NET...) çevirir.</summary>

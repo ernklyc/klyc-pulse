@@ -1,3 +1,4 @@
+using Pulse.Core.Localization;
 using System.Diagnostics;
 using System.Text.Json;
 using Pulse.Core.Diagnostics;
@@ -53,7 +54,7 @@ public sealed class ModeEngine : IDisposable
         steps.Add(ApplyAsusProfile(mode));
         steps.AddRange(ApplyPowerPlan(mode));
         // Parlaklık, yenileme hızından önce: hız değişince monitör kaydı kısa süre yeniden oluşur.
-        steps.Add(options.ChangeBrightness ? ApplyBrightness(mode) : new StepResult("Parlaklık", StepStatus.Skipped, "Bu modda parlaklık değiştirilmedi."));
+        steps.Add(options.ChangeBrightness ? ApplyBrightness(mode) : new StepResult(Loc.T("Parlaklık"), StepStatus.Skipped, Loc.T("Bu modda parlaklık değiştirilmedi.")));
         steps.Add(ApplyRefresh(mode));
         steps.Add(ApplyGpuCap(mode));
         steps.Add(ApplyGpuOc(mode, options));
@@ -88,18 +89,18 @@ public sealed class ModeEngine : IDisposable
     // ---- Adımlar ---------------------------------------------------------
     private StepResult ApplyAsusProfile(ModeDefinition mode)
     {
-        const string name = "ASUS profili";
-        if (_acpi is null) return new(name, StepStatus.Skipped, "ASUS'un donanım sürücüsü bulunamadı.");
+        var name = Loc.T("ASUS profili");
+        if (_acpi is null) return new(name, StepStatus.Skipped, Loc.T("ASUS'un donanım sürücüsü bulunamadı."));
 
         var before = _acpi.GetCpuFanRpm();
         var accepted = _acpi.SetPerformanceMode(mode.Asus);
-        if (!accepted) return new(name, StepStatus.Failed, $"{mode.Asus} profilini bilgisayar reddetti.");
+        if (!accepted) return new(name, StepStatus.Failed, Loc.F("{0} profilini bilgisayar reddetti.", mode.Asus));
 
         // Bu model profili geri okutmaz; en azından fan hızını izleyip bilgi olarak göster.
         Thread.Sleep(700);
         var after = _acpi.GetCpuFanRpm();
-        var detail = $"{mode.Asus} profili bilgisayar tarafından kabul edildi" +
-                     (before is not null && after is not null ? $" (CPU fanı {before} → {after} RPM)." : ".");
+        var detail = Loc.F("{0} profili bilgisayar tarafından kabul edildi", mode.Asus) +
+                     (before is not null && after is not null ? Loc.F(" (CPU fanı {0} → {1} RPM).", before, after) : ".");
         return new(name, StepStatus.Applied, detail);
     }
 
@@ -108,7 +109,7 @@ public sealed class ModeEngine : IDisposable
         var active = Powercfg.ActiveScheme();
         if (active is null)
         {
-            yield return new("Güç planı", StepStatus.Failed, "Etkin güç planı okunamadı.");
+            yield return new(Loc.T("Güç planı"), StepStatus.Failed, Loc.T("Etkin güç planı okunamadı."));
             yield break;
         }
 
@@ -140,11 +141,11 @@ public sealed class ModeEngine : IDisposable
             Journal.Write($"Güç ayarları tutmadı (deneme {attempt + 1}), yeniden yazılıyor.");
         }
 
-        yield return Verify("İşlemci ek hızı (turbo)", mode.Boost, Powercfg.GetAc(active, Powercfg.SubProcessor, Powercfg.BoostMode), v => v == 0 ? "kapalı" : "açık");
-        yield return Verify("İşlemci üst sınırı", mode.MaxState, Powercfg.GetAc(active, Powercfg.SubProcessor, Powercfg.MaxProcessorState), v => $"%{v}");
-        yield return Verify("Hız / güç dengesi", mode.Epp, Powercfg.GetAc(active, Powercfg.SubProcessor, Powercfg.EnergyPerformancePref), v => v.ToString());
-        yield return Verify("Pilde de aynı (ek hız)", mode.Boost, Powercfg.GetDc(active, Powercfg.SubProcessor, Powercfg.BoostMode), v => v == 0 ? "kapalı" : "açık");
-        yield return Verify("İşlemci en yüksek hızı", mode.CpuMaxMhz ?? 0, Powercfg.GetAc(active, Powercfg.SubProcessor, Powercfg.MaxFrequency), v => v == 0 ? "sınırsız" : $"{v} MHz");
+        yield return Verify(Loc.T("İşlemci ek hızı (turbo)"), mode.Boost, Powercfg.GetAc(active, Powercfg.SubProcessor, Powercfg.BoostMode), v => v == 0 ? Loc.T("kapalı") : Loc.T("açık"));
+        yield return Verify(Loc.T("İşlemci üst sınırı"), mode.MaxState, Powercfg.GetAc(active, Powercfg.SubProcessor, Powercfg.MaxProcessorState), v => $"%{v}");
+        yield return Verify(Loc.T("Hız / güç dengesi"), mode.Epp, Powercfg.GetAc(active, Powercfg.SubProcessor, Powercfg.EnergyPerformancePref), v => v.ToString());
+        yield return Verify(Loc.T("Pilde de aynı (ek hız)"), mode.Boost, Powercfg.GetDc(active, Powercfg.SubProcessor, Powercfg.BoostMode), v => v == 0 ? Loc.T("kapalı") : Loc.T("açık"));
+        yield return Verify(Loc.T("İşlemci en yüksek hızı"), mode.CpuMaxMhz ?? 0, Powercfg.GetAc(active, Powercfg.SubProcessor, Powercfg.MaxFrequency), v => v == 0 ? Loc.T("sınırsız") : $"{v} MHz");
     }
 
     /// <summary>
@@ -153,17 +154,17 @@ public sealed class ModeEngine : IDisposable
     /// </summary>
     public StepResult SetFanBoost(ModeDefinition current, bool on)
     {
-        const string name = "Fan desteği";
-        if (_acpi is null) return new(name, StepStatus.Skipped, "ASUS fan profili bu bilgisayarda yok.");
+        var name = Loc.T("Fan desteği");
+        if (_acpi is null) return new(name, StepStatus.Skipped, Loc.T("ASUS fan profili bu bilgisayarda yok."));
         var before = _acpi.GetCpuFanRpm();
         var ok = _acpi.SetPerformanceMode(on ? AsusPerformanceMode.Turbo : current.Asus);
-        if (!ok) return new(name, StepStatus.Failed, "Fan profili bilgisayar tarafından reddedildi.");
+        if (!ok) return new(name, StepStatus.Failed, Loc.T("Fan profili bilgisayar tarafından reddedildi."));
         Thread.Sleep(2500);
         var after = _acpi.GetCpuFanRpm();
-        var rpm = before is not null && after is not null ? $" (CPU fanı {before} → {after} RPM)" : "";
+        var rpm = before is not null && after is not null ? Loc.F(" (CPU fanı {0} → {1} RPM)", before, after) : "";
         if (on && before is { } b && after is { } a && a < b * 1.1)
-            return new(name, StepStatus.Warning, $"Turbo profili kabul edildi ama fan devri artmadı{rpm}; fan zaten tam hızda olabilir.");
-        return new(name, StepStatus.Applied, (on ? "Fan tam hıza alındı" : $"{current.Asus} profiline dönüldü") + rpm + ".");
+            return new(name, StepStatus.Warning, Loc.F("Turbo profili kabul edildi ama fan devri artmadı{0}; fan zaten tam hızda olabilir.", rpm));
+        return new(name, StepStatus.Applied, (on ? Loc.T("Fan tam hıza alındı") : Loc.F("{0} profiline dönüldü", current.Asus)) + rpm + ".");
     }
 
     /// <summary>İstenen hızı çözer: MaxHz ise ekranın desteklediği en yüksek; liste boşsa MaxHz (belirlenemedi) döner.</summary>
@@ -172,13 +173,13 @@ public sealed class ModeEngine : IDisposable
 
     private static StepResult ApplyRefresh(ModeDefinition mode)
     {
-        const string name = "Ekran yenileme hızı";
+        var name = Loc.T("Ekran yenileme hızı");
         var supported = DisplayService.SupportedRefreshRates();
         var target = ResolveRefreshTarget(mode.RefreshHz, supported);
         if (target == Modes.MaxHz)
-            return new(name, StepStatus.Skipped, "Ekranın desteklediği yenileme hızları okunamadı.");
+            return new(name, StepStatus.Skipped, Loc.T("Ekranın desteklediği yenileme hızları okunamadı."));
         if (supported.Count > 0 && !supported.Contains(target))
-            return new(name, StepStatus.Warning, $"{target} Hz bu ekranda yok (desteklenen: {string.Join(", ", supported)} Hz).");
+            return new(name, StepStatus.Warning, Loc.F("{0} Hz bu ekranda yok (desteklenen: {1} Hz).", target, string.Join(", ", supported)));
 
         DisplayService.SetRefreshRate(target);
         Thread.Sleep(900);
@@ -187,45 +188,45 @@ public sealed class ModeEngine : IDisposable
 
     private static StepResult ApplyBrightness(ModeDefinition mode)
     {
-        const string name = "Ekran parlaklığı";
+        var name = Loc.T("Ekran parlaklığı");
         if (DisplayService.GetBrightnessWithRetry(attempts: 4) is null)
-            return new(name, StepStatus.Skipped, "Bu ekranın parlaklığı yazılımla okunamıyor.");
+            return new(name, StepStatus.Skipped, Loc.T("Bu ekranın parlaklığı yazılımla okunamıyor."));
 
         DisplayService.SetBrightness(mode.Brightness);
         Thread.Sleep(500);
         var now = DisplayService.GetBrightnessWithRetry();
         return now is not null && Math.Abs(now.Value - mode.Brightness) <= 3
-            ? new(name, StepStatus.Verified, $"%{now} (hedef %{mode.Brightness})")
-            : new(name, StepStatus.Failed, $"Hedef %{mode.Brightness}, okunan {(now is null ? "yok" : "%" + now)}.");
+            ? new(name, StepStatus.Verified, Loc.F("%{0} (hedef %{1})", now, mode.Brightness))
+            : new(name, StepStatus.Failed, Loc.F("Hedef %{0}, okunan {1}.", mode.Brightness, now is null ? Loc.T("yok") : Loc.F("%{0}", now)));
     }
 
     private static StepResult ApplyGpuOc(ModeDefinition mode, ModeOptions options)
     {
-        const string name = "Ekran kartı hızlandırma";
-        if (!Monitoring.Nvml.IsAvailable) return new(name, StepStatus.Skipped, "NVIDIA ekran kartı bulunamadı.");
+        var name = Loc.T("Ekran kartı hızlandırma");
+        if (!Monitoring.Nvml.IsAvailable) return new(name, StepStatus.Skipped, Loc.T("NVIDIA ekran kartı bulunamadı."));
         var wantCore = mode.Key == Modes.Game ? options.GpuOcCore : 0;
         var wantMem = mode.Key == Modes.Game ? options.GpuOcMem : 0;
         var current = Hardware.GpuOverclock.Read();
         if (current is null)
             // Uyuyan (boşta kapanmış) ekran kartı zaten fabrika hızındadır; hızlandırma istenmiyorsa yapılacak bir şey yok.
-            return wantCore == 0 && wantMem == 0 ? new(name, StepStatus.Verified, "Ekran kartı uykuda, fabrika hızında.") : new(name, StepStatus.Warning, "Ekran kartı hız arayüzü okunamadı (kart uyuyor olabilir).");
+            return wantCore == 0 && wantMem == 0 ? new(name, StepStatus.Verified, Loc.T("Ekran kartı uykuda, fabrika hızında.")) : new(name, StepStatus.Warning, Loc.T("Ekran kartı hız arayüzü okunamadı (kart uyuyor olabilir)."));
         if (current.CoreMhz == wantCore && current.MemMhz == wantMem)
-            return new(name, StepStatus.Verified, wantCore == 0 && wantMem == 0 ? "Fabrika hızı." : $"Çekirdek +{wantCore}, bellek +{wantMem} MHz (zaten uygulu).");
-        if (!Cleanup.CleanupEngine.IsAdmin) return new(name, StepStatus.Skipped, "Hız ayarı için KLYC-Pulse'ın yönetici olarak çalışması gerekir.");
+            return new(name, StepStatus.Verified, wantCore == 0 && wantMem == 0 ? Loc.T("Fabrika hızı.") : Loc.F("Çekirdek +{0}, bellek +{1} MHz (zaten uygulu).", wantCore, wantMem));
+        if (!Cleanup.CleanupEngine.IsAdmin) return new(name, StepStatus.Skipped, Loc.T("Hız ayarı için KLYC-Pulse'ın yönetici olarak çalışması gerekir."));
         var r = Hardware.GpuOverclock.Apply(wantCore, wantMem);
         return !r.Ok ? new(name, StepStatus.Failed, r.Message) : new(name, r.Verified ? StepStatus.Verified : StepStatus.Warning, r.Message);
     }
 
     private static StepResult ApplyGpuCap(ModeDefinition mode)
     {
-        const string name = "Ekran kartı hız sınırı";
-        if (!Monitoring.Nvml.IsAvailable) return new(name, StepStatus.Skipped, "NVIDIA ekran kartı bulunamadı.");
-        if (!Cleanup.CleanupEngine.IsAdmin) return new(name, StepStatus.Skipped, "Saat sınırı için KLYC-Pulse'ın yönetici olarak çalışması gerekir.");
+        var name = Loc.T("Ekran kartı hız sınırı");
+        if (!Monitoring.Nvml.IsAvailable) return new(name, StepStatus.Skipped, Loc.T("NVIDIA ekran kartı bulunamadı."));
+        if (!Cleanup.CleanupEngine.IsAdmin) return new(name, StepStatus.Skipped, Loc.T("Saat sınırı için KLYC-Pulse'ın yönetici olarak çalışması gerekir."));
 
         if (mode.GpuCapMhz is not { } cap)
         {
             var r = Hardware.GpuClocks.Release();
-            return r.Ok ? new(name, StepStatus.Verified, "Sınırsız (sürücü varsayılanı).") : new(name, StepStatus.Warning, r.Message);
+            return r.Ok ? new(name, StepStatus.Verified, Loc.T("Sınırsız (sürücü varsayılanı).")) : new(name, StepStatus.Warning, r.Message);
         }
         var c = Hardware.GpuClocks.Cap(cap);
         return !c.Ok ? new(name, StepStatus.Failed, c.Message) : new(name, c.Verified ? StepStatus.Verified : StepStatus.Applied, c.Message);
@@ -233,9 +234,9 @@ public sealed class ModeEngine : IDisposable
 
     private static StepResult ApplyIdlePower(ModeDefinition mode)
     {
-        const string name = "Ekran kapanma ve uyku";
+        var name = Loc.T("Ekran kapanma ve uyku");
         var active = Powercfg.ActiveScheme();
-        if (active is null) return new(name, StepStatus.Failed, "Etkin güç planı okunamadı.");
+        if (active is null) return new(name, StepStatus.Failed, Loc.T("Etkin güç planı okunamadı."));
 
         var state = LoadState();
         if (mode.IdlePower)
@@ -252,8 +253,8 @@ public sealed class ModeEngine : IDisposable
             var mon = Powercfg.GetAc(active, Powercfg.SubVideo, Powercfg.VideoIdle);
             var slp = Powercfg.GetAc(active, Powercfg.SubSleep, Powercfg.StandbyIdle);
             return mon == 60 && slp == 0
-                ? new(name, StepStatus.Verified, "Ekran 1 dk'da kapanır, uyku kapalı.")
-                : new(name, StepStatus.Failed, $"Okunan: ekran {mon} sn, uyku {slp} sn.");
+                ? new(name, StepStatus.Verified, Loc.T("Ekran 1 dk'da kapanır, uyku kapalı."))
+                : new(name, StepStatus.Failed, Loc.F("Okunan: ekran {0} sn, uyku {1} sn.", mon, slp));
         }
 
         if (state.OriginalMonitorSeconds is { } m && state.OriginalStandbySeconds is { } s)
@@ -266,23 +267,23 @@ public sealed class ModeEngine : IDisposable
             SaveState(state);
             var mon = Powercfg.GetAc(active, Powercfg.SubVideo, Powercfg.VideoIdle);
             return mon == m
-                ? new(name, StepStatus.Verified, "Önceki ekran ve uyku ayarları geri yüklendi.")
-                : new(name, StepStatus.Failed, $"Geri yükleme doğrulanamadı (okunan ekran {mon} sn).");
+                ? new(name, StepStatus.Verified, Loc.T("Önceki ekran ve uyku ayarları geri yüklendi."))
+                : new(name, StepStatus.Failed, Loc.F("Geri yükleme doğrulanamadı (okunan ekran {0} sn).", mon));
         }
-        return new(name, StepStatus.Skipped, "Bu modda değiştirilmedi.");
+        return new(name, StepStatus.Skipped, Loc.T("Bu modda değiştirilmedi."));
     }
 
     /// <summary>Modu bozabilecek diğer yazılımlar (açılışta profili geri alabilirler).</summary>
     private static IEnumerable<StepResult> CheckConflicts()
     {
         foreach (var label in ConflictService.Running())
-            yield return new("Çakışma uyarısı", StepStatus.Warning,
-                $"{label} çalışıyor. Kendi profilini uygulayıp Pulse'ın seçtiği modu bozabilir. Ayarlar'dan otomatik kapatılabilir.");
+            yield return new(Loc.T("Çakışma uyarısı"), StepStatus.Warning,
+                Loc.F("{0} çalışıyor. Kendi profilini uygulayıp Pulse'ın seçtiği modu bozabilir. Ayarlar'dan otomatik kapatılabilir.", label));
     }
     private static StepResult Verify(string name, int expected, int? actual, Func<int, string> format) =>
         actual == expected
             ? new(name, StepStatus.Verified, format(expected))
-            : new(name, StepStatus.Failed, $"Hedef {format(expected)}, okunan {(actual is null ? "yok" : format(actual.Value))}.");
+            : new(name, StepStatus.Failed, Loc.F("Hedef {0}, okunan {1}.", format(expected), actual is null ? Loc.T("yok") : format(actual.Value)));
 
     // ---- Durum -----------------------------------------------------------
     private sealed class ModeState

@@ -1,3 +1,4 @@
+using Pulse.Core.Localization;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 
@@ -108,21 +109,21 @@ public sealed class ProcessInspector
         {
             var why = name.ToLowerInvariant() switch
             {
-                "klyc-pulse" => "KLYC-Pulse'ın kendisi",
+                "klyc-pulse" => Loc.T("KLYC-Pulse'ın kendisi"),
                 "vgc" or "vgtray" => "Riot Vanguard (Valorant anti-hile)",
-                "easyanticheat" or "easyanticheat_eos" or "beservice" => "Oyun anti-hile koruması",
-                "msmpeng" or "nissrv" or "securityhealthservice" or "securityhealthsystray" or "mpdefendercoreservice" => "Windows güvenliği",
-                "nvdisplay.container" or "nvcontainer" => "NVIDIA sürücü hizmeti",
-                _ => "Windows için gerekli",
+                "easyanticheat" or "easyanticheat_eos" or "beservice" => Loc.T("Oyun anti-hile koruması"),
+                "msmpeng" or "nissrv" or "securityhealthservice" or "securityhealthsystray" or "mpdefendercoreservice" => Loc.T("Windows güvenliği"),
+                "nvdisplay.container" or "nvcontainer" => Loc.T("NVIDIA sürücü hizmeti"),
+                _ => Loc.T("Windows için gerekli"),
             };
             return (true, why);
         }
-        if (inSession0) return (true, "Arka plan hizmeti (Arka plan sekmesinden yönet)");
+        if (inSession0) return (true, Loc.T("Arka plan hizmeti (Arka plan sekmesinden yönet)"));
         if (path is not null)
         {
             var p = path.ToLowerInvariant();
             var isWindows = p.StartsWith(Environment.GetFolderPath(Environment.SpecialFolder.Windows).ToLowerInvariant() + "\\");
-            if (isWindows && !hasWindow) return (true, "Windows bileşeni");
+            if (isWindows && !hasWindow) return (true, Loc.T("Windows bileşeni"));
         }
         return (false, null);
     }

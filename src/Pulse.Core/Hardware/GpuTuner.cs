@@ -1,3 +1,4 @@
+using Pulse.Core.Localization;
 using System.Diagnostics;
 using Pulse.Core.Diagnostics;
 using Pulse.Core.Monitoring;
@@ -24,16 +25,16 @@ public static class GpuTuner
     {
         var steps = new List<TuneStep>();
         var nvml = Nvml.TryOpen();
-        if (nvml is null) return new(steps, 0, 0, "NVIDIA ekran kartı bulunamadı.");
-        if (GpuOverclock.Read() is not { Editable: true }) return new(steps, 0, 0, "Bu ekran kartında hız ayarı kapalı.");
+        if (nvml is null) return new(steps, 0, 0, Loc.T("NVIDIA ekran kartı bulunamadı."));
+        if (GpuOverclock.Read() is not { Editable: true }) return new(steps, 0, 0, Loc.T("Bu ekran kartında hız ayarı kapalı."));
 
         GpuLoad? load = null;
         var tuneStart = DateTime.Now;
         try
         {
             load = GpuLoad.Start();
-            if (load is null) return new(steps, 0, 0, "Yük üretmek için Microsoft Edge bulunamadı.");
-            progress?.Report("Yük sayfası açılıyor…");
+            if (load is null) return new(steps, 0, 0, Loc.T("Yük üretmek için Microsoft Edge bulunamadı."));
+            progress?.Report(Loc.T("Yük sayfası açılıyor…"));
             await Task.Delay(9000, ct);   // pencere + sayfanın yükü kendi ayarlaması (ısınma)
 
             double bestFps = 0;
@@ -41,9 +42,9 @@ public static class GpuTuner
             foreach (var (core, mem) in Ladder)
             {
                 ct.ThrowIfCancellationRequested();
-                progress?.Report(core == 0 ? "Fabrika hızı ölçülüyor…" : $"Deneniyor: çekirdek +{core}, bellek +{mem} MHz…");
+                progress?.Report(core == 0 ? Loc.T("Fabrika hızı ölçülüyor…") : Loc.F("Deneniyor: çekirdek +{0}, bellek +{1} MHz…", core, mem));
                 var apply = GpuOverclock.Apply(core, mem);
-                if (!apply.Ok || !apply.Verified) { steps.Add(new(core, mem, 0, 0, 0, 0, 0, false, "Sürücü ofseti kabul etmedi")); break; }
+                if (!apply.Ok || !apply.Verified) { steps.Add(new(core, mem, 0, 0, 0, 0, 0, false, Loc.T("Sürücü ofseti kabul etmedi"))); break; }
                 await Task.Delay(4000, ct);
 
                 var step = await Measure(nvml, core, mem, tuneStart, ct);
@@ -53,14 +54,14 @@ public static class GpuTuner
 
                 var gain = bestFps > 0 ? (step.Fps - bestFps) / bestFps * 100 : 0;
                 if (core == 0) { bestFps = step.Fps; continue; }
-                if (gain < MinGainPercent) { steps[^1] = step with { Note = $"Kazanç %{gain:0.0}, artık değmiyor" }; break; }
+                if (gain < MinGainPercent) { steps[^1] = step with { Note = Loc.F("Kazanç %{0:0.0}, artık değmiyor", gain) }; break; }
                 bestFps = step.Fps;
                 best = (core, mem);
             }
 
             var summary = best == (0, 0)
-                ? "Hız aşırtma kayda değer kazanç vermedi (güç ya da ısı sınırı). Fabrika hızı en iyisi."
-                : $"En iyi kararlı ayar: çekirdek +{best.Core}, bellek +{best.Mem} MHz. Fabrika hızına göre kare hızı %{(bestFps / Math.Max(steps[0].Fps, 0.1) - 1) * 100:0.0} daha yüksek.";
+                ? Loc.T("Hız aşırtma kayda değer kazanç vermedi (güç ya da ısı sınırı). Fabrika hızı en iyisi.")
+                : Loc.F("En iyi kararlı ayar: çekirdek +{0}, bellek +{1} MHz. Fabrika hızına göre kare hızı %{2:0.0} daha yüksek.", best.Core, best.Mem, (bestFps / Math.Max(steps[0].Fps, 0.1) - 1) * 100);
             return new(steps, best.Core, best.Mem, summary);
         }
         finally
@@ -90,11 +91,11 @@ public static class GpuTuner
 
         var note = "";
         var stable = true;
-        if (HadDriverReset(since)) { stable = false; note = "Ekran sürücüsü hata verdi (TDR)"; }
-        else if (GpuLoad.Lost()) { stable = false; note = "Grafik kartı yanıt vermedi"; }
-        else if (fps.Count < 5) { stable = false; note = "Kare hızı ölçülemedi"; }
-        else if (maxTemp >= HotLimitC) { stable = false; note = $"Sıcaklık sınırı aşıldı ({maxTemp:0} °C)"; }
-        else if (hotSamples > n * 0.3) { stable = false; note = "Isı ya da donanım kısıtlaması sürekli devrede"; }
+        if (HadDriverReset(since)) { stable = false; note = Loc.T("Ekran sürücüsü hata verdi (TDR)"); }
+        else if (GpuLoad.Lost()) { stable = false; note = Loc.T("Grafik kartı yanıt vermedi"); }
+        else if (fps.Count < 5) { stable = false; note = Loc.T("Kare hızı ölçülemedi"); }
+        else if (maxTemp >= HotLimitC) { stable = false; note = Loc.F("Sıcaklık sınırı aşıldı ({0:0} °C)", maxTemp); }
+        else if (hotSamples > n * 0.3) { stable = false; note = Loc.T("Isı ya da donanım kısıtlaması sürekli devrede"); }
 
         var avgFps = fps.Count > 0 ? fps.Skip(fps.Count / 4).Average() : 0;   // ilk çeyrek ısınma, atılır
         return new(core, mem, avgFps, coreSum / Math.Max(n, 1), memSum / Math.Max(n, 1), maxTemp, powerSum / Math.Max(n, 1), stable, note);

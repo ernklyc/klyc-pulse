@@ -1,3 +1,4 @@
+using Pulse.Core.Localization;
 using Pulse.Core.Diagnostics;
 using Pulse.Core.Monitoring;
 using Pulse.Core.Platform;
@@ -20,7 +21,7 @@ public static class FreqCapProbe
     public static FreqCapProbeResult Run(CancellationToken ct = default)
     {
         var scheme = Powercfg.ActiveScheme();
-        if (scheme is null) return new(null, 0, 0, 0, "Etkin güç planı okunamadı.");
+        if (scheme is null) return new(null, 0, 0, 0, Loc.T("Etkin güç planı okunamadı."));
 
         string[] keys = [Powercfg.BoostMode, Powercfg.MaxProcessorState, Powercfg.MaxFrequency, Powercfg.MaxFrequencyClass1];
         var saved = keys.ToDictionary(k => k, k => (Ac: Powercfg.GetAc(scheme, Powercfg.SubProcessor, k), Dc: Powercfg.GetDc(scheme, Powercfg.SubProcessor, k)));
@@ -52,15 +53,15 @@ public static class FreqCapProbe
             var uncapped = Measure(0);
             var baseMhz = hub.BaseMhz;
             if (uncapped < baseMhz * 1.1)
-                return new(null, uncapped, 0, 0, $"İşlemci denemede taban hızın ({baseMhz:0} MHz) üstüne çıkmadı ({uncapped:0} MHz); güç/ısı sınırı ya da pil olabilir. Sınır denenemedi.");
+                return new(null, uncapped, 0, 0, Loc.F("İşlemci denemede taban hızın ({0:0} MHz) üstüne çıkmadı ({1:0} MHz); güç/ısı sınırı ya da pil olabilir. Sınır denenemedi.", baseMhz, uncapped));
 
             Thread.Sleep(3000);
             var cap = (int)(Math.Max(baseMhz + 100, Math.Round(uncapped * 0.75 / 100) * 100));
             var capped = Measure(cap);
             var supported = capped <= cap * 1.1 && capped <= uncapped * 0.92;
             var note = supported
-                ? $"Windows frekans sınırını uyguluyor: sınırsız {uncapped:0} MHz → {cap} MHz sınırıyla {capped:0} MHz."
-                : $"Windows frekans sınırını uygulamıyor: sınırsız {uncapped:0} MHz, {cap} MHz sınırıyla {capped:0} MHz. Bu bilgisayarda (Ryzen/HWP ya da üretici yazılımı) sınır çalışmıyor.";
+                ? Loc.F("Windows frekans sınırını uyguluyor: sınırsız {0:0} MHz → {1} MHz sınırıyla {2:0} MHz.", uncapped, cap, capped)
+                : Loc.F("Windows frekans sınırını uygulamıyor: sınırsız {0:0} MHz, {1} MHz sınırıyla {2:0} MHz. Bu bilgisayarda (Ryzen/HWP ya da üretici yazılımı) sınır çalışmıyor.", uncapped, cap, capped);
             Journal.Write("Frekans sınırı denemesi: " + note);
             return new(supported, uncapped, capped, cap, note);
         }

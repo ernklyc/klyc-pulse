@@ -1,3 +1,4 @@
+using Pulse.Core.Localization;
 using System.Collections.ObjectModel;
 using System.Windows.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -42,13 +43,13 @@ public partial class GameProfileVm : ObservableObject
     /// <summary>Ekran kartı tercihini Windows kaydından okur.</summary>
     public void RefreshGpu()
     {
-        if (string.IsNullOrEmpty(_profile.ExePath)) { GpuText = "Ekran kartı: oyun yolu bilinmiyor (oyunu bir kez açınca öğrenilir)"; GpuNeedsFix = false; return; }
+        if (string.IsNullOrEmpty(_profile.ExePath)) { GpuText = Loc.T("Ekran kartı: oyun yolu bilinmiyor (oyunu bir kez açınca öğrenilir)"); GpuNeedsFix = false; return; }
         var pref = Core.Optimize.GameTuning.GetGpuPreference(_profile.ExePath);
         GpuNeedsFix = pref != 2;
-        GpuText = pref == 2 ? "Ekran kartı: yüksek performans (NVIDIA) ✓" : "Ekran kartı: Windows seçiyor, Intel ekran kartında çalışabilir";
+        GpuText = pref == 2 ? Loc.T("Ekran kartı: yüksek performans (NVIDIA) ✓") : Loc.T("Ekran kartı: Windows seçiyor, Intel ekran kartında çalışabilir");
     }
 
-    public static IReadOnlyList<ModeOption> Modes { get; } = Core.Modes.Modes.All.Select(m => new ModeOption(m.Key, m.Title + " modu")).ToList();
+    public static IReadOnlyList<ModeOption> Modes { get; } = Core.Modes.Modes.All.Select(m => new ModeOption(m.Key, Loc.F("{0} modu", Loc.T(m.Title)))).ToList();
     /// <summary>İşlemci hız sınırı seçenekleri: bu bilgisayarın gerçek hızından türetilir (her işlemciye uyar).</summary>
     public ObservableCollection<string> CpuCapOptions { get; } = new();
     private int?[] _caps = [null];
@@ -64,11 +65,11 @@ public partial class GameProfileVm : ObservableObject
         var onLadder = AppServices.GameLadder();
         CpuCapOptions.Clear();
         for (var i = 0; i < caps.Length; i++)
-            CpuCapOptions.Add(caps[i] is not { } mhz ? "Sınırsız (en hızlı)"
-                : onLadder.Contains(mhz) ? Core.Hardware.CpuLadder.Label(i, caps.Length, mhz) : $"En çok {mhz / 1000.0:0.0} GHz (elle)");
+            CpuCapOptions.Add(caps[i] is not { } mhz ? Loc.T("Sınırsız (en hızlı)")
+                : onLadder.Contains(mhz) ? Core.Hardware.CpuLadder.Label(i, caps.Length, mhz) : Loc.F("En çok {0:0.0} GHz (elle)", mhz / 1000.0));
         return true;
     }
-    public static IReadOnlyList<string> RefreshOptions { get; } = ["Modun varsayılanı", "60 Hz", "Ekranın en yükseği"];
+    public static IReadOnlyList<string> RefreshOptions { get; } = [Loc.T("Modun varsayılanı"), "60 Hz", Loc.T("Ekranın en yükseği")];
 
     [ObservableProperty] private string _modeKey;
     [ObservableProperty] private int _refreshIndex;
@@ -95,7 +96,7 @@ public partial class GameProfileVm : ObservableObject
     {
         p.CpuMaxMhz = _caps[Math.Clamp(value, 0, _caps.Length - 1)];
         p.AutoTuneLocked = true;
-        p.AutoTuneNote = "Elle seçildi; otomatik ayar dokunmuyor. Otomatik ayarı kapatıp açarsan yeniden öğrenir.";
+        p.AutoTuneNote = Loc.T("Elle seçildi; otomatik ayar dokunmuyor. Otomatik ayarı kapatıp açarsan yeniden öğrenir.");
         AutoTuneNote = p.AutoTuneNote;
     });
     partial void OnAutoTuneChanged(bool value) => Apply(p => { p.AutoTune = value; if (value) p.AutoTuneLocked = false; });
@@ -123,8 +124,8 @@ public sealed partial class GameSettingVm : ObservableObject
     public void Update()
     {
         CanFix = !Setting.IsGood;
-        Label = Setting.IsGood ? "UYGUN" : "DÜZELTİLEBİLİR";
-        State = Setting.IsGood ? "Uygun" : $"Şu an: {Setting.CurrentText}";
+        Label = Loc.T(Setting.IsGood ? "UYGUN" : "DÜZELTİLEBİLİR");
+        State = Setting.IsGood ? Loc.T("Uygun") : Loc.F("Şu an: {0}", Loc.T(Setting.CurrentText));
         Brush = (System.Windows.Media.Brush)System.Windows.Application.Current.FindResource(Setting.IsGood ? "GoodBrush" : "WarnBrush");
     }
 }
@@ -155,12 +156,12 @@ public partial class GamesViewModel : ObservableObject, IDisposable
     private void RefreshFreqCapText()
     {
         var s = _store.Current;
-        var peak = s.CpuPeakMhz > 0 ? $" Öğrenilen tepe hız: {s.CpuPeakMhz / 1000.0:0.0} GHz." : "";
+        var peak = s.CpuPeakMhz > 0 ? Loc.F(" Öğrenilen tepe hız: {0:0.0} GHz.", s.CpuPeakMhz / 1000.0) : "";
         FreqCapText = s.FreqCapSupported switch
         {
-            true => "✓ Bu bilgisayarda işlemci hız sınırı çalışıyor. " + s.FreqCapNote + peak,
-            false => "✗ " + s.FreqCapNote + " Hız sınırı özellikleri bu bilgisayarda kapalı.",
-            _ => "İşlemci hız sınırının bu bilgisayarda çalışıp çalışmadığı henüz denenmedi. Otomatik ayar ilk sınırı koymadan önce kendiliğinden dener." + peak,
+            true => Loc.T("✓ Bu bilgisayarda işlemci hız sınırı çalışıyor. ") + s.FreqCapNote + peak,
+            false => "✗ " + s.FreqCapNote + Loc.T(" Hız sınırı özellikleri bu bilgisayarda kapalı."),
+            _ => Loc.T("İşlemci hız sınırının bu bilgisayarda çalışıp çalışmadığı henüz denenmedi. Otomatik ayar ilk sınırı koymadan önce kendiliğinden dener.") + peak,
         };
     }
 
@@ -169,11 +170,11 @@ public partial class GamesViewModel : ObservableObject, IDisposable
     {
         if (Probing || FreqCapService.IsRunning) return;
         var ok = System.Windows.MessageBox.Show(
-            "İşlemcinin hız sınırı bu bilgisayarda çalışıyor mu diye ölçülecek. Bunun için işlemci yaklaşık 20 saniye tam yüklenir (fan hızlanır). Oyun açıkken yapma. Devam edilsin mi?",
-            "Hız sınırı denemesi", System.Windows.MessageBoxButton.YesNo, System.Windows.MessageBoxImage.Question);
+            Loc.T("İşlemcinin hız sınırı bu bilgisayarda çalışıyor mu diye ölçülecek. Bunun için işlemci yaklaşık 20 saniye tam yüklenir (fan hızlanır). Oyun açıkken yapma. Devam edilsin mi?"),
+            Loc.T("Hız sınırı denemesi"), System.Windows.MessageBoxButton.YesNo, System.Windows.MessageBoxImage.Question);
         if (ok != System.Windows.MessageBoxResult.Yes) return;
         Probing = true;
-        FreqCapText = "Deneniyor… (yaklaşık 20 saniye, işlemci tam yüklenir)";
+        FreqCapText = Loc.T("Deneniyor… (yaklaşık 20 saniye, işlemci tam yüklenir)");
         try { await FreqCapService.RunAsync(); }
         finally { Probing = false; RefreshFreqCapText(); foreach (var g in Games) g.SyncAuto(); }
     }
@@ -198,7 +199,7 @@ public partial class GamesViewModel : ObservableObject, IDisposable
         _store.Save();
         foreach (var g in Games.ToList()) if (ReferenceEquals(g.Profile, profile)) g.SyncAuto();
         ShowSuggestion = false;
-        ReportNote = $"Uygulandı: {_report.Game} için işlemci en çok {cap / 1000.0:0.0} GHz. Bir sonraki oyunda geçerli olur; rapor önceki oturumla karşılaştırır. İstersen aşağıdaki listeden değiştirebilirsin.";
+        ReportNote = Loc.F("Uygulandı: {0} için işlemci en çok {1:0.0} GHz. Bir sonraki oyunda geçerli olur; rapor önceki oturumla karşılaştırır. İstersen aşağıdaki listeden değiştirebilirsin.", _report.Game, cap / 1000.0);
     }
     [ObservableProperty] private System.Windows.Media.Brush _reportBrush = System.Windows.Media.Brushes.Gray;
 
@@ -211,7 +212,7 @@ public partial class GamesViewModel : ObservableObject, IDisposable
         ReportLines.Clear();
         ReportNote = "";
         ShowSuggestion = r?.SuggestedCpuCapMhz is not null;
-        SuggestionText = r?.SuggestedCpuCapMhz is { } sc ? $"Bu oyun için işlemciyi en çok {sc / 1000.0:0.0} GHz'e sınırla" : "";
+        SuggestionText = r?.SuggestedCpuCapMhz is { } sc ? Loc.F("Bu oyun için işlemciyi en çok {0:0.0} GHz'e sınırla", sc / 1000.0) : "";
         HasReport = r is not null;
         NoReport = r is null;
         if (r is null) return;
@@ -229,7 +230,7 @@ public partial class GamesViewModel : ObservableObject, IDisposable
         GameSettings.Clear();
         foreach (var s in Core.Optimize.WindowsGameSettings.Read()) GameSettings.Add(new GameSettingVm(s));
         var bad = GameSettings.Count(g => g.CanFix);
-        SettingsNote = bad == 0 ? "Windows'un oyun ayarlarının hepsi doğru." : $"{bad} ayar düzeltilebilir.";
+        SettingsNote = bad == 0 ? Loc.T("Windows'un oyun ayarlarının hepsi doğru.") : Loc.F("{0} ayar düzeltilebilir.", bad);
     }
 
     [RelayCommand]
@@ -268,7 +269,7 @@ public partial class GamesViewModel : ObservableObject, IDisposable
     }
 
     private static string Detected() =>
-        AppServices.Auto.DetectedGame is { } g ? $"Şu an çalışan oyun: {g}" : "Şu an çalışan oyun algılanmadı.";
+        AppServices.Auto.DetectedGame is { } g ? Loc.F("Şu an çalışan oyun: {0}", g) : Loc.T("Şu an çalışan oyun algılanmadı.");
 
     /// <summary>Otomatik öğrenilen yeni oyunları listeye ekler (var olanlara dokunmaz).</summary>
     private void Reload()
@@ -286,7 +287,7 @@ public partial class GamesViewModel : ObservableObject, IDisposable
     {
         var dlg = new Microsoft.Win32.OpenFileDialog
         {
-            Title = "Oyunun .exe dosyasını seç",
+            Title = Loc.T("Oyunun .exe dosyasını seç"),
             Filter = "Uygulama (*.exe)|*.exe",
             CheckFileExists = true,
         };

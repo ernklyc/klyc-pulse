@@ -1,3 +1,4 @@
+using Pulse.Core.Localization;
 using System.Diagnostics;
 using Microsoft.Win32;
 using Pulse.Core.Diagnostics;
@@ -15,11 +16,11 @@ public static class StartupManager
     public static IReadOnlyList<StartupItem> List()
     {
         var items = new List<StartupItem>();
-        ReadRun(items, RegistryHive.CurrentUser, RegistryView.Default, "Run", machine: false, "Kullanıcı (Run)");
+        ReadRun(items, RegistryHive.CurrentUser, RegistryView.Default, "Run", machine: false, Loc.T("Kullanıcı (Run)"));
         ReadRun(items, RegistryHive.LocalMachine, RegistryView.Registry64, "Run", machine: true, "Sistem (Run)");
         ReadRun(items, RegistryHive.LocalMachine, RegistryView.Registry32, "Run32", machine: true, "Sistem 32-bit (Run)");
-        ReadFolder(items, Environment.GetFolderPath(Environment.SpecialFolder.Startup), machine: false, "Başlangıç klasörü (kullanıcı)");
-        ReadFolder(items, Environment.GetFolderPath(Environment.SpecialFolder.CommonStartup), machine: true, "Başlangıç klasörü (ortak)");
+        ReadFolder(items, Environment.GetFolderPath(Environment.SpecialFolder.Startup), machine: false, Loc.T("Başlangıç klasörü (kullanıcı)"));
+        ReadFolder(items, Environment.GetFolderPath(Environment.SpecialFolder.CommonStartup), machine: true, Loc.T("Başlangıç klasörü (ortak)"));
         return items.OrderBy(i => i.Name, StringComparer.CurrentCultureIgnoreCase).ToList();
     }
 

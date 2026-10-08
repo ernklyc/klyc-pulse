@@ -1220,6 +1220,92 @@ if (cmd == "orphan-test")
     return fails == 0 ? 0 : 1;
 }
 
+if (cmd == "loc-test")
+{
+    // Çeviri: sözlük kaynak koddaki Loc.T/Loc.F metinleriyle ve XAML'deki sabit metinlerle uyuşuyor mu? (donanıma dokunmaz)
+    var fails = 0;
+    void Check(bool ok, string what) { Console.WriteLine($"  [{(ok ? "GEÇTİ" : "KALDI")}] {what}"); if (!ok) fails++; }
+    var root = AppContext.BaseDirectory;
+    while (root is not null && !File.Exists(Path.Combine(root, "Pulse.sln"))) root = Path.GetDirectoryName(root);
+    if (root is null) { Console.WriteLine("  Depo klasörü bulunamadı (Pulse.sln); test atlandı."); return 0; }
+    var src = Path.Combine(root, "src");
+    string Unesc(string s) => System.Text.RegularExpressions.Regex.Replace(s, @"\\(.)", m => m.Groups[1].Value switch { "n" => "\n", "t" => "\t", var c => c });
+    var Holes = new System.Text.RegularExpressions.Regex(@"\{(\d+)");
+    string HoleSet(string s) => string.Join(",", Holes.Matches(s).Select(m => m.Groups[1].Value).Distinct().OrderBy(x => x));
+
+    // 1) Sözlük dosyaları: boş çeviri yok, yer tutucular (örn. {0}, {1}) Türkçe ile İngilizcede aynı
+    var tsvFiles = Directory.GetFiles(Path.Combine(src, "Pulse.Core", "Localization"), "en*.tsv");
+    var entries = new Dictionary<string, string>();
+    var bad = new List<string>();
+    foreach (var f in tsvFiles)
+        foreach (var line in File.ReadAllLines(f))
+        {
+            if (line.Length == 0 || line[0] == '#') continue;
+            var tab = line.IndexOf('\t');
+            if (tab <= 0) { bad.Add("satır biçimi: " + line[..Math.Min(40, line.Length)]); continue; }
+            var k = line[..tab].Replace("\\n", "\n"); var v = line[(tab + 1)..].Replace("\\n", "\n");
+            if (string.IsNullOrWhiteSpace(v)) bad.Add("boş çeviri: " + k[..Math.Min(40, k.Length)]);
+            else if (HoleSet(k) != HoleSet(v)) bad.Add($"yer tutucu uyuşmuyor: {k[..Math.Min(40, k.Length)]} ({HoleSet(k)} ≠ {HoleSet(v)})");
+            entries[k] = v;
+        }
+    foreach (var b in bad.Take(15)) Console.WriteLine("    " + b);
+    Check(entries.Count > 200, $"Sözlükte yeterince satır var ({entries.Count})");
+    Check(bad.Count == 0, $"Sözlük satırları geçerli: boş çeviri ve yer tutucu uyuşmazlığı yok ({bad.Count} sorun)");
+
+    // 2) Kaynak koddaki her Loc.T("…") / Loc.F("…") metninin karşılığı sözlükte var
+    var rx = new System.Text.RegularExpressions.Regex("Loc\\.(?:T|F)\\(\\s*\"((?:[^\"\\\\]|\\\\.)*)\"");
+    var missing = new SortedSet<string>();
+    var used = 0;
+    foreach (var f in Directory.EnumerateFiles(src, "*.cs", SearchOption.AllDirectories))
+    {
+        var rel = f[src.Length..];
+        if (rel.Contains("\\obj\\") || rel.Contains("\\bin\\") || rel.StartsWith("\\Pulse.Cli")) continue;
+        // Yorum satırları (örn. "/// Loc.F(...)" örnekleri) sayılmaz
+        var code = string.Join("\n", File.ReadAllLines(f).Where(l => !l.TrimStart().StartsWith("//")));
+        foreach (System.Text.RegularExpressions.Match m in rx.Matches(code))
+        {
+            used++;
+            var key = Unesc(m.Groups[1].Value);
+            if (!entries.ContainsKey(key)) missing.Add(key);
+        }
+    }
+    foreach (var mkey in missing.Take(20)) Console.WriteLine("    eksik: " + mkey[..Math.Min(90, mkey.Length)].Replace("\n", "\\n"));
+    Check(used > 100, $"Kodda çok sayıda çevrilen metin var ({used})");
+    Check(missing.Count == 0, $"Koddaki her çevrilen metnin İngilizcesi sözlükte var (eksik: {missing.Count})");
+
+    // 3) XAML'deki sabit metinler: çevrilmeyecekler dışında hepsinin karşılığı var
+    var xrx = new System.Text.RegularExpressions.Regex("\\b(?:Text|Content|ToolTip|Header|PlaceholderText)=\"([^\"{][^\"]*)\"");
+    var skip = new HashSet<string> { "KLYC-Pulse", "NVIDIA App", "DİL / LANGUAGE" };
+    var xmissing = new SortedSet<string>();
+    foreach (var f in Directory.EnumerateFiles(src, "*.xaml", SearchOption.AllDirectories))
+    {
+        if (f.Contains("\\obj\\") || f.Contains("\\bin\\") || f.Contains("\\Themes\\")) continue;
+        foreach (System.Text.RegularExpressions.Match m in xrx.Matches(File.ReadAllText(f)))
+        {
+            var v = System.Net.WebUtility.HtmlDecode(m.Groups[1].Value);
+            if (!System.Text.RegularExpressions.Regex.IsMatch(v, "[A-Za-zÇĞİÖŞÜçğıöşü]{3}") || skip.Contains(v)) continue;
+            if (!entries.ContainsKey(v)) xmissing.Add(v);
+        }
+    }
+    foreach (var mkey in xmissing.Take(20)) Console.WriteLine("    XAML'de eksik: " + mkey[..Math.Min(90, mkey.Length)]);
+    Check(xmissing.Count == 0, $"XAML'deki her sabit metnin İngilizcesi var (eksik: {xmissing.Count})");
+
+    // 4) Çalışma: İngilizce modda çeviri yapılır, Türkçe modda metin aynen kalır
+    Pulse.Core.Localization.Loc.Configure("tr");
+    Check(Pulse.Core.Localization.Loc.T("Ayarlar") == "Ayarlar" && Pulse.Core.Localization.Loc.F("{0} modu", "Oyun") == "Oyun modu", "Türkçe modda metin aynen kalır");
+    Pulse.Core.Localization.Loc.Configure("en");
+    Check(Pulse.Core.Localization.Loc.T("Ayarlar") == "Settings" && Pulse.Core.Localization.Loc.F("{0} modu", "Game") == "Game mode", "İngilizce modda metin çevrilir, biçim doldurulur");
+    Check(Pulse.Core.Localization.Loc.T("sözlükte olmayan bir cümle") == "sözlükte olmayan bir cümle", "Sözlükte olmayan metin Türkçe kalır (hiçbir şey kırılmaz)");
+    Pulse.Core.Localization.Loc.Configure("auto", new System.Globalization.CultureInfo("tr-TR"));
+    Check(Pulse.Core.Localization.Loc.Language == "tr", "Otomatik: Windows Türkçeyse Türkçe");
+    Pulse.Core.Localization.Loc.Configure("auto", new System.Globalization.CultureInfo("de-DE"));
+    Check(Pulse.Core.Localization.Loc.Language == "en", "Otomatik: Windows Türkçe değilse İngilizce");
+    Pulse.Core.Localization.Loc.Configure("tr");
+
+    Console.WriteLine(fails == 0 ? "ÇEVİRİ TESTİ GEÇTİ" : $"{fails} TEST KALDI");
+    return fails == 0 ? 0 : 1;
+}
+
 if (cmd == "bgload")
 {
     // Gerçek bilgisayarda: 30 sn boyunca arka plan yükünü ölçer ve en çok yük bindirenleri yazar (kimseyi kapatmaz).

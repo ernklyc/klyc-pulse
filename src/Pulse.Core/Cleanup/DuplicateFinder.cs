@@ -1,3 +1,4 @@
+using Pulse.Core.Localization;
 using System.Security.Cryptography;
 
 namespace Pulse.Core.Cleanup;
@@ -83,7 +84,7 @@ public static class DuplicateFinder
         foreach (var sizeGroup in candidates)
         {
             if (ct.IsCancellationRequested) return [];
-            progress?.Report($"Karşılaştırılıyor ({++done}/{candidates.Count})…");
+            progress?.Report(Loc.F("Karşılaştırılıyor ({0}/{1})…", ++done, candidates.Count));
             foreach (var partial in GroupBy(sizeGroup, PartialHash, ct))
             {
                 foreach (var full in GroupBy(partial, FullHash, ct))

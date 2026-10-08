@@ -222,6 +222,26 @@
                     </DockPanel>
                 </StackPanel>
             </Border>
+            <TextBlock Style="{StaticResource PulseLabel}" Text="DİL / LANGUAGE" Margin="0,18,0,8" />
+            <Border Style="{StaticResource PulseCard}" Padding="16,12">
+                <StackPanel>
+                    <ItemsControl ItemsSource="{Binding Languages}">
+                        <ItemsControl.ItemsPanel><ItemsPanelTemplate><StackPanel Orientation="Horizontal" /></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Grid Margin="0,0,6,0">
+                                    <Button Content="{Binding Title}" Style="{StaticResource PulseSegment}" MinWidth="120"
+                                            Command="{Binding DataContext.SetLanguageCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}" CommandParameter="{Binding}" />
+                                    <Button Content="{Binding Title}" Style="{StaticResource PulseSegmentActive}" MinWidth="120" Visibility="{Binding IsActive, Converter={StaticResource BoolToVis}}"
+                                            Command="{Binding DataContext.SetLanguageCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}" CommandParameter="{Binding}" />
+                                </Grid>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                    <TextBlock Style="{StaticResource PulseMuted}" TextWrapping="Wrap" Margin="0,8,0,0" Text="{Binding LanguageNote}" />
+                </StackPanel>
+            </Border>
+
             <TextBlock Style="{StaticResource PulseLabel}" Text="DESTEK" Margin="0,18,0,8" />
             <Border Style="{StaticResource PulseCard}" Padding="16,12">
                 <DockPanel>

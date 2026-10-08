@@ -1,3 +1,4 @@
+using Pulse.Core.Localization;
 using System.Diagnostics;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -15,7 +16,7 @@ public static class WingetService
     public static async Task<(IReadOnlyList<UpgradeInfo> Items, string? Error)> GetUpgradesAsync()
     {
         var (code, output) = await RunAsync("upgrade --accept-source-agreements --disable-interactivity", 90000);
-        if (code != 0 && !output.Contains("----")) return (Array.Empty<UpgradeInfo>(), $"winget çalışmadı (kod {code}).");
+        if (code != 0 && !output.Contains("----")) return (Array.Empty<UpgradeInfo>(), Loc.F("winget çalışmadı (kod {0}).", code));
         return (ParseTable(output), null);
     }
 
@@ -66,7 +67,7 @@ public static class WingetService
             catch (OperationCanceledException)
             {
                 try { p.Kill(true); } catch { }
-                return (-1, "Zaman aşımı");
+                return (-1, Loc.T("Zaman aşımı"));
             }
             return (p.ExitCode, await read);
         }

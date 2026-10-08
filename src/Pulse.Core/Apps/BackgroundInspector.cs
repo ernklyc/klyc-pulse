@@ -1,3 +1,4 @@
+using Pulse.Core.Localization;
 using System.Diagnostics;
 using System.Text.Json;
 using System.Text.RegularExpressions;
@@ -29,35 +30,35 @@ public sealed class BackgroundInspector
     // Sıra önemli: ilk eşleşen kural geçerli. Eşleşme, ad + görünen ad + yol üzerinde (küçük harf) aranır.
     private static readonly Rule[] Rules =
     [
-        new("nvidia", BgAdvice.Keep, "NVIDIA sürücü hizmeti. Ekran kartı ayarları ve oyun profilleri buna bağlı."),
-        new("nvcontainer", BgAdvice.Keep, "NVIDIA sürücü hizmeti."),
-        new("vgc", BgAdvice.Keep, "Riot Vanguard (Valorant anti-hile). Kapatılırsa Valorant açılmaz."),
+        new("nvidia", BgAdvice.Keep, Loc.T("NVIDIA sürücü hizmeti. Ekran kartı ayarları ve oyun profilleri buna bağlı.")),
+        new("nvcontainer", BgAdvice.Keep, Loc.T("NVIDIA sürücü hizmeti.")),
+        new("vgc", BgAdvice.Keep, Loc.T("Riot Vanguard (Valorant anti-hile). Kapatılırsa Valorant açılmaz.")),
         new("vgk", BgAdvice.Keep, "Riot Vanguard (Valorant anti-hile)."),
-        new("riot", BgAdvice.Keep, "Riot oyunları için gerekli."),
-        new("easyanticheat", BgAdvice.Keep, "Oyun anti-hile hizmeti."),
+        new("riot", BgAdvice.Keep, Loc.T("Riot oyunları için gerekli.")),
+        new("easyanticheat", BgAdvice.Keep, Loc.T("Oyun anti-hile hizmeti.")),
         new("beservice", BgAdvice.Keep, "Oyun anti-hile hizmeti (BattlEye)."),
-        new("sunshine", BgAdvice.Keep, "Sunshine oyun akışı hizmeti."),
+        new("sunshine", BgAdvice.Keep, Loc.T("Sunshine oyun akışı hizmeti.")),
         new("steam", BgAdvice.Keep, "Steam istemci hizmeti."),
-        new("rtkaud", BgAdvice.Keep, "Ses sürücüsü (Realtek). Sesi bozabilir."),
-        new("realtek", BgAdvice.Keep, "Ses sürücüsü (Realtek)."),
-        new("asusoptimization", BgAdvice.Keep, "ASUS profil ve donanım sürücüsü. Fn tuşlarını etkileyebilir."),
-        new("asusswitch", BgAdvice.Keep, "ASUS donanım geçişleri. Fn tuşlarını etkileyebilir."),
-        new("ghelper", BgAdvice.Keep, "G-Helper'ın pil şarj limitini her açılışta yazan görevi. Pil limitin böyle korunuyor, dokunma."),
+        new("rtkaud", BgAdvice.Keep, Loc.T("Ses sürücüsü (Realtek). Sesi bozabilir.")),
+        new("realtek", BgAdvice.Keep, Loc.T("Ses sürücüsü (Realtek).")),
+        new("asusoptimization", BgAdvice.Keep, Loc.T("ASUS profil ve donanım sürücüsü. Fn tuşlarını etkileyebilir.")),
+        new("asusswitch", BgAdvice.Keep, Loc.T("ASUS donanım geçişleri. Fn tuşlarını etkileyebilir.")),
+        new("ghelper", BgAdvice.Keep, Loc.T("G-Helper'ın pil şarj limitini her açılışta yazan görevi. Pil limitin böyle korunuyor, dokunma.")),
 
-        new("dsaservice", BgAdvice.Optional, "Intel Driver & Support Assistant. Sürücü güncellemesi için; sürekli arka planda çalışması gerekmez."),
-        new("dsaupdate", BgAdvice.Optional, "Intel Driver & Support Assistant güncelleyicisi."),
+        new("dsaservice", BgAdvice.Optional, Loc.T("Intel Driver & Support Assistant. Sürücü güncellemesi için; sürekli arka planda çalışması gerekmez.")),
+        new("dsaupdate", BgAdvice.Optional, Loc.T("Intel Driver & Support Assistant güncelleyicisi.")),
         new("driver and support assistant", BgAdvice.Optional, "Intel Driver & Support Assistant."),
-        new("googleupdat", BgAdvice.Optional, "Google güncelleyicisi. Tarayıcı kendi kendine de güncellenir."),
-        new("gupdate", BgAdvice.Optional, "Google güncelleyicisi."),
-        new("edgeupdate", BgAdvice.Optional, "Edge güncelleyicisi."),
-        new("adobe", BgAdvice.Optional, "Adobe güncelleme/lisans hizmeti."),
-        new("armourycrate", BgAdvice.Optional, "Armoury Crate arka planı. 'Dizüstü' sayfasındaki sihirbazla birlikte yönetilir."),
-        new("asusappservice", BgAdvice.Optional, "Armoury Crate arka planı."),
-        new("asussoftwaremanager", BgAdvice.Optional, "ASUS yazılım güncelleyicisi."),
+        new("googleupdat", BgAdvice.Optional, Loc.T("Google güncelleyicisi. Tarayıcı kendi kendine de güncellenir.")),
+        new("gupdate", BgAdvice.Optional, Loc.T("Google güncelleyicisi.")),
+        new("edgeupdate", BgAdvice.Optional, Loc.T("Edge güncelleyicisi.")),
+        new("adobe", BgAdvice.Optional, Loc.T("Adobe güncelleme/lisans hizmeti.")),
+        new("armourycrate", BgAdvice.Optional, Loc.T("Armoury Crate arka planı. 'Dizüstü' sayfasındaki sihirbazla birlikte yönetilir.")),
+        new("asusappservice", BgAdvice.Optional, Loc.T("Armoury Crate arka planı.")),
+        new("asussoftwaremanager", BgAdvice.Optional, Loc.T("ASUS yazılım güncelleyicisi.")),
         new("asussystemanalysis", BgAdvice.Optional, "ASUS sistem analizi (telemetri)."),
-        new("asussystemdiagnosis", BgAdvice.Optional, "ASUS sistem tanılama (telemetri)."),
+        new("asussystemdiagnosis", BgAdvice.Optional, Loc.T("ASUS sistem tanılama (telemetri).")),
         new("ccleaner", BgAdvice.Optional, "CCleaner arka plan izleyicisi."),
-        new("epic", BgAdvice.Optional, "Epic Games hizmeti. Oyunlar başlatıcıyla açılırken kendiliğinden devreye girer."),
+        new("epic", BgAdvice.Optional, Loc.T("Epic Games hizmeti. Oyunlar başlatıcıyla açılırken kendiliğinden devreye girer.")),
     ];
 
     private readonly string _changesPath;
@@ -146,7 +147,7 @@ public sealed class BackgroundInspector
             if (!atLogon) return null;
             var command = doc.Descendants().FirstOrDefault(e => e.Name.LocalName == "Command")?.Value ?? "";
             var (advice, reason) = Classify(rel, rel.TrimStart('\\'), command);
-            return new BgItem("Görev", rel, rel.TrimStart('\\'), command.Trim('"'), enabled, false, advice, reason);
+            return new BgItem(Loc.T("Görev"), rel, rel.TrimStart('\\'), command.Trim('"'), enabled, false, advice, reason);
         }
         catch { return null; }
     }
@@ -156,7 +157,7 @@ public sealed class BackgroundInspector
         var hay = $"{name} {display} {path}".ToLowerInvariant();
         foreach (var r in Rules)
             if (hay.Contains(r.Pattern)) return (r.Advice, r.Reason);
-        return (BgAdvice.Unknown, "Bilinmiyor. Ne işe yaradığından emin olmadığımız için dokunulmaz.");
+        return (BgAdvice.Unknown, Loc.T("Bilinmiyor. Ne işe yaradığından emin olmadığımız için dokunulmaz."));
     }
 
     private BgItem? ReadSingle(string key)
@@ -181,8 +182,8 @@ public sealed class BackgroundInspector
     /// </summary>
     public (bool Ok, string Message) SetStartAtBoot(BgItem item, bool startAtBoot)
     {
-        if (item.Advice == BgAdvice.Keep) return (false, "Bu öğe sistem veya oyunlar için gerekli, dokunulmaz.");
-        if (item.Advice == BgAdvice.Unknown && !startAtBoot) return (false, "Ne işe yaradığı bilinmiyor, bu yüzden kapatılmaz.");
+        if (item.Advice == BgAdvice.Keep) return (false, Loc.T("Bu öğe sistem veya oyunlar için gerekli, dokunulmaz."));
+        if (item.Advice == BgAdvice.Unknown && !startAtBoot) return (false, Loc.T("Ne işe yaradığı bilinmiyor, bu yüzden kapatılmaz."));
 
         var changes = LoadChanges();
         try
@@ -192,17 +193,17 @@ public sealed class BackgroundInspector
                 if (!startAtBoot)
                 {
                     var original = CurrentServiceStartType(item.Name);
-                    if (original is null) return (false, "Servis okunamadı.");
+                    if (original is null) return (false, Loc.T("Servis okunamadı."));
                     if (!changes.ContainsKey(item.Key)) changes[item.Key] = original;
                     Exec("sc.exe", "config", item.Name, "start=", "demand");
                     var now = CurrentServiceStartType(item.Name);
-                    if (now != "demand") return (false, "Servis ayarı doğrulanamadı (yönetici gerekebilir).");
+                    if (now != "demand") return (false, Loc.T("Servis ayarı doğrulanamadı (yönetici gerekebilir)."));
                 }
                 else
                 {
                     var original = changes.TryGetValue(item.Key, out var o) ? o : "auto";
                     Exec("sc.exe", "config", item.Name, "start=", original);
-                    if (CurrentServiceStartType(item.Name) != original) return (false, "Eski ayar geri yüklenemedi.");
+                    if (CurrentServiceStartType(item.Name) != original) return (false, Loc.T("Eski ayar geri yüklenemedi."));
                     changes.Remove(item.Key);
                 }
             }
@@ -211,12 +212,12 @@ public sealed class BackgroundInspector
                 Exec("schtasks.exe", "/Change", "/TN", item.Name, startAtBoot ? "/ENABLE" : "/DISABLE");
                 var file = TasksRoot + item.Name;
                 var after = File.Exists(file) ? ReadTaskFile(file, item.Name) : null;
-                if (after is null || after.StartsAtBoot != startAtBoot) return (false, "Görev ayarı doğrulanamadı (yönetici gerekebilir).");
+                if (after is null || after.StartsAtBoot != startAtBoot) return (false, Loc.T("Görev ayarı doğrulanamadı (yönetici gerekebilir)."));
                 if (!startAtBoot) changes[item.Key] = "enabled"; else changes.Remove(item.Key);
             }
             SaveChanges(changes);
             Journal.Write($"Arka plan: {item.Key} açılışta {(startAtBoot ? "başlayacak" : "başlamayacak")}.");
-            return (true, startAtBoot ? "Eski haline döndü." : "Açılışta başlamayacak (silinmedi, istediğin an geri açılır).");
+            return (true, startAtBoot ? Loc.T("Eski haline döndü.") : Loc.T("Açılışta başlamayacak (silinmedi, istediğin an geri açılır)."));
         }
         catch (Exception ex) { return (false, ex.Message); }
     }

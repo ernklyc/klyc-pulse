@@ -1,3 +1,4 @@
+using Pulse.Core.Localization;
 using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -36,7 +37,7 @@ public sealed class AppVm
         DateText = a.InstallDate?.ToString("yyyy-MM-dd") ?? "";
         var hint = BloatCatalog.Evaluate(a);
         Hint = hint?.Reason ?? "";
-        HintLabel = hint?.Level switch { BloatLevel.Recommended => "Gereksiz olabilir", BloatLevel.Optional => "İsteğe bağlı", _ => "" };
+        HintLabel = hint?.Level switch { BloatLevel.Recommended => Loc.T("Gereksiz olabilir"), BloatLevel.Optional => Loc.T("İsteğe bağlı"), _ => "" };
     }
 
     public InstalledApp App { get; }
@@ -76,9 +77,9 @@ public partial class StartupVm : ObservableObject
             _loading = true;
             IsEnabled = !value;
             _loading = false;
-            _owner.Status = Item.Machine ? "Sistem öğesini değiştirmek için KLYC-Pulse'ın yönetici olarak çalışması gerekir." : "Bu öğe değiştirilemedi.";
+            _owner.Status = Item.Machine ? Loc.T("Sistem öğesini değiştirmek için KLYC-Pulse'ın yönetici olarak çalışması gerekir.") : Loc.T("Bu öğe değiştirilemedi.");
         }
-        else _owner.Status = value ? $"{Item.Name} açılışta başlayacak." : $"{Item.Name} açılışta başlamayacak.";
+        else _owner.Status = value ? Loc.F("{0} açılışta başlayacak.", Item.Name) : Loc.F("{0} açılışta başlamayacak.", Item.Name);
     }
 }
 
@@ -97,15 +98,15 @@ public partial class BackgroundVm : ObservableObject
         (Label, BrushKey) = item.Advice switch
         {
             BgAdvice.Keep => ("DOKUNMA", "GoodBrush"),
-            BgAdvice.Optional => ("KAPATILABİLİR", "WarnBrush"),
-            _ => ("BİLİNMİYOR", "MutedBrush"),
+            BgAdvice.Optional => (Loc.T("KAPATILABİLİR"), "WarnBrush"),
+            _ => (Loc.T("BİLİNMİYOR"), "MutedBrush"),
         };
         CanToggle = item.Advice == BgAdvice.Optional || (item.Advice == BgAdvice.Unknown && !item.StartsAtBoot);
     }
 
     public BgItem Item { get; }
     public string Name => Item.Display;
-    public string Detail => Item.IsService ? $"Servis  ·  {(Item.Running ? "çalışıyor" : "durmuş")}  ·  {Item.Reason}" : $"Görev  ·  {Item.Reason}";
+    public string Detail => Item.IsService ? Loc.F("Servis  ·  {0}  ·  {1}", Loc.T(Item.Running ? "çalışıyor" : "durmuş"), Item.Reason) : Loc.F("Görev  ·  {0}", Item.Reason);
     public string Label { get; }
     public string BrushKey { get; }
     public System.Windows.Media.Brush Brush => (System.Windows.Media.Brush)System.Windows.Application.Current.FindResource(BrushKey);
@@ -140,7 +141,7 @@ public partial class AppsViewModel : ObservableObject
     {
         Tabs = new ObservableCollection<TabVm>
         {
-            new(0, "Güncellemeler"), new(1, "Kurulu uygulamalar"), new(2, "Açılışta başlayanlar"), new(3, "Arka plan"),
+            new(0, Loc.T("Güncellemeler")), new(1, Loc.T("Kurulu uygulamalar")), new(2, Loc.T("Açılışta başlayanlar")), new(3, Loc.T("Arka plan")),
         };
         Tabs[0].IsActive = true;
         _ = LoadAsync();
@@ -156,7 +157,7 @@ public partial class AppsViewModel : ObservableObject
     [ObservableProperty] private string _search = "";
     [ObservableProperty] private string _status = "";
     [ObservableProperty] private bool _isBusy;
-    [ObservableProperty] private string _updatesNote = "Güncellemeler denetleniyor…";
+    [ObservableProperty] private string _updatesNote = Loc.T("Güncellemeler denetleniyor…");
     [ObservableProperty] private string _appsNote = "";
 
     partial void OnSearchChanged(string value) => FilterApps();
@@ -184,13 +185,13 @@ public partial class AppsViewModel : ObservableObject
 
     private async Task LoadBackground()
     {
-        Op.Begin("Servisler ve zamanlanmış görevler taranıyor…");
+        Op.Begin(Loc.T("Servisler ve zamanlanmış görevler taranıyor…"));
         var items = await Task.Run(Background.List);
         Op.End();
         BackgroundItems.Clear();
         foreach (var i in items) BackgroundItems.Add(new BackgroundVm(i, this));
         var optional = items.Count(i => i.Advice == BgAdvice.Optional && i.StartsAtBoot);
-        BackgroundNote = $"{items.Count} öğe. {optional} tanesi kapatılabilir; kapatmak silmez, istediğin an geri açılır.";
+        BackgroundNote = Loc.F("{0} öğe. {1} tanesi kapatılabilir; kapatmak silmez, istediğin an geri açılır.", items.Count, optional);
     }
 
     private void FilterApps()
@@ -202,30 +203,30 @@ public partial class AppsViewModel : ObservableObject
         Apps.Clear();
         foreach (var a in list) Apps.Add(a);
         var hints = _allApps.Count(a => a.HintLabel.Length > 0);
-        AppsNote = $"{_allApps.Count} uygulama" + (hints > 0 ? $", {hints} tanesi için öneri var" : "");
+        AppsNote = Loc.F("{0} uygulama", _allApps.Count) + (hints > 0 ? Loc.F(", {0} tanesi için öneri var", hints) : "");
     }
 
     [RelayCommand]
     private async Task RefreshUpdates()
     {
-        UpdatesNote = "Güncellemeler denetleniyor…";
-        Op.Begin("Güncellemeler denetleniyor (winget)…");
+        UpdatesNote = Loc.T("Güncellemeler denetleniyor…");
+        Op.Begin(Loc.T("Güncellemeler denetleniyor (winget)…"));
         var (items, error) = await WingetService.GetUpgradesAsync();
         Op.End();
         Updates.Clear();
         foreach (var i in items) Updates.Add(new UpdateVm(i));
         _updatesLoaded = true;
-        UpdatesNote = error ?? (items.Count == 0 ? "Tüm uygulamalar güncel." : $"{items.Count} uygulamanın güncellemesi var.");
+        UpdatesNote = error ?? (items.Count == 0 ? Loc.T("Tüm uygulamalar güncel.") : Loc.F("{0} uygulamanın güncellemesi var.", items.Count));
     }
 
     [RelayCommand]
     private async Task UpdateOne(UpdateVm? u)
     {
         if (u is null || u.IsBusy) return;
-        u.IsBusy = true; u.State = "Güncelleniyor…";
+        u.IsBusy = true; u.State = Loc.T("Güncelleniyor…");
         var (ok, _) = await WingetService.UpgradeAsync(u.Id);
         u.IsBusy = false; u.IsDone = ok;
-        u.State = ok ? "Güncellendi" : "Güncellenemedi (yönetici izni ya da açık uygulama olabilir)";
+        u.State = ok ? Loc.T("Güncellendi") : Loc.T("Güncellenemedi (yönetici izni ya da açık uygulama olabilir)");
     }
 
     [RelayCommand]
@@ -234,17 +235,17 @@ public partial class AppsViewModel : ObservableObject
         if (IsBusy) return;
         IsBusy = true;
         var pending = Updates.Where(x => !x.IsDone).ToList();
-        Op.Begin("Güncelleniyor…", pending.Count);
+        Op.Begin(Loc.T("Güncelleniyor…"), pending.Count);
         try
         {
             foreach (var u in pending)
             {
-                Op.Step($"Güncelleniyor: {u.Name}");
+                Op.Step(Loc.F("Güncelleniyor: {0}", u.Name));
                 await UpdateOne(u);
             }
         }
         finally { IsBusy = false; Op.End(); }
-        UpdatesNote = $"{Updates.Count(x => x.IsDone)} / {Updates.Count} güncellendi.";
+        UpdatesNote = Loc.F("{0} / {1} güncellendi.", Updates.Count(x => x.IsDone), Updates.Count);
     }
 
     [RelayCommand]
@@ -252,39 +253,39 @@ public partial class AppsViewModel : ObservableObject
     {
         if (a is null || IsBusy) return;
         var ok = System.Windows.MessageBox.Show(
-            $"“{a.Name}” kaldırılacak.\n\nUygulamanın kendi kaldırıcısı çalışır. Bitince geride kalan klasörler varsa ayrıca sorulur.",
-            "Kaldırmayı onayla", System.Windows.MessageBoxButton.YesNo, System.Windows.MessageBoxImage.Question);
+            Loc.F("“{0}” kaldırılacak.\n\nUygulamanın kendi kaldırıcısı çalışır. Bitince geride kalan klasörler varsa ayrıca sorulur.", a.Name),
+            Loc.T("Kaldırmayı onayla"), System.Windows.MessageBoxButton.YesNo, System.Windows.MessageBoxImage.Question);
         if (ok != System.Windows.MessageBoxResult.Yes) return;
 
         IsBusy = true;
-        Op.Begin("Geri Yükleme Noktası alınıyor (güvenlik için)…", 3);
+        Op.Begin(Loc.T("Geri Yükleme Noktası alınıyor (güvenlik için)…"), 3);
         try
         {
-            Status = "Geri Yükleme Noktası alınıyor…";
-            Op.Step("Geri Yükleme Noktası alınıyor (güvenlik için)…");
-            var rp = await RestorePoint.CreateAsync($"KLYC-Pulse: {a.Name} kaldırma öncesi");
-            Status = $"{rp.Message} {a.Name} kaldırılıyor…";
-            Op.Step($"{a.Name} kaldırılıyor (kaldırıcı penceresini onayla)…");
+            Status = Loc.T("Geri Yükleme Noktası alınıyor…");
+            Op.Step(Loc.T("Geri Yükleme Noktası alınıyor (güvenlik için)…"));
+            var rp = await RestorePoint.CreateAsync(Loc.F("KLYC-Pulse: {0} kaldırma öncesi", a.Name));
+            Status = Loc.F("{0} {1} kaldırılıyor…", rp.Message, a.Name);
+            Op.Step(Loc.F("{0} kaldırılıyor (kaldırıcı penceresini onayla)…", a.Name));
             var code = await AppUninstaller.UninstallAsync(a.App, preferQuiet: false);
             var stillThere = await Task.Run(() => InstalledAppsReader.Read().Any(x => x.RegistryKey == a.App.RegistryKey));
-            if (stillThere) { Status = code == 0 ? $"{a.Name} hâlâ kurulu görünüyor (kaldırma iptal edilmiş olabilir)." : $"{a.Name} kaldırılamadı."; return; }
+            if (stillThere) { Status = code == 0 ? Loc.F("{0} hâlâ kurulu görünüyor (kaldırma iptal edilmiş olabilir).", a.Name) : Loc.F("{0} kaldırılamadı.", a.Name); return; }
 
-            Op.Step("Artık dosyalar aranıyor…");
+            Op.Step(Loc.T("Artık dosyalar aranıyor…"));
             var left = await Task.Run(() => AppUninstaller.FindLeftovers(a.App));
             if (left.Count > 0)
             {
                 var list = string.Join("\n", left.Select(l => $"• {l.Path}  ({FolderVm.Format(l.Bytes)})"));
                 var del = System.Windows.MessageBox.Show(
-                    $"{a.Name} kaldırıldı. Geride şu klasörler kalmış:\n\n{list}\n\nGeri Dönüşüm Kutusu'na gönderilsin mi? (Geri alınabilir)",
-                    "Artık dosyalar", System.Windows.MessageBoxButton.YesNo, System.Windows.MessageBoxImage.Question);
+                    Loc.F("{0} kaldırıldı. Geride şu klasörler kalmış:\n\n{1}\n\nGeri Dönüşüm Kutusu'na gönderilsin mi? (Geri alınabilir)", a.Name, list),
+                    Loc.T("Artık dosyalar"), System.Windows.MessageBoxButton.YesNo, System.Windows.MessageBoxImage.Question);
                 if (del == System.Windows.MessageBoxResult.Yes)
                 {
                     var n = left.Count(AppUninstaller.RemoveLeftover);
-                    Status = $"{a.Name} kaldırıldı, {n} artık klasör Geri Dönüşüm Kutusu'na gönderildi.";
+                    Status = Loc.F("{0} kaldırıldı, {1} artık klasör Geri Dönüşüm Kutusu'na gönderildi.", a.Name, n);
                 }
-                else Status = $"{a.Name} kaldırıldı. Artık klasörlere dokunulmadı.";
+                else Status = Loc.F("{0} kaldırıldı. Artık klasörlere dokunulmadı.", a.Name);
             }
-            else Status = $"{a.Name} kaldırıldı, artık dosya bulunamadı.";
+            else Status = Loc.F("{0} kaldırıldı, artık dosya bulunamadı.", a.Name);
 
             _allApps = await Task.Run(() => InstalledAppsReader.Read().Select(x => new AppVm(x)).ToList());
             FilterApps();

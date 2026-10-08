@@ -1,3 +1,4 @@
+using Pulse.Core.Localization;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Windows.Media;
@@ -31,30 +32,30 @@ public partial class DriversViewModel : ObservableObject
     public ObservableCollection<DriverRowVm> Installed { get; } = new();
     public ObservableCollection<DriverRowVm> Updates { get; } = new();
 
-    [ObservableProperty] private string _biosText = "Okunuyor…";
+    [ObservableProperty] private string _biosText = Loc.T("Okunuyor…");
     [ObservableProperty] private string _biosNote = "";
     [ObservableProperty] private string _nvidiaText = "—";
-    [ObservableProperty] private string _updateNote = "Taramak için “Windows Update'te ara”ya bas. Yalnızca arar, hiçbir şey indirmez.";
+    [ObservableProperty] private string _updateNote = Loc.T("Taramak için “Windows Update'te ara”ya bas. Yalnızca arar, hiçbir şey indirmez.");
     [ObservableProperty] private bool _isBusy;
     [ObservableProperty] private bool _hasNvidiaApp;
 
     private async Task LoadAsync()
     {
         (_bios, _installed) = await Task.Run(() => (DriverCenter.ReadBios(), DriverCenter.ReadInstalled()));
-        BiosText = _bios is null ? "Okunamadı" : $"{_bios.Model}  ·  BIOS {_bios.Version}";
-        BiosNote = _bios?.Date is { } d ? $"BIOS tarihi {d:yyyy-MM-dd} ({(DateTime.Now - d).TotalDays / 365.25:0.0} yıl önce). BIOS kendiliğinden güncellenmez; ASUS destek sayfasından sen karar verirsin." : "";
-        NvidiaText = DriverCenter.NvidiaVersion(_installed) is { } v ? $"NVIDIA sürücüsü {v}" : "NVIDIA sürücüsü bulunamadı";
+        BiosText = _bios is null ? Loc.T("Okunamadı") : $"{_bios.Model}  ·  BIOS {_bios.Version}";
+        BiosNote = _bios?.Date is { } d ? Loc.F("BIOS tarihi {0:yyyy-MM-dd} ({1:0.0} yıl önce). BIOS kendiliğinden güncellenmez; ASUS destek sayfasından sen karar verirsin.", d, (DateTime.Now - d).TotalDays / 365.25) : "";
+        NvidiaText = DriverCenter.NvidiaVersion(_installed) is { } v ? Loc.F("NVIDIA sürücüsü {0}", v) : Loc.T("NVIDIA sürücüsü bulunamadı");
         HasNvidiaApp = System.IO.File.Exists(NvidiaAppPath);
 
         Installed.Clear();
         foreach (var dr in _installed.Where(x => !x.Manufacturer.Contains("Microsoft", StringComparison.OrdinalIgnoreCase) && !x.Name.StartsWith("Steam", StringComparison.OrdinalIgnoreCase) && !x.Name.Contains("Virtual", StringComparison.OrdinalIgnoreCase)))
         {
             var old = dr.AgeYears is > 3 && dr.Class is "DISPLAY" or "NET" or "BLUETOOTH";
-            Installed.Add(new DriverRowVm(dr.Name, $"{ClassName(dr.Class)}  ·  sürüm {dr.Version}  ·  {dr.Date:yyyy-MM-dd}", old ? "ESKİ" : "TAMAM", old ? "WarnBrush" : "GoodBrush"));
+            Installed.Add(new DriverRowVm(dr.Name, Loc.F("{0}  ·  sürüm {1}  ·  {2:yyyy-MM-dd}", ClassName(dr.Class), dr.Version, dr.Date), old ? Loc.T("ESKİ") : Loc.T("TAMAM"), old ? "WarnBrush" : "GoodBrush"));
         }
     }
 
-    private static string ClassName(string c) => c switch { "DISPLAY" => "Ekran", "NET" => "Ağ", "BLUETOOTH" => "Bluetooth", "MEDIA" => "Ses", _ => c };
+    private static string ClassName(string c) => c switch { "DISPLAY" => Loc.T("Ekran"), "NET" => Loc.T("Ağ"), "BLUETOOTH" => "Bluetooth", "MEDIA" => Loc.T("Ses"), _ => c };
 
     private const string NvidiaAppPath = @"C:\Program Files\NVIDIA Corporation\NVIDIA App\CEF\NVIDIA App.exe";
 
@@ -63,8 +64,8 @@ public partial class DriversViewModel : ObservableObject
     {
         if (IsBusy) return;
         IsBusy = true;
-        Op.Begin("Windows Update'te sürücü güncellemeleri aranıyor (yaklaşık bir dakika sürebilir)…");
-        UpdateNote = "Aranıyor…";
+        Op.Begin(Loc.T("Windows Update'te sürücü güncellemeleri aranıyor (yaklaşık bir dakika sürebilir)…"));
+        UpdateNote = Loc.T("Aranıyor…");
         try
         {
             var (list, error) = await Task.Run(DriverCenter.SearchWindowsUpdate);
@@ -75,11 +76,11 @@ public partial class DriversViewModel : ObservableObject
             {
                 var (isNewer, note) = DriverCenter.Judge(u, _installed, _bios);
                 if (isNewer) newer++;
-                Updates.Add(new DriverRowVm(u.Title, note, isNewer ? "YENİ" : "KURMA", isNewer ? "WarnBrush" : "MutedBrush"));
+                Updates.Add(new DriverRowVm(u.Title, note, isNewer ? Loc.T("YENİ") : "KURMA", isNewer ? "WarnBrush" : "MutedBrush"));
             }
-            UpdateNote = list.Count == 0 ? "Bekleyen sürücü güncellemesi yok."
-                : newer == 0 ? $"{list.Count} öneri var ama hiçbiri kurulu sürümden yeni değil. Yapılacak bir şey yok."
-                : $"{newer} gerçekten yeni güncelleme var. Windows Update'ten kurabilirsin (Windows kendi geri alma desteğiyle kurar).";
+            UpdateNote = list.Count == 0 ? Loc.T("Bekleyen sürücü güncellemesi yok.")
+                : newer == 0 ? Loc.F("{0} öneri var ama hiçbiri kurulu sürümden yeni değil. Yapılacak bir şey yok.", list.Count)
+                : Loc.F("{0} gerçekten yeni güncelleme var. Windows Update'ten kurabilirsin (Windows kendi geri alma desteğiyle kurar).", newer);
         }
         finally { IsBusy = false; Op.End(); }
     }

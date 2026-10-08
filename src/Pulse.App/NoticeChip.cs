@@ -1,3 +1,4 @@
+using Pulse.Core.Localization;
 using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Controls;
@@ -44,7 +45,7 @@ public sealed class NoticeChip : Window
             TextWrapping = TextWrapping.Wrap,
         });
         if (onClick is not null)
-            body.Children.Add(new TextBlock { Text = "Tıkla, aç ›", Foreground = accent, FontSize = 11.5, FontWeight = FontWeights.SemiBold, Margin = new Thickness(0, 3, 0, 0) });
+            body.Children.Add(new TextBlock { Text = Loc.T("Tıkla, aç ›"), Foreground = accent, FontSize = 11.5, FontWeight = FontWeights.SemiBold, Margin = new Thickness(0, 3, 0, 0) });
         var border = new Border
         {
             Background = new SolidColorBrush(Color.FromArgb(onClick is null ? (byte)0xB0 : (byte)0xE0, 0x11, 0x18, 0x27)),

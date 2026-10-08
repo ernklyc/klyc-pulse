@@ -3,6 +3,7 @@
       xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
       xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
       xmlns:c="clr-namespace:Pulse.App.Controls"
+      xmlns:app="clr-namespace:Pulse.App"
       Background="Transparent" FontFamily="{StaticResource BodyFont}"
       ScrollViewer.CanContentScroll="False" ScrollViewer.VerticalScrollBarVisibility="Disabled">
     <Page.Resources>
@@ -51,12 +52,12 @@
                 <DataTrigger Binding="{Binding IsActive}" Value="True">
                     <Setter TargetName="Frame" Property="BorderBrush" Value="{StaticResource InkBrush}" />
                     <Setter TargetName="Frame" Property="BorderThickness" Value="1.5" />
-                    <Setter TargetName="ApplyButton" Property="Content" Value="Yeniden uygula" />
+                    <Setter TargetName="ApplyButton" Property="Content" Value="{app:Tr Yeniden uygula}" />
                     <Setter TargetName="ApplyButton" Property="Style" Value="{StaticResource PulseGhostButton}" />
                     <Setter TargetName="ActiveText" Property="Visibility" Value="Visible" />
                 </DataTrigger>
                 <DataTrigger Binding="{Binding IsBusy}" Value="True">
-                    <Setter TargetName="ApplyButton" Property="Content" Value="Uygulanıyor…" />
+                    <Setter TargetName="ApplyButton" Property="Content" Value="{app:Tr Uygulanıyor…}" />
                     <Setter TargetName="ApplyButton" Property="IsEnabled" Value="False" />
                 </DataTrigger>
                 <Trigger SourceName="Frame" Property="IsMouseOver" Value="True">

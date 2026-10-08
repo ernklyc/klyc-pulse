@@ -1,0 +1,886 @@
+# Türkçe<TAB>English (koddan gelen metinler). Satır sonu için \n yazılır.
+Oyun	Game
+Günlük	Daily
+Sessiz	Quiet
+Boşta	Idle
+Tam güç. Oyuna girmeden önce seç.	Full power. Pick it before you start a game.
+Dengeli. İnternet, ofis ve yazılım için.	Balanced. For browsing, office work and coding.
+Serin ve sessiz. Hafif işler için.	Cool and quiet. For light tasks.
+İndirme, yedekleme, uzakta bırakma.	Downloads, backups, leaving it unattended.
+Sessiz profil	Quiet profile
+Dengeli profil	Balanced profile
+CPU turbo açık	CPU turbo on
+CPU turbo kapalı	CPU turbo off
+Ekranın en yüksek Hz'i	Screen's max Hz
+Parlaklık %{0}	Brightness {0}%
+Uyku kapalı	Sleep off
+Şunlar yapılacak:\n\n• 2 günden eski zararsız geçici dosyalar silinir (belgelerine, oyunlarına, indirilenlerine dokunulmaz)\n• Arka plandaki büyük uygulamaların belleği rahatlatılır (hiçbir uygulama kapanmaz)\n• Seçili modun ayarları yeniden uygulanıp doğrulanır\n• Windows oyun ayarları ve açılış öğeleri denetlenir (değiştirilmez)\n\nİşlem bitince önce/sonra ölçümü gösterilir. Devam edilsin mi?	These will be done:\n\n• Harmless temporary files older than 2 days are deleted (your documents, games and downloads are not touched)\n• Memory of large background apps is eased (no app is closed)\n• The selected mode's settings are re-applied and verified\n• Windows game settings and startup items are checked (not changed)\n\nA before/after measurement is shown when it finishes. Continue?
+TAMAM	OK
+DİKKAT	ATTENTION
+Yeni sürüm var: KLYC-Pulse {0} (şu an {1})	New version available: KLYC-Pulse {0} (currently {1})
+Hızlandır	Speed up
+Başlıyor…	Starting…
+Boş RAM	Free RAM
+Boş disk (C:)	Free disk (C:)
+Açılışta başlayan	Startup apps
+{0}  →  {1} uygulama	{0}  →  {1} apps
+Hızlandır raporu	Speed-up report
+Her adım tamam	Every step OK
+{0} adım dikkat istiyor	{0} steps need attention
+Hızlandır tamamlanamadı	Speed-up could not finish
+{0} modu uygulanıyor ve doğrulanıyor (güç planı, ekran, fan profili)…	Applying and verifying {0} mode (power plan, display, fan profile)…
+{0} modu	{0} mode
+{0} ayar doğrulanamadı	{0} settings could not be verified
+Uygulandı, {0} uyarı var	Applied, {0} warnings
+Windows ayarları doğrulandı, ASUS profili kabul edildi	Windows settings verified, ASUS profile accepted
+Tüm ayarlar uygulandı ve doğrulandı	All settings applied and verified
+Sol üst	Top left
+Sağ üst	Top right
+Sol alt	Bottom left
+Sağ alt	Bottom right
+Kare hızı: bir DirectX oyunu açıkken ölçülür.	Frame rate: measured while a DirectX game is running.
+Ölçülüyor…	Measuring…
+  ·  sıcaklık için yönetici gerekir	  ·  administrator needed for temperature
+{0} yük  ·  {1}	{0} load  ·  {1}
+  ·  boşta	  ·  idle
+{0} yük  ·  {1} W	{0} load  ·  {1} W
+/ {0:0.0} GB video belleği	/ {0:0.0} GB video memory
+NVIDIA sürücüsü bulunamadı	NVIDIA driver not found
+Kare hızı: {0:0} FPS, {1:0.0} ms, %1 düşük {2:0}  ({3})	Frame rate: {0:0} FPS, {1:0.0} ms, 1% low {2:0}  ({3})
+Kare hızı: bir DirectX oyunu açıkken ölçülür (DirectX 10/11/12).	Frame rate: measured while a DirectX 10/11/12 game is running.
+CPU  ·  GPU {0} devir/dk	CPU  ·  GPU {0} rpm
+devir / dakika	revolutions / minute
+Ekran kartı kısılıyor: {0}.	Graphics card is being throttled: {0}.
+İşlemci çok sıcak. Fan ve havalandırmayı kontrol et.	The CPU is very hot. Check the fan and the vents.
+İşlemci sıcak ama sınır içinde.	The CPU is hot but within limits.
+İşlemci hafif yükte bile {0:0} °C. Bir süre boşta bekleyince düşmezse havalandırma tozlanmış ya da termal macun kurumuş olabilir.	The CPU is {0:0} °C even under light load. If it doesn't drop after idling for a while, the vents may be dusty or the thermal paste dried out.
+İşlemci: {0}.	CPU: {0}.
+Bellek dolmak üzere. Arka plandaki uygulamaları kapatmak iyi olur.	Memory is almost full. It would help to close apps in the background.
+Her şey normal. Bilgisayar yavaşlamıyor.	Everything is normal. The computer is not slowing down.
+Aşırı ısı (donanım)	Overheating (hardware)
+Isı sınırı	Thermal limit
+Güç freni (donanım)	Power brake (hardware)
+Donanım yavaşlatma	Hardware slowdown
+Güç sınırı	Power limit
+Isı yüzünden yavaşlıyor olabilir	May be slowing down because of heat
+Güç veya mod sınırı yüzünden yavaşlıyor olabilir	May be slowing down because of a power or mode limit
+Kapalı	Off
+KLYC-Pulse {0} · MIT lisansı	KLYC-Pulse {0} · MIT license
+Bildirimler artık burada çıkacak.	Notifications will now appear here.
+Kapalı. Bilgisayarın fanı yazılımla ayarlanamıyor; bunun yerine bir sıcaklık sınırı koyabilirsin.	Off. The computer's fan cannot be controlled by software; you can set a temperature limit instead.
+Sınır {0} °C. İşlemci bu sıcaklığı geçerse en yüksek hızı küçük adımlarla (her seferinde ~300 MHz) düşürülür, ekran kartı {1}°C'yi geçerse hızı kısılır. Soğuyunca eski hızına döner. Ani düşüş olmaz.	Limit {0} °C. If the CPU goes above this temperature its top speed is lowered in small steps (~300 MHz each time), and if the graphics card goes above {1}°C its speed is trimmed. When it cools it returns to its old speed. There are no sudden drops.
+Son çalışma: {0:dd.MM.yyyy HH:mm}, {1:N0} MB temizlendi.	Last run: {0:dd.MM.yyyy HH:mm}, {1:N0} MB cleaned.
+Henüz çalışmadı.	Has not run yet.
+ Yönetici olarak çalışmıyor, otomatik temizlik çalışmaz.	 Not running as administrator, so automatic cleanup will not run.
+Yapılamadı: {0}	Could not do it: {0}
+Bu ayar için KLYC-Pulse'ın yönetici olarak çalışması gerekir.	KLYC-Pulse must run as administrator for this setting.
+Kapatıldı: {0}	Closed: {0}
+Kapatıldı:	Closed:
+Kapatılacak uygulama yoktu.	There was no app to close.
+Şu an çalışıyor: {0}	Running now: {0}
+Çakışan uygulama çalışmıyor.	No conflicting app is running.
+Algılanan oyun: {0}	Detected game: {0}
+Şu an çalışan oyun algılanmadı.	No running game detected right now.
+Ekran kartı: oyun yolu bilinmiyor (oyunu bir kez açınca öğrenilir)	Graphics card: game path unknown (learned once the game has been opened)
+Ekran kartı: yüksek performans (NVIDIA) ✓	Graphics card: high performance (NVIDIA) ✓
+Ekran kartı: Windows seçiyor, Intel ekran kartında çalışabilir	Graphics card: Windows decides, it may run on the Intel graphics
+Sınırsız (en hızlı)	Unlimited (fastest)
+En çok {0:0.0} GHz (elle)	At most {0:0.0} GHz (manual)
+Modun varsayılanı	Mode default
+Ekranın en yükseği	Screen's highest
+Elle seçildi; otomatik ayar dokunmuyor. Otomatik ayarı kapatıp açarsan yeniden öğrenir.	Chosen by hand; auto-tune leaves it alone. If you turn auto-tune off and on again it learns again.
+UYGUN	GOOD
+DÜZELTİLEBİLİR	FIXABLE
+Uygun	Good
+Şu an: {0}	Now: {0}
+ Öğrenilen tepe hız: {0:0.0} GHz.	 Learned peak speed: {0:0.0} GHz.
+✓ Bu bilgisayarda işlemci hız sınırı çalışıyor. 	✓ The CPU speed limit works on this computer. 
+ Hız sınırı özellikleri bu bilgisayarda kapalı.	 Speed-limit features are turned off on this computer.
+İşlemci hız sınırının bu bilgisayarda çalışıp çalışmadığı henüz denenmedi. Otomatik ayar ilk sınırı koymadan önce kendiliğinden dener.	It has not been tested yet whether the CPU speed limit works on this computer. Auto-tune tests it by itself before setting the first limit.
+İşlemcinin hız sınırı bu bilgisayarda çalışıyor mu diye ölçülecek. Bunun için işlemci yaklaşık 20 saniye tam yüklenir (fan hızlanır). Oyun açıkken yapma. Devam edilsin mi?	We will measure whether the CPU speed limit works on this computer. For this the CPU is fully loaded for about 20 seconds (the fan speeds up). Don't do it while a game is running. Continue?
+Hız sınırı denemesi	Speed-limit test
+Deneniyor… (yaklaşık 20 saniye, işlemci tam yüklenir)	Testing… (about 20 seconds, the CPU is fully loaded)
+Uygulandı: {0} için işlemci en çok {1:0.0} GHz. Bir sonraki oyunda geçerli olur; rapor önceki oturumla karşılaştırır. İstersen aşağıdaki listeden değiştirebilirsin.	Applied: for {0} the CPU is limited to {1:0.0} GHz. It takes effect in the next game; the report compares with the previous session. You can change it in the list below.
+Bu oyun için işlemciyi en çok {0:0.0} GHz'e sınırla	Limit the CPU to {0:0.0} GHz for this game
+Windows'un oyun ayarlarının hepsi doğru.	All of Windows' game settings are right.
+{0} ayar düzeltilebilir.	{0} settings can be fixed.
+Şu an çalışan oyun: {0}	Game running now: {0}
+Oyunun .exe dosyasını seç	Choose the game's .exe file
+Oyun raporu hazır: dikkat edilecek şeyler var.	Game report ready: there are things to look at.
+Otomatik temizlik: {0:N0} MB gereksiz dosya temizlendi.	Automatic cleanup: {0:N0} MB of junk files cleaned.
+Otomatik temizlik çalıştı, temizlenecek bir şey yoktu.	Automatic cleanup ran, there was nothing to clean.
+Oyun raporu hazır. Otomatik ayar bu oyun için işlemci sınırını güncelledi (Oyunlar sayfası).	Game report ready. Auto-tune updated the CPU limit for this game (Games page).
+Oyun raporu hazır: sorun görülmedi.	Game report ready: no problems found.
+KLYC-Pulse'ı aç	Open KLYC-Pulse
+Çıkış	Exit
+{0} modu uygulandı.	{0} mode applied.
+{0} modu uygulandı, {1} ayar doğrulanamadı.	{0} mode applied, {1} settings could not be verified.
+Henüz denetlenmedi.	Not checked yet.
+Yeni sürüm var: {0} (şu an {1}).	New version available: {0} (currently {1}).
+Yeni sürüm var: KLYC-Pulse {0}.	New version available: KLYC-Pulse {0}.
+Güncelsin ({0}).	You're up to date ({0}).
+Oyunun %{0}'i pilde oynandı. Pilde işlemci ve ekran kartı güç sınırına girer; FPS yarıya kadar düşebilir. Prize takıp oyna.	The game was played {0}% on battery. On battery the CPU and graphics card hit their power limits; FPS can drop by half. Plug in and play.
+İşlemci sıcaklığı okunamadı (Pulse yönetici olarak çalışmıyor ya da bu bilgisayar sıcaklığı sunmuyor); ısı değerlendirmesi ve otomatik ısı ayarı yapılamadı.	CPU temperature could not be read (Pulse is not running as administrator, or this computer does not provide it); heat evaluation and automatic heat tuning could not be done.
+İşlemci sürenin %{0}'ında 90 °C'nin üstündeydi (en yüksek {1:0} °C). Bu ısıda işlemci kendini yavaşlatır ve oyun takılabilir. İç temizlik, termal macun yenileme ya da soğutma altlığı en etkili çözüm.	The CPU was above 90 °C for {0}% of the time (max {1:0} °C). At this heat the CPU slows itself down and the game can stutter. Internal cleaning, new thermal paste or a cooling pad is the most effective fix.
+İşlemci zaman zaman 90 °C'ye çıktı (en yüksek {0:0} °C). Şimdilik sorun değil ama izlemeye değer.	The CPU occasionally reached 90 °C (max {0:0} °C). No problem for now but worth watching.
+Yük altında işlemci hızı ortalama {0:0.0} GHz'e düştü (tepe {1:0.0} GHz). 	Under load the CPU speed dropped to an average of {0:0.0} GHz (peak {1:0.0} GHz). 
+Isı yüzünden yavaşlamış.	It slowed down because of heat.
+Isı yüksek değildi; güç veya mod sınırı olabilir.	Heat was not high; it may be a power or mode limit.
+Ekran kartı sürenin %{0}'inde güç bütçesine ulaştı ('Güç sınırı'). Dizüstü ekran kartlarının sabit bir güç bütçesi vardır; dolunca hızı biraz kısılır. Bu normaldir, ısı sorunu değildir.	The graphics card reached its power budget for {0}% of the time ('Power limit'). Laptop graphics cards have a fixed power budget; when it is full the speed is trimmed a little. This is normal and not a heat problem.
+Ekran kartı sürenin %{0}'inde kısıldı: {1}.	The graphics card was throttled for {0}% of the time: {1}.
+Bellek %{0:0}'ye kadar doldu. Dolunca Windows diske taşır ve bu takılma yapar. Arka plandaki uygulamaları (tarayıcı, launcher) kapatmak iyi olur.	Memory filled up to {0:0}%. When it is full Windows moves data to disk and that causes stutter. It would help to close background apps (browser, launcher).
+Bellek %{0:0}'e çıktı; sınıra yakın. Arka plandaki uygulamaları kapatmak iyi olur.	Memory went up to {0:0}%; close to the limit. It would help to close background apps.
+Ekran kartı belleği %{0:0}'e kadar doldu. Dolunca dokular sistem belleğine taşar ve oyun takılır. Oyunda doku kalitesini bir kademe düşür.	Graphics memory filled up to {0:0}%. When it is full textures spill into system memory and the game stutters. Lower the texture quality one step in the game.
+Ekran kartı belleği %{0:0}'e çıktı; sınıra yakın. Takılma olursa doku kalitesini bir kademe düşür.	Graphics memory went up to {0:0}%; close to the limit. If you get stutter, lower the texture quality one step.
+Oyun yavaş bir HDD'de duruyor. Yüklemeleri ve açık dünyada akış takılmalarını yavaşlatır; oyunu SSD'ye taşımak çözer (FPS'i artırmaz).	The game is on a slow HDD. It slows loading and streaming in open worlds; moving the game to an SSD fixes it (it does not raise FPS).
+, en kötü %1'lik karelerde {0:0} FPS.	, {0:0} FPS in the worst 1% of frames.
+ Takılma var: en kötü karelerin hızı ortalamanın çok altında.	 There is stutter: the worst frames are far below the average.
+ En kötü karelerde bile akıcı.	 Smooth even in the worst frames.
+Oyun ortalama {0:0} FPS çalıştı ama ekran {1} Hz. Ekranın gösteremeyeceği kareleri üretmek boşuna ısıtır. Oyunda FPS sınırını {2}'e koyarsan ısı düşer, görüntü aynı kalır.	The game ran at an average of {0:0} FPS but the screen is {1} Hz. Producing frames the screen cannot show only heats things up. If you set the FPS limit to {2} in the game, heat drops and the picture stays the same.
+Öneri: bu oyun için işlemci hızını en çok {0:0.0} GHz'e sınırla (aşağıdaki düğme). Oyunu ekran kartı sınırladığı için FPS neredeyse aynı kalır, ısı belirgin düşer. Sonraki oyunda rapor önceki oturumla karşılaştırır.	Suggestion: limit the CPU speed to at most {0:0.0} GHz for this game (button below). Because the graphics card limits the game, FPS stays almost the same and heat drops noticeably. In the next game the report compares with the previous session.
+Oyunu işlemci sınırladığı için işlemci hızını kısmak FPS'i düşürür. Önce soğutmayı düzeltmek (temizlik, macun, altlık) daha doğru.	Because the CPU limits the game, lowering the CPU speed would reduce FPS. Fixing the cooling first (cleaning, paste, pad) is more sensible.
+Bu oyunu ekran kartı sınırlıyor (ortalama %{0:0} çalıştı). İşlemci hızını kısmak FPS'i az etkiler ama ısıyı belirgin düşürür.	The graphics card limits this game (it ran at an average of {0:0}%). Lowering the CPU speed affects FPS little but drops heat noticeably.
+Ekran kartı ortalama %{0:0} çalıştı; oyunu büyük olasılıkla işlemci sınırlıyor. İşlemci hızını kısmak FPS'i düşürür.	The graphics card ran at an average of {0:0}%; the CPU probably limits the game. Lowering the CPU speed would reduce FPS.
+Ekran kartı ve işlemci tam yüklenmedi; kare sınırı (V-Sync / FPS sınırı) ya da oyunun kendisi sınırlıyor olabilir.	Neither the graphics card nor the CPU was fully loaded; a frame limit (V-Sync / FPS cap) or the game itself may be the limit.
+Ekran kartı kullanımı okunamadı; oyunu neyin sınırladığı belirlenemedi.	Graphics card usage could not be read; what limits the game could not be determined.
+Bu oyun boyunca belirgin bir sorun görülmedi.	No noticeable problem was seen during this game.
+ Bu bir oyun başlatıcısı; oyun açıkken kapatma (oyun kapanabilir). İndirme ya da güncelleme varsa oyun sırasında duraklat.	 This is a game launcher; don't close it while the game is running (the game may quit). If a download or update is running, pause it while you play.
+ Oyunu işlemci sınırlıyor, bu yüzden FPS'i düşürmüş olabilir; oyundan önce kapat.	 The CPU limits the game, so it may have lowered FPS; close it before playing.
+ Oyunu ekran kartı sınırladığı için FPS'e etkisi az; yine de ısıyı azaltmak için oyundan önce kapatabilirsin.	 Because the graphics card limits the game the effect on FPS is small; you can still close it before playing to reduce heat.
+ Oyundan önce kapatman iyi olur.	 It would be good to close it before playing.
+ Windows Defender oyun sırasında tarama yapmış; tarama saatini oyun saatlerinden uzağa almak Windows Güvenliği'nden yapılır (Pulse güvenlik ayarlarına dokunmaz).	 Windows Defender was scanning during the game; moving the scan time away from your gaming hours is done in Windows Security (Pulse does not touch security settings).
+ Windows Update arka planda çalışıyor; Windows'un 'etkin saatler' ayarına oyun saatini yazarsan oyun sırasında çalışmaz.	 Windows Update is running in the background; if you put your gaming hours into Windows' 'active hours' it won't run while you play.
+ Windows arama dizinleyicisi çalışıyordu; kendiliğinden biter.	 The Windows search indexer was running; it finishes by itself.
+ Windows'un veri toplama işi çalışıyordu; kendiliğinden biter.	 Windows' data collection job was running; it finishes by itself.
+Arka planda {0} oyun boyunca ortalama %{1:0.#} işlemci kullandı (en çok %{2:0}).{3}	In the background {0} used an average of {1:0.#}% CPU during the game (max {2:0}%).{3}
+Bellek %{0:0} dolmuşken {1} arka planda yaklaşık {2:0.0} GB bellek tutuyordu. Oyundan önce kapatırsan bellek boşalır.	With memory at {0:0}%, {1} was holding about {2:0.0} GB of memory in the background. Closing it before playing frees memory.
+Arka plandaki programlar toplamda ortalama %{0:0} işlemci harcadı.	Background programs together used an average of {0:0}% CPU.
+ortalama ısı {0:0} → {1:0} °C	average heat {0:0} → {1:0} °C
+yük altı hız {0:0.0} → {1:0.0} GHz	speed under load {0:0.0} → {1:0.0} GHz
+Bu işlemcide hızı sınırlamaya yetecek turbo payı yok; otomatik ayar yapılmadı.	This CPU doesn't have enough turbo headroom to limit its speed; no automatic tuning was done.
+Bu oyun için ayar öğrenildi ve kilitli (Otomatik ayarı kapatıp açarsan yeniden öğrenir).	The setting for this game was learned and is locked (if you turn auto-tune off and on again it learns again).
+Oturum kısa ({0:0} dk); karar için en az {1:0} dakika gerekir.	The session was short ({0:0} min); at least {1:0} minutes are needed to decide.
+Elle seçilmiş bir sınır var; otomatik ayar dokunmadı.	There is a limit chosen by hand; auto-tune left it alone.
+FPS %{0:0} düştü	FPS dropped {0:0}%
+ekran kartı kullanımı {0:0} puan düştü	graphics card usage dropped {0:0} points
+Sınır {0} iken {1}; önceki ayara ({2}) dönüldü. Bu oyun işlemciye bağlı, ayar kilitlendi.	With limit {0}, {1}; went back to the previous setting ({2}). This game depends on the CPU, so the setting was locked.
+FPS ve ekran kartı verisi alınamadı; etkisi ölçülemediği için daha ileri gidilmedi.	FPS and graphics card data could not be obtained; because the effect could not be measured, it did not go further.
+Ayar zararsız ama ısı hâlâ yüksek;{0} işlemci bir kademe daha, {1}'e indirildi.	The setting is harmless but heat is still high;{0} the CPU was lowered one more step, to {1}.
+En düşük kademeye ulaşıldı ama ısı hâlâ yüksek;{0} bundan sonrası için donanım soğutması (temizlik, macun, altlık) gerekir.	The lowest step was reached but heat is still high;{0} beyond this, hardware cooling (cleaning, paste, pad) is needed.
+Ayar işe yaradı, ısı normale döndü;{0} ayar kilitlendi.	The setting worked and heat returned to normal;{0} the setting was locked.
+Isı normal; ayar gerekmedi.	Heat is normal; no setting was needed.
+En düşük kademede ve ısı yüksek; donanım soğutması gerekir.	At the lowest step and heat is high; hardware cooling is needed.
+Isı yüksek ama oyunu işlemci sınırlıyor; sınırlamak FPS kaybettirir, otomatik ayar yapılmadı. Soğutma (temizlik, macun, altlık) önerilir.	Heat is high but the CPU limits the game; limiting it would cost FPS, so no automatic tuning was done. Cooling (cleaning, paste, pad) is recommended.
+Isı yüksek ama oyunu neyin sınırladığı belirlenemedi; otomatik ayar yapılmadı.	Heat is high but what limits the game could not be determined; no automatic tuning was done.
+Sonraki oyunda ısı ve FPS karşılaştırılır; FPS düşerse geri alınır.	In the next game heat and FPS are compared; if FPS drops it is reverted.
+sınırsız	unlimited
+varsayılan	default
+değer {0}	value {0}
+Ekran kartı zamanlayıcısı (HAGS)	Graphics scheduler (HAGS)
+Ekran kartı kendi iş sırasını yönetir, işlemci rahatlar. Açık olması iyi.	The graphics card manages its own work queue, relieving the CPU. Better on.
+Oyun açıkken Windows arka plandaki işleri geri çeker. Açık olması iyi.	While a game is running Windows pulls back background jobs. Better on.
+Arka planda oyun kaydı	Background game recording
+Kapalıyken Windows oyun sırasında sürekli video kaydetmez. Ekran kartı ve disk rahatlar. Kapalı olması iyi.	When off, Windows does not record video continuously while you play. The graphics card and disk get relief. Better off.
+Oyun kaydı (ikinci ayar)	Game recording (second setting)
+Yukarıdakiyle birlikte çalışır; ikisi de kapalı olmalı.	Works together with the one above; both should be off.
+Yazıldı ama geri okunan değer farklı.	Written, but the value read back is different.
+Düzeltildi ve doğrulandı. Etkisi için yeniden başlatma gerekir.	Fixed and verified. A restart is needed for it to take effect.
+Düzeltildi ve doğrulandı.	Fixed and verified.
+En çok {0:0.0} GHz	At most {0:0.0} GHz
+{0} · {1:0} dk · {2:d MMMM HH:mm}	{0} · {1:0} min · {2:d MMMM HH:mm}
+ Windows/sürücü işi; genelde kendiliğinden biter.	 A Windows/driver job; it usually finishes by itself.
+ Oyun sırasında arka planda çalışıyordu.	 It was running in the background during the game.
+Arka planda {0} oyun boyunca ortalama {1:0} MB/sn disk okuma/yazma yaptı. Oyun diskten veri akıtıyorsa takılma yapabilir.{2}	In the background {0} read/wrote an average of {1:0} MB/s on disk during the game. If the game streams data from disk, this can cause stutter.{2}
+ Oyundan önce kapatırsan disk oyuna kalır.	 If you close it before playing, the disk is left to the game.
+ortalama FPS {0:0} → {1:0}	average FPS {0:0} → {1:0}
+ (işlemci sınırı: {0} → {1})	 (CPU limit: {0} → {1})
+yok	none
+Önceki oturuma göre ({0:d MMM}){1}: {2}.	Compared with the previous session ({0:d MMM}){1}: {2}.
+ Isı {0:0.#} °C {1}, FPS kaybı {2}.	 Heat {1} by {0:0.#} °C, FPS loss {2}.
+düştü	dropped
+arttı	rose
+ölçülemedi	could not be measured
+Isı yüksekti (sürenin %{0}'ında 90 °C üstü) ve oyunu {1} belirliyor: işlemci en çok {2}'e ayarlandı. 	Heat was high ({0}% of the time above 90 °C) and {1} sets the game's pace: the CPU was set to at most {2}. 
+ekran kartı	the graphics card
+kare sınırı	a frame limit
+Windows Oyun Modu	Windows Game Mode
+uygun	right
+Steam (arayüz)	Steam (interface)
+EA uygulaması	EA app
+Windows Defender taraması	Windows Defender scan
+Windows arama dizinleyicisi	Windows search indexer
+Windows veri toplama	Windows data collection
+Windows hizmetleri	Windows services
+Windows yönetim hizmeti	Windows management service
+Windows Gezgini	Windows Explorer
+Windows arama	Windows search
+NVIDIA hizmeti	NVIDIA service
+NVIDIA kaplaması	NVIDIA overlay
+Pulse ne işe yarar?	What is Pulse for?
+Bilgisayarını oyun, günlük iş ya da sessiz çalışma için tek tıkla ayarlar ve ayarın gerçekten tuttuğunu kontrol eder. Kısa bir tur: yaklaşık bir dakika.	It sets your computer up for gaming, everyday work or quiet running with one click and checks that the setting really held. A short tour: about one minute.
+Hızlı	Fast
+Oyuna girince en iyi performansı, işin bitince serin ve sessiz hâli kendisi ayarlar.	It sets the best performance when you start a game and a cool, quiet state when you're done.
+Dürüst	Honest
+Bir ayarı yazdıktan sonra geri okuyup doğrular. Tutmadıysa söyler.	After writing a setting it reads it back and verifies it. If it didn't hold, it tells you.
+Güvenli	Safe
+Sormadan hiçbir şeyi silmez, güvenlik ayarlarına dokunmaz.	It never deletes anything without asking and never touches security settings.
+4 mod: hangisi ne zaman?	4 modes: which one when?
+Ana ekrandan bir mod seçersin, Pulse işlemci, ekran, parlaklık ve gücü ona göre ayarlar.	You pick a mode on Home and Pulse sets the CPU, screen, brightness and power for it.
+En yüksek performans. Oyun oynarken.	Highest performance. While gaming.
+Dengeli. İnternet, ofis, yazılım için.	Balanced. For browsing, office work and coding.
+Serin ve sessiz. Hafif işler, pilde.	Cool and quiet. Light tasks, on battery.
+İndirme, yedekleme, bilgisayarı başında olmadan bırakırken.	Downloads, backups, when you leave the computer unattended.
+Çoğu zaman Günlük modda kalıp “oyun açılınca otomatik geç”i açık bırakmak yeter.	Most of the time it is enough to stay in Daily mode and keep “switch automatically when a game starts” on.
+Oyunlar kendiliğinden	Games automatically
+Bir oyunu açınca Pulse onu tanır, Oyun moduna geçer, kapatınca eski moda döner. Oyunlar listeye kendiliğinden eklenir.	When you open a game Pulse recognizes it, switches to Game mode, and goes back to the previous mode when you close it. Games are added to the list automatically.
+Oyun raporu	Game report
+Oyun kapanınca “neden takıldı?”yı sade dille söyler: ısı, işlemci hızı, ekran kartı, bellek, FPS.	When the game closes it tells you “why did it stutter?” in plain language: heat, CPU speed, graphics card, memory, FPS.
+Akıllı oyun ayarı	Smart game tuning
+İşlemci çok ısınıyorsa hızını FPS'i bozmadan hafifçe kısmayı dener, sonraki oyunda ölçer. FPS düşerse geri alır, kendi kendine öğrenir.	If the CPU gets very hot it tries trimming its speed slightly without hurting FPS and measures in the next game. If FPS drops it reverts; it learns on its own.
+Oyun ekle	Add a game
+Listede olmayan bir oyunu Oyunlar sayfasından elle ekleyebilirsin.	You can add a game that isn't in the list by hand from the Games page.
+Oyunlar sayfasına git	Go to the Games page
+Oyunda ekranda FPS ve ısı	FPS and heat on screen in games
+Oyun açılınca ekranın köşesinde işlemci, ekran kartı ve (ölçülebiliyorsa) FPS bilgisi çıkar. Soluk ve oyuna karışmaz. Açma/kapama ve köşe İzleme sayfasında, kısayol Ctrl+Alt+O.	When a game starts, CPU, graphics card and (if measurable) FPS information appears in a corner of the screen. It is faint and doesn't interfere with the game. Turning it on/off and the corner are on the Monitor page, the shortcut is Ctrl+Alt+O.
+Görünmüyorsa	If you can't see it
+Oyunun görüntü ayarında “Tam ekran” yerine “Kenarlıksız pencere” (ya da “Tam ekran penceresi”) seç. Özel tam ekranda gösterge görünmez.	In the game's display settings choose “Borderless window” (or “Fullscreen window”) instead of “Fullscreen”. The indicator can't show over exclusive fullscreen.
+Oyuna hiçbir şey enjekte etmez; Vanguard, EAC, VAC gibi korumalarla sorun çıkarmaz.	It injects nothing into the game; it doesn't cause problems with protections like Vanguard, EAC, VAC.
+İzleme sayfasına git	Go to the Monitor page
+Temizlik	Cleanup
+Yalnızca zaten yeniden oluşan dosyalar silinir; biraz riskli olanlar silinmeden önce 7 gün ayrı bir yerde bekler.	Only files that are recreated anyway are deleted; slightly riskier ones wait 7 days in a separate place before deletion.
+Eski kalıntılar	Old leftovers
+Çoktan sildiğin uygulamaların bıraktığı klasörleri bulur. Sen seçmeden hiçbir şeye dokunmaz; seçtiklerin Geri Dönüşüm Kutusu'na gider.	Finds the folders left behind by apps you deleted long ago. It touches nothing until you choose; what you pick goes to the Recycle Bin.
+Kopya dosyalar	Duplicate files
+Birebir aynı büyük dosyaları bulur, her grupta en eskisini korur.	Finds identical large files and keeps the oldest in each group.
+Registry temizleyici ve shader önbelleği silme bilerek yok: yararı yok, zararı var.	A registry cleaner and shader cache deletion are deliberately absent: no benefit, only harm.
+Temizlik sayfasına git	Go to the Cleanup page
+Gizlilik ve ayarların	Privacy and your settings
+Pulse veri toplamaz. Ayarların ve oyun raporların bu bilgisayarda saklanır.	Pulse collects no data. Your settings and game reports are stored on this computer.
+Ayarların güvende	Your settings are safe
+Ayarlar %LOCALAPPDATA%\Pulse klasöründedir. Güncelleyince ya da yeniden kurunca silinmez; her kayıtta otomatik yedeği alınır.	Settings are in the %LOCALAPPDATA%\Pulse folder. They are not deleted when you update or reinstall; an automatic backup is made at every save.
+Güncelleme denetimi	Update check
+Günde en fazla bir kez yeni sürüm var mı diye bakar (kişisel bilgi göndermez, hiçbir şey indirmez). Ayarlar > Güncellemeler'den kapatılır.	At most once a day it checks whether there is a new version (sends no personal information, downloads nothing). You can turn it off in Settings > Updates.
+Yönetici izni	Administrator rights
+Sıcaklık okumak, ekran kartı ayarı ve FPS ölçümü için Pulse yönetici olarak açılır.	Pulse opens as administrator to read temperatures, adjust the graphics card and measure FPS.
+Bu turu istediğin zaman Ayarlar sayfasından yeniden açabilirsin.	You can reopen this tour any time from the Settings page.
+HIZLI TUR  ·  {0} / {1}	QUICK TOUR  ·  {0} / {1}
+Başlayalım	Let's start
+İleri	Next
+Yeniden uygula	Apply again
+Uygulanıyor…	Applying…
+%{0:0}	{0:0}%
+%{0}	{0}%
+CPU ≤ %{0}	CPU ≤ {0}%
+%{0:0.0}	{0:0.0}%
+Kare hızı ölçümü için KLYC-Pulse'ın yönetici olarak çalışması gerekir.	KLYC-Pulse must run as administrator to measure frame rate.
+Kare hızı ölçümü başlatılamadı: 	Frame-rate measurement could not be started: 
+Parlaklık	Brightness
+Bu modda parlaklık değiştirilmedi.	Brightness was not changed in this mode.
+ASUS'un donanım sürücüsü bulunamadı.	ASUS hardware driver not found.
+{0} profili bilgisayar tarafından kabul edildi	{0} profile was accepted by the computer
+ (CPU fanı {0} → {1} RPM).	 (CPU fan {0} → {1} RPM).
+Güç planı	Power plan
+Etkin güç planı okunamadı.	The active power plan could not be read.
+İşlemci ek hızı (turbo)	CPU boost (turbo)
+kapalı	off
+açık	on
+İşlemci üst sınırı	CPU maximum state
+Hız / güç dengesi	Speed / power balance
+Pilde de aynı (ek hız)	Same on battery (boost)
+İşlemci en yüksek hızı	CPU maximum speed
+Fan profili bilgisayar tarafından reddedildi.	The fan profile was rejected by the computer.
+ (CPU fanı {0} → {1} RPM)	 (CPU fan {0} → {1} RPM)
+Turbo profili kabul edildi ama fan devri artmadı{0}; fan zaten tam hızda olabilir.	Turbo profile was accepted but the fan speed did not increase{0}; the fan may already be at full speed.
+Fan tam hıza alındı	Fan set to full speed
+{0} profiline dönüldü	Went back to the {0} profile
+Ekranın desteklediği yenileme hızları okunamadı.	The screen's supported refresh rates could not be read.
+Bu ekranın parlaklığı yazılımla okunamıyor.	This screen's brightness cannot be read by software.
+NVIDIA ekran kartı bulunamadı.	NVIDIA graphics card not found.
+Ekran kartı uykuda, fabrika hızında.	The graphics card is asleep, at factory speed.
+Ekran kartı hız arayüzü okunamadı (kart uyuyor olabilir).	The graphics card speed interface could not be read (the card may be asleep).
+Fabrika hızı.	Factory speed.
+Çekirdek +{0}, bellek +{1} MHz (zaten uygulu).	Core +{0}, memory +{1} MHz (already applied).
+Hız ayarı için KLYC-Pulse'ın yönetici olarak çalışması gerekir.	KLYC-Pulse must run as administrator for the speed adjustment.
+Saat sınırı için KLYC-Pulse'ın yönetici olarak çalışması gerekir.	KLYC-Pulse must run as administrator for the clock limit.
+Sınırsız (sürücü varsayılanı).	Unlimited (driver default).
+Ekran 1 dk'da kapanır, uyku kapalı.	Screen turns off after 1 min, sleep is off.
+Önceki ekran ve uyku ayarları geri yüklendi.	The previous screen and sleep settings were restored.
+Geri yükleme doğrulanamadı (okunan ekran {0} sn).	The restore could not be verified (screen reads {0} s).
+Bu modda değiştirilmedi.	Not changed in this mode.
+Çakışma uyarısı	Conflict warning
+{0} çalışıyor. Kendi profilini uygulayıp Pulse'ın seçtiği modu bozabilir. Ayarlar'dan otomatik kapatılabilir.	{0} is running. It can apply its own profile and break the mode Pulse selected. It can be closed automatically from Settings.
+Önce ölçüm alınıyor…	Taking the first measurement…
+Zararsız geçici dosyalar temizleniyor…	Cleaning harmless temporary files…
+Geçici dosyalar	Temporary files
+Temizlenecek bir şey yoktu	There was nothing to clean
+ ({0} kategori yönetici izni gerektirdiği için atlandı)	 ({0} categories skipped because they need administrator rights)
+Arka plandaki uygulamaların belleği rahatlatılıyor…	Easing the memory of background apps…
+Güç ve mod ayarları doğrulanıyor…	Verifying power and mode settings…
+Windows oyun ayarları denetleniyor…	Checking Windows game settings…
+Windows oyun ayarları	Windows game settings
+Düzeltilebilir: 	Fixable: 
+Açılışta başlayan uygulamalar taranıyor…	Scanning startup apps…
+Açılış öğeleri	Startup items
+{0} uygulama Windows ile başlıyor. Gereksiz olanları Uygulamalar > Başlangıç'tan kapatabilirsin.	{0} apps start with Windows. You can turn off the unneeded ones in Apps > Startup.
+Sonra ölçüm alınıyor…	Taking the second measurement…
+Mod ayarları	Mode settings
+Henüz bir mod seçilmemiş, dokunulmadı.	No mode has been selected yet, left untouched.
+Başka bir işlem sürüyordu, atlandı.	Another operation was in progress, skipped.
+{0} modu yeniden uygulandı ve doğrulandı.	{0} mode was re-applied and verified.
+{0} ayar doğrulanamadı.	{0} settings could not be verified.
+Rahatlatılacak büyük arka plan uygulaması yok.	There is no large background app to ease.
+{0} uygulamanın belleği rahatlatıldı, {1} boşaldı (geçici: uygulamalar kullandıkça geri alır, hiçbiri kapanmadı).	Memory of {0} apps was eased, {1} freed (temporary: apps take it back as they run, none were closed).
+{0} uygulama denendi, fark küçük ({1}). Windows belleği zaten iyi yönetiyor.	{0} apps were tried, the difference is small ({1}). Windows already manages memory well.
+Pil algılanmıyor	Battery not detected
+Windows pili görmüyor. Pilsiz çalışmak ASUS'ta performans kısıtlamasına yol açabilir.	Windows can't see the battery. Running without a battery can limit performance on ASUS.
+Pil şarj almıyor	Battery is not charging
+Bilgisayar prizde ama pile akım gitmiyor (şarj akımı 0 mW, voltaj {0:N2} V, kalan 0 mWh). Pil koruma devresi şarjı kilitlemiş ya da pil bozulmuş olabilir. 	The computer is plugged in but no current goes to the battery (charge current 0 mW, voltage {0:N2} V, remaining 0 mWh). The battery protection circuit may have locked charging or the battery may be faulty. 
+Şişme belirtisi (alt kapakta kabarma, tuş takımı ya da dokunmatik yüzeyin yükselmesi) görürsen kullanmayı bırak ve servise götür. Uyurken ya da evde yokken prizde bırakma.	If you see signs of swelling (a bulge in the bottom cover, a raised keyboard or touchpad), stop using it and take it to service. Don't leave it plugged in while asleep or away from home.
+Pil sorunlu görünüyor	The battery looks faulty
+Alt kapağın kabarması, tuş takımı veya dokunmatik yüzeyin yükselmesi gibi şişme belirtisi görürsen kullanmayı bırak ve servise götür. Bu bir güvenlik konusudur.	If you see signs of swelling such as a bulge in the bottom cover or a raised keyboard or touchpad, stop using it and take it to service. This is a safety matter.
+Pil aşınmış	Battery is worn
+Kapasite tasarımın %{0:N0}'ine düşmüş. Pil değişimi düşünülebilir.	Capacity has dropped to {0:N0}% of the design. Replacing the battery could be considered.
+Pil sağlıklı	Battery is healthy
+Aşınma %{0:N0}	Wear {0:N0}%
+, {0} şarj döngüsü.	, {0} charge cycles.
+İşlemci çok sıcak	CPU is very hot
+{0:N0} °C. Bu sıcaklıkta işlemci kendini kısar. Fan ızgarasını ve termal macunu kontrol et, bilgisayarı sert zeminde kullan.	{0:N0} °C. At this temperature the CPU throttles itself. Check the fan grille and thermal paste, and use the computer on a hard surface.
+İşlemci sıcak	CPU is hot
+{0:N0} °C. Uzun süre bu sıcaklıkta çalışmak ömrü kısaltır. Sessiz modu ya da soğutma altlığı yardımcı olur.	{0:N0} °C. Running at this temperature for a long time shortens its life. Quiet mode or a cooling pad helps.
+İşlemci sıcaklığı normal	CPU temperature is normal
+{0:N0} °C (yaklaşık değer).	{0:N0} °C (approximate).
+Ekran kartı sıcak	Graphics card is hot
+C: sürücüsünde %{0:N0} boş alan kaldı. Temizlik sayfasından yer aç.	Only {0:N0}% free space is left on drive C:. Free up space from the Cleanup page.
+Disk dolmaya yaklaşıyor	Disk is getting full
+C: sürücüsünde %{0:N0} boş alan var. %15'in altı SSD'yi yavaşlatabilir.	There is {0:N0}% free space on drive C:. Below 15% can slow down an SSD.
+Disk alanı yeterli	Disk space is sufficient
+{0:N0} GB boş (%{1:N0}).	{0:N0} GB free ({1:N0}%).
+aşınma %{0}	wear {0}%
+{0:N0} saat çalıştı	ran for {0:N0} hours
+Disk sağlığı: {0}	Disk health: {0}
+{0}. Önemli dosyalarını yedekle. {1}	{0}. Back up your important files. {1}
+SSD aşınmış	SSD is worn
+{0}: %{1} aşınma. Yedeğini güncel tut, yenisini planla.	{0}: {1}% wear. Keep your backup up to date and plan a new one.
+Diskte okuma/yazma hatası var	The disk has read/write errors
+{0}: {1} hata kaydı. Yedek al, durumu izle.	{0}: {1} error records. Take a backup and watch the situation.
+Disk sağlıklı	Disk is healthy
+Uzun süredir yeniden başlatılmadı	Not restarted for a long time
+{0:N0} gündür açık. Yeniden başlatmak bellek sızıntılarını ve takılan süreçleri temizler.	Up for {0:N0} days. Restarting clears memory leaks and stuck processes.
+Yeniden başlatma bekleniyor	A restart is pending
+Bir güncelleme ya da kurulum yeniden başlatma istiyor.	An update or installation wants a restart.
+Çakışabilecek uygulamalar çalışıyor	Apps that can conflict are running
+Açılışta çok program başlıyor	Many programs start at boot
+{0} program. Uygulamalar sayfasından gereksizleri kapatabilirsin.	{0} programs. You can turn off the unneeded ones from the Apps page.
+1 şey dikkat istiyor	1 thing needs attention
+{0} şey dikkat istiyor	{0} things need attention
+Her şey yolunda	Everything is fine
+Pil hızlı yaşlanıyor	Battery is aging fast
+Son {0} günde tam şarj kapasitesi %{1:N0} düştü. Sürekli prizde ve %100'de bırakmak bunu hızlandırır; Dizüstü sayfasından şarj limitini %60-80'e ayarla.	In the last {0} days the full-charge capacity dropped {1:N0}%. Leaving it plugged in at 100% all the time speeds this up; set the charge limit to 60-80% on the Laptop page.
+Pil kapasitesi kararlı	Battery capacity is stable
+Son {0} günde kapasite değişimi %{1:N1}.	Capacity change in the last {0} days: {1:N1}%.
+BİLGİ	INFO
+İYİ	GOOD
+Yaklaşık sıcaklık	Approximate temperature
+CPU fanı	CPU fan
+Sensör okunamadı	Sensor could not be read
+Yönetici izni gerekir	Administrator rights needed
+%{0} kullanım	{0}% usage
+CPU fanı · GPU {0:N0} RPM	CPU fan · GPU {0:N0} RPM
+CPU fanı (RPM)	CPU fan (RPM)
+Pil algılanmadı	Battery not detected
+Kalan kapasite (tasarıma göre)	Remaining capacity (relative to design)
+{0} profilini bilgisayar reddetti.	The computer rejected the {0} profile.
+ASUS fan profili bu bilgisayarda yok.	There is no ASUS fan profile on this computer.
+{0} Hz bu ekranda yok (desteklenen: {1} Hz).	{0} Hz is not available on this screen (supported: {1} Hz).
+%{0} (hedef %{1})	{0}% (target {1}%)
+Hedef %{0}, okunan {1}.	Target {0}%, read {1}.
+Okunan: ekran {0} sn, uyku {1} sn.	Read: screen {0} s, sleep {1} s.
+Hedef {0}, okunan {1}.	Target {0}, read {1}.
+ASUS profili	ASUS profile
+Fan desteği	Fan boost
+Ekran yenileme hızı	Screen refresh rate
+Ekran parlaklığı	Screen brightness
+Ekran kartı hızlandırma	Graphics card boost
+Ekran kartı hız sınırı	Graphics card speed limit
+Ekran kapanma ve uyku	Screen off and sleep
+Kullanıcı geçici dosyaları	User temporary files
+Uygulamaların bıraktığı geçici dosyalar. 2 günden eski olanlar.	Temporary files left by apps. Those older than 2 days.
+Windows geçici dosyaları	Windows temporary files
+Sistem geçici klasörü. 2 günden eski olanlar.	The system temporary folder. Those older than 2 days.
+Windows Update indirme önbelleği	Windows Update download cache
+Kurulmuş güncellemelerin indirme kalıntıları. Gerekirse yeniden iner.	Download leftovers of installed updates. It downloads again if needed.
+Teslim Optimizasyonu önbelleği	Delivery Optimization cache
+Windows'un güncelleme paylaşım önbelleği.	Windows' update sharing cache.
+Hata raporları ve çökme dökümleri	Error reports and crash dumps
+Windows hata raporları, mini dökümler, kurulum günlükleri. 7 günden eski olanlar.	Windows error reports, mini dumps, setup logs. Those older than 7 days.
+Prefetch (uygulama başlatma önbelleği)	Prefetch (app launch cache)
+Windows'un uygulamaları hızlı açmak için tuttuğu kayıtlar. Silmek zararsızdır ama faydası yoktur: Windows yeniden oluşturur, silince ilk açılışlar biraz yavaşlar. Önerilmez.	Records Windows keeps to open apps faster. Deleting is harmless but pointless: Windows recreates them and first launches get a little slower. Not recommended.
+Geri dönüşüm kutusu	Recycle Bin
+Silinmiş ama kutuda bekleyen dosyalar. Kalıcı olarak silinir.	Files that were deleted but are waiting in the bin. They are deleted permanently.
+İndirilenler: eski kurulum dosyaları	Downloads: old installers
+30 günden eski .exe, .msi, .zip, .iso, .7z, .rar. Silinmez, 7 gün karantinada tutulur.	.exe, .msi, .zip, .iso, .7z, .rar older than 30 days. Not deleted, kept in quarantine for 7 days.
+Geliştirici önbellekleri	Developer caches
+Gradle, npm, pip ve NuGet önbellekleri. Sonraki derleme biraz yavaş olur.	Gradle, npm, pip and NuGet caches. The next build is a bit slower.
+Windows bileşen deposu temizliği	Windows component store cleanup
+Eski güncelleme kalıntılarını DISM ile temizler. Birkaç dakika sürer.	Cleans old update leftovers with DISM. Takes a few minutes.
+{0} sayfa ve kod önbelleği. Oturumların, şifrelerin ve yer imlerin silinmez. Tarayıcı açıkken kısmen temizlenir.	{0} page and code cache. Your sessions, passwords and bookmarks are not deleted. Partly cleaned while the browser is open.
+Firefox önbelleği	Firefox cache
+Firefox sayfa önbelleği. Oturumların, şifrelerin ve yer imlerin silinmez.	Firefox page cache. Your sessions, passwords and bookmarks are not deleted.
+Steam önbelleği ve günlükleri	Steam cache and logs
+Steam'in tarayıcı önbelleği, çökme kayıtları ve 7 günden eski günlükleri. Oyunların ve oyun shader önbelleği silinmez.	Steam's browser cache, crash records and logs older than 7 days. Your games and the game shader cache are not deleted.
+Epic Games Launcher önbelleği	Epic Games Launcher cache
+Epic'in tarayıcı önbelleği ve günlükleri. Oyunların silinmez.	Epic's browser cache and logs. Your games are not deleted.
+NVIDIA sürücü kurulum artıkları	NVIDIA driver installer leftovers
+Sürücü kurulumundan kalan açılmış kurulum dosyaları. Kurulum bittikten sonra gerekmez. 7 gün karantinada tutulur.	Unpacked installer files left over from a driver install. Not needed after the install. Kept in quarantine for 7 days.
+Boşaltılamadı	Could not be emptied
+{0} dosya kullanımda, atlandı	{0} files in use, skipped
+Bileşen deposu temizlendi (alan kazancı sistem tarafından hesaplanır)	Component store cleaned (the space gained is calculated by the system)
+Ek antivirüs, Windows Defender ile birlikte çalışınca sistemi yavaşlatır ve çakışır. Biri yeterli.	An extra antivirus running with Windows Defender slows the system down and conflicts. One is enough.
+Bilgisayarla birlikte gelen tanıtım yazılımı.	Promotional software that came with the computer.
+Tarayıcı araç çubuğu ya da arama yönlendirici, genellikle istenmeden kurulur.	A browser toolbar or search redirector, usually installed unintentionally.
+ASUS arka plan servisleri. KLYC-Pulse kullanıyorsan gerekmez, ama BIOS tuşları (ör. Fn kısayolları) buna bağlı olabilir.	ASUS background services. Not needed if you use KLYC-Pulse, but BIOS keys (e.g. Fn shortcuts) may depend on it.
+Ses efekti yazılımı. Kullanmıyorsan arka planda kaynak harcar.	Sound effect software. If you don't use it, it wastes resources in the background.
+Eski, güvenlik açığı riski taşıyan bileşen. Hiçbir şey ona bağlı değilse kaldırılabilir.	An old component with a security risk. It can be removed if nothing depends on it.
+Oyun istemcisi. Oynamıyorsan yer kaplıyor, istediğin zaman yeniden kurulur.	Game client. If you don't play, it takes up space; it can be reinstalled any time.
+NVIDIA sürücü hizmeti. Ekran kartı ayarları ve oyun profilleri buna bağlı.	NVIDIA driver service. Graphics card settings and game profiles depend on it.
+NVIDIA sürücü hizmeti.	NVIDIA driver service.
+Riot Vanguard (Valorant anti-hile). Kapatılırsa Valorant açılmaz.	Riot Vanguard (Valorant anti-cheat). If turned off, Valorant won't start.
+Riot oyunları için gerekli.	Needed for Riot games.
+Sunshine oyun akışı hizmeti.	Sunshine game streaming service.
+Ses sürücüsü (Realtek). Sesi bozabilir.	Audio driver (Realtek). Turning it off can break sound.
+Ses sürücüsü (Realtek).	Audio driver (Realtek).
+ASUS profil ve donanım sürücüsü. Fn tuşlarını etkileyebilir.	ASUS profile and hardware driver. It can affect the Fn keys.
+ASUS donanım geçişleri. Fn tuşlarını etkileyebilir.	ASUS hardware switches. It can affect the Fn keys.
+G-Helper'ın pil şarj limitini her açılışta yazan görevi. Pil limitin böyle korunuyor, dokunma.	The task that writes G-Helper's battery charge limit at every start. This is how your battery limit is kept, don't touch it.
+Intel Driver & Support Assistant. Sürücü güncellemesi için; sürekli arka planda çalışması gerekmez.	Intel Driver & Support Assistant. For driver updates; it doesn't need to run in the background all the time.
+Intel Driver & Support Assistant güncelleyicisi.	Intel Driver & Support Assistant updater.
+Google güncelleyicisi. Tarayıcı kendi kendine de güncellenir.	Google updater. The browser also updates itself.
+Google güncelleyicisi.	Google updater.
+Edge güncelleyicisi.	Edge updater.
+Adobe güncelleme/lisans hizmeti.	Adobe update/licensing service.
+Armoury Crate arka planı. 'Dizüstü' sayfasındaki sihirbazla birlikte yönetilir.	Armoury Crate background. Managed together with the wizard on the 'Laptop' page.
+Armoury Crate arka planı.	Armoury Crate background.
+ASUS yazılım güncelleyicisi.	ASUS software updater.
+ASUS sistem tanılama (telemetri).	ASUS system diagnostics (telemetry).
+Epic Games hizmeti. Oyunlar başlatıcıyla açılırken kendiliğinden devreye girer.	Epic Games service. It kicks in by itself when games start from the launcher.
+Görev	Task
+Bilinmiyor. Ne işe yaradığından emin olmadığımız için dokunulmaz.	Unknown. We don't touch it because we're not sure what it is for.
+Bu öğe sistem veya oyunlar için gerekli, dokunulmaz.	This item is needed by the system or games, so it is left alone.
+Ne işe yaradığı bilinmiyor, bu yüzden kapatılmaz.	It is not known what it is for, so it is not turned off.
+Servis okunamadı.	The service could not be read.
+Servis ayarı doğrulanamadı (yönetici gerekebilir).	The service setting could not be verified (administrator rights may be needed).
+Eski ayar geri yüklenemedi.	The old setting could not be restored.
+Görev ayarı doğrulanamadı (yönetici gerekebilir).	The task setting could not be verified (administrator rights may be needed).
+Eski haline döndü.	Returned to the old state.
+Açılışta başlamayacak (silinmedi, istediğin an geri açılır).	Will not start at boot (not deleted, you can turn it back on any time).
+Kullanıcı (Run)	User (Run)
+Başlangıç klasörü (kullanıcı)	Startup folder (user)
+Başlangıç klasörü (ortak)	Startup folder (shared)
+KLYC-Pulse'ın kendisi	KLYC-Pulse itself
+Oyun anti-hile koruması	Game anti-cheat protection
+Windows güvenliği	Windows security
+NVIDIA sürücü hizmeti	NVIDIA driver service
+Windows için gerekli	Needed by Windows
+Arka plan hizmeti (Arka plan sekmesinden yönet)	Background service (manage from the Background tab)
+Windows bileşeni	Windows component
+Windows Update arayüzü bulunamadı.	The Windows Update interface was not found.
+Windows Update sorgulanamadı: 	Windows Update could not be queried: 
+Karşılaştırılacak kurulu sürüm bulunamadı.	No installed version was found to compare with.
+Kurulu sürümden yeni ({0:yyyy-MM-dd} yerine {1:yyyy-MM-dd}).	Newer than the installed version ({1:yyyy-MM-dd} instead of {0:yyyy-MM-dd}).
+Kurulu sürüm daha yeni ya da aynı ({0:yyyy-MM-dd}). Kurmana gerek yok.	The installed version is newer or the same ({0:yyyy-MM-dd}). No need to install.
+Geri Yükleme Noktası oluşturulamadı (yönetici izni ya da Sistem Koruması kapalı olabilir).	A restore point could not be created (administrator rights may be missing or System Protection may be off).
+ThrottleStop zaten çalışıyor.	ThrottleStop is already running.
+ThrottleStop bulunamadı.	ThrottleStop was not found.
+ThrottleStop başlatılamadı.	ThrottleStop could not be started.
+ThrottleStop penceresi görünmedi.	The ThrottleStop window did not appear.
+ThrottleStop arka planda başlatıldı.	ThrottleStop was started in the background.
+Profil 1-4 arasında olmalı.	The profile must be between 1 and 4.
+ThrottleStop çalışmıyor.	ThrottleStop is not running.
+Profil düğmesi bulunamadı (ThrottleStop sürümü farklı olabilir).	The profile button was not found (the ThrottleStop version may be different).
+ThrottleStop profili “{0}” seçildi ve doğrulandı.	ThrottleStop profile “{0}” was selected and verified.
+Profil “{0}” seçilemedi (okunan: {1}).	Profile “{0}” could not be selected (read: {1}).
+ThrottleStop zaten kapalı.	ThrottleStop is already closed.
+ThrottleStop kapanmadı.	ThrottleStop did not close.
+ThrottleStop kapatıldı.	ThrottleStop was closed.
+Afterburner zaten çalışıyor.	Afterburner is already running.
+Afterburner bulunamadı.	Afterburner was not found.
+Afterburner başlatıldı.	Afterburner was started.
+Profil 1-5 arasında olmalı.	The profile must be between 1 and 5.
+Afterburner’a Profil {0} uygulama komutu gönderildi (Afterburner geri bildirim vermez).	The command to apply Profile {0} was sent to Afterburner (Afterburner gives no feedback).
+G-Helper zaten çalışıyor.	G-Helper is already running.
+G-Helper bulunamadı.	G-Helper was not found.
+G-Helper başlatıldı.	G-Helper was started.
+{0} çalışıyor mu	Is {0} running
+Evet, çalışıyor	Yes, it is running
+Hayır	No
+Kurulu değil	Not installed
+Başlangıç: {0}	Start: {0}
+Yedek alındı	Backup taken
+{0} kapatıldı	{0} was closed
+Hâlâ çalışıyor	Still running
+{0} açılışta başlamasın	Don't start {0} at boot
+Görev kapatıldı	Task turned off
+Görev kapatılamadı	Task could not be turned off
+{0} açılış görevi	{0} startup task
+Kurulu değil, atlandı	Not installed, skipped
+{0} eski haline döndü	{0} returned to its old state
+{0} açılış görevi eski haline döndü	{0} startup task returned to its old state
+Açık	On
+{0} yeniden başlatıldı	{0} was restarted
+Başlatıldı	Started
+ASUS sürücüsü bulunamadı.	ASUS driver not found.
+Bu cihazda klavye ışığı okunamıyor.	The keyboard light cannot be read on this device.
+Bilgisayar isteği kabul etmedi.	The computer did not accept the request.
+Klavye ışığı doğrulandı: {0}.	Keyboard light verified: {0}.
+Yazıldı ama okunan değer {0}.	Written but the value read back is {0}.
+Bu klavyede RGB renk kontrolü yok.	This keyboard has no RGB color control.
+Klavye rengi bilgisayar tarafından kabul edildi.	The keyboard color was accepted by the computer.
+Klavye ışığı okunamıyor.	The keyboard light cannot be read.
+%{0} limiti bilgisayar tarafından kabul edildi.	The {0}% limit was accepted by the computer.
+Bilgisayar sınırı kabul etmedi.	The computer did not accept the limit.
+NVIDIA sürücüsü bulunamadı.	NVIDIA driver not found.
+Desteklenen saat listesi okunamadı.	The supported clock list could not be read.
+Sürücü saat kilidini kabul etmedi (yönetici gerekir ya da bu kart desteklemiyor).	The driver did not accept the clock lock (administrator rights are needed or this card doesn't support it).
+Sınır aralığı yazılamadı.	The limit range could not be written.
+Saat sınırı {0} MHz. Doğrulandı: sınama kilidinde saat {1} MHz'e gitti.	Clock limit {0} MHz. Verified: on the test lock the clock went to {1} MHz.
+Saat sınırı {0} MHz kabul edildi ama sınama saati {1} MHz okundu; boşta olduğu için doğrulanamadı olabilir.	Clock limit {0} MHz was accepted but the test clock read {1} MHz; it may not have been verifiable because it was idle.
+Saat sınırı kaldırıldı (sürücü varsayılanı).	Clock limit removed (driver default).
+Saat sınırı kaldırılamadı (yönetici gerekir).	The clock limit could not be removed (administrator rights needed).
+Bu ekran kartında hız ayarı sürücü tarafından kapalı.	Speed adjustment is turned off by the driver on this graphics card.
+Sürücü ofseti kabul etmedi: 	The driver did not accept the offset: 
+Fabrika hızına dönüldü (doğrulandı).	Returned to factory speed (verified).
+Çekirdek {0:+0;-0;0} MHz, bellek {1:+0;-0;0} MHzuygulandı ve kontrol edildi.	Core {0:+0;-0;0} MHz, memory {1:+0;-0;0} MHz applied and checked.
+Sürüm bilgisi alınamadı (depo gizli ya da henüz sürüm yok).	Version information could not be obtained (the repository is private or there is no release yet).
+GitHub şu an çok istek aldığı için sürüm sorgusunu reddetti; daha sonra tekrar denenecek.	GitHub refused the version query because it is receiving too many requests right now; it will be tried again later.
+Sürüm sorgusu başarısız (HTTP {0}).	The version query failed (HTTP {0}).
+Sürüm bilgisi okunamadı.	Version information could not be read.
+Sürüm sorgusu zaman aşımına uğradı.	The version query timed out.
+İnternete bağlanılamadı; sürüm denetlenemedi.	Could not connect to the internet; the version could not be checked.
+Yüksek	High
+7 gün karantina	7-day quarantine
+Yönetici gerekir	Administrator rights needed
+{0}  ·  son kullanım {1:dd.MM.yyyy}  ·  {2}	{0}  ·  last used {1:dd.MM.yyyy}  ·  {2}
+  ·  KORUNUR (asıl kopya)	  ·  KEPT (original copy)
+{0} aynı dosya  ·  {1} × {2} fazla = {3} boşa	{0} identical files  ·  {1} × {2} extra = {3} wasted
+Belgeler, Masaüstü, Resimler, Videolar, Müzik ve İndirilenler klasörlerinde birebir aynı büyük dosyaları bulur. Hiçbir şeyi kendiliğinden silmez.	Finds identical large files in Documents, Desktop, Pictures, Videos, Music and Downloads. It deletes nothing by itself.
+Kopya dosyalar aranıyor…	Searching for duplicate files…
+Aranıyor…	Searching…
+Birebir aynı büyük dosya bulunamadı.	No identical large files were found.
+{0} grup, fazladan {1}. Her grupta en eski kopya korunur, silinmez. Hiçbiri seçili değil.	{0} groups, {1} extra. The oldest copy in each group is kept and not deleted. None is selected.
+Her grubun korunan kopyası dışındakiler seçildi. Gözden geçirip gönderebilirsin.	Everything except the kept copy of each group was selected. You can review and send.
+Hiçbir dosya seçili değil.	No file is selected.
+{0} fazlalık kopya ({1}) Geri Dönüşüm Kutusu'na gönderilecek. Her grubun asıl kopyası yerinde kalır. Kutudan geri alabilirsin. Devam edilsin mi?	{0} extra copies ({1}) will be sent to the Recycle Bin. The original copy of each group stays in place. You can restore them from the bin. Continue?
+Kopyaları onayla	Confirm duplicates
+Geri Dönüşüm Kutusu'na gönderiliyor…	Sending to the Recycle Bin…
+Gönderiliyor: {0}	Sending: {0}
+{0}/{1} kopya Geri Dönüşüm Kutusu'na gönderildi ({2}). Alan, kutuyu boşaltınca açılır. Listeyi yenilemek için “Kopyaları bul”a bas.	{0}/{1} copies were sent to the Recycle Bin ({2}). The space is freed when you empty the bin. Press “Find duplicates” to refresh the list.
+Eskiden silinmiş uygulamaların bıraktığı klasörleri bulur. Hiçbir şeyi kendiliğinden silmez.	Finds folders left behind by apps that were deleted long ago. It deletes nothing by itself.
+Eski kalıntılar aranıyor…	Searching for old leftovers…
+Kalıntı bulunamadı.	No leftovers were found.
+{0} aday, toplam {1}. Hiçbiri seçili değil; emin olduklarını işaretle. Silinenler Geri Dönüşüm Kutusu'na gider, geri alabilirsin.	{0} candidates, {1} in total. None is selected; tick the ones you're sure about. Deleted ones go to the Recycle Bin and can be restored.
+Hiçbir klasör seçili değil.	No folder is selected.
+Şu klasörler Geri Dönüşüm Kutusu'na gönderilecek:\n\n{0}\n\nİçlerinde işine yarayan bir şey (oyun kayıtları, ayarlar) olabilir. Emin değilsen “Hayır” de. Kutudan geri alabilirsin. Devam edilsin mi?	These folders will be sent to the Recycle Bin:\n\n{0}\n\nThey may contain something useful (game saves, settings). If you're not sure, say “No”. You can restore them from the bin. Continue?
+Kalıntıları onayla	Confirm leftovers
+{0}/{1} klasör Geri Dönüşüm Kutusu'na gönderildi ({2}). Alan, kutuyu boşaltınca açılır.	{0}/{1} folders were sent to the Recycle Bin ({2}). The space is freed when you empty the bin.
+Taramak için “Tara”ya bas.	Press “Scan” to scan.
+Geri Yükleme Noktaları okunuyor…	Reading restore points…
+Henüz Geri Yükleme Noktası yok. KLYC-Pulse sistem temizliğinden ve uygulama kaldırmadan önce kendiliğinden alır.	There is no restore point yet. KLYC-Pulse takes one by itself before system cleanup and uninstalling apps.
+{0} Geri Yükleme Noktası var.	There are {0} restore points.
+Taranıyor…	Scanning…
+Taranıyor: {0}	Scanning: {0}
+Tarama bitti. İstemediklerinin işaretini kaldırıp “Seçilenleri temizle”ye bas.	Scan finished. Untick what you don't want and press “Clean selected”.
+Hiçbir kategori seçili değil.	No category is selected.
+Şunlar temizlenecek:\n\n{0}\n\nÖnbellekler ve geçici dosyalar silinir. Eski kurulum dosyaları silinmez, 7 gün karantinada tutulur. Devam edilsin mi?	These will be cleaned:\n\n{0}\n\nCaches and temporary files are deleted. Old installers are not deleted, they are kept in quarantine for 7 days. Continue?
+Temizliği onayla	Confirm cleanup
+Geri Yükleme Noktası alınıyor…	Taking a restore point…
+Geri Yükleme Noktası alınıyor (güvenlik için)…	Taking a restore point (for safety)…
+KLYC-Pulse sistem temizliği öncesi	Before KLYC-Pulse system cleanup
+Bitti. {0} alan açıldı.	Done. {0} of space freed.
+Disk analiz ediliyor (birkaç dakika sürebilir)…	Analyzing the disk (can take a few minutes)…
+Analiz bitti. Silme kararı sana ait, KLYC-Pulse bu klasörlere dokunmaz.	Analysis finished. The decision to delete is yours; KLYC-Pulse doesn't touch these folders.
+{0} dosya özgün yerine geri yüklendi.	{0} files were restored to their original place.
+seçili kategorilerde temizlenebilir	can be cleaned in the selected categories
+Karantinada {0} dosya ({1}). 7 gün sonra kalıcı silinir.	{0} files in quarantine ({1}). Permanently deleted after 7 days.
+Sistem öğesini değiştirmek için KLYC-Pulse'ın yönetici olarak çalışması gerekir.	KLYC-Pulse must run as administrator to change a system item.
+Bu öğe değiştirilemedi.	This item could not be changed.
+{0} açılışta başlayacak.	{0} will start at boot.
+{0} açılışta başlamayacak.	{0} will not start at boot.
+KAPATILABİLİR	CAN BE TURNED OFF
+BİLİNMİYOR	UNKNOWN
+Güncellemeler	Updates
+Açılışta başlayanlar	Starting with Windows
+Güncellemeler denetleniyor…	Checking for updates…
+Servisler ve zamanlanmış görevler taranıyor…	Scanning services and scheduled tasks…
+{0} öğe. {1} tanesi kapatılabilir; kapatmak silmez, istediğin an geri açılır.	{0} items. {1} can be turned off; turning off doesn't delete, you can turn it back on any time.
+, {0} tanesi için öneri var	, {0} have a recommendation
+Güncellemeler denetleniyor (winget)…	Checking for updates (winget)…
+Tüm uygulamalar güncel.	All apps are up to date.
+{0} uygulamanın güncellemesi var.	{0} apps have updates.
+Güncelleniyor…	Updating…
+Güncellendi	Updated
+Güncellenemedi (yönetici izni ya da açık uygulama olabilir)	Could not be updated (administrator rights or an open app may be the cause)
+Güncelleniyor: {0}	Updating: {0}
+{0} / {1} güncellendi.	{0} / {1} updated.
+“{0}” kaldırılacak.\n\nUygulamanın kendi kaldırıcısı çalışır. Bitince geride kalan klasörler varsa ayrıca sorulur.	“{0}” will be uninstalled.\n\nThe app's own uninstaller runs. When it finishes you'll be asked separately about any leftover folders.
+Kaldırmayı onayla	Confirm uninstall
+KLYC-Pulse: {0} kaldırma öncesi	KLYC-Pulse: before uninstalling {0}
+{0} {1} kaldırılıyor…	Uninstalling {0} {1}…
+{0} kaldırılıyor (kaldırıcı penceresini onayla)…	Uninstalling {0} (confirm in the uninstaller window)…
+{0} hâlâ kurulu görünüyor (kaldırma iptal edilmiş olabilir).	{0} still seems to be installed (the uninstall may have been cancelled).
+{0} kaldırılamadı.	{0} could not be uninstalled.
+Artık dosyalar aranıyor…	Searching for leftover files…
+{0} kaldırıldı. Geride şu klasörler kalmış:\n\n{1}\n\nGeri Dönüşüm Kutusu'na gönderilsin mi? (Geri alınabilir)	{0} was uninstalled. These folders were left behind:\n\n{1}\n\nSend them to the Recycle Bin? (can be restored)
+Artık dosyalar	Leftover files
+{0} kaldırıldı, {1} artık klasör Geri Dönüşüm Kutusu'na gönderildi.	{0} was uninstalled, {1} leftover folders were sent to the Recycle Bin.
+{0} kaldırıldı. Artık klasörlere dokunulmadı.	{0} was uninstalled. The leftover folders were not touched.
+{0} kaldırıldı, artık dosya bulunamadı.	{0} was uninstalled, no leftover files were found.
+Düşük	Low
+Normal altı	Below normal
+Normal üstü	Above normal
+{0} süreç	{0} processes
+süreç	processes
+“{0}” kapatılacak ({1}).\n\nÖnce nazikçe kapanması istenir; kaydedilmemiş işin varsa program sana sorar.	“{0}” will be closed ({1}).\n\nIt is first asked to close politely; if you have unsaved work the program will ask you.
+{0} kapatılıyor…	Closing {0}…
+{0} kapatıldı.	{0} was closed.
+{0} kapanmadı ({1} süreç hâlâ çalışıyor). Cevap vermiyor olabilir.\n\nZorla sonlandırılsın mı? Kaydedilmemiş veri kaybolur.	{0} did not close ({1} processes still running). It may not be responding.\n\nForce it to end? Unsaved data will be lost.
+{0} açık bırakıldı.	{0} was left open.
+{0} sonlandırıldı.	{0} was ended.
+{0} tamamen sonlandırılamadı.	{0} could not be ended completely.
+{0}: öncelik {1}/{2} süreçte değişti.	{0}: priority changed in {1}/{2} processes.
+{0}: Verimlilik Modu {1}/{2} süreçte değişti.	{0}: Efficiency Mode changed in {1}/{2} processes.
+Taramak için “Windows Update'te ara”ya bas. Yalnızca arar, hiçbir şey indirmez.	Press “Search in Windows Update” to scan. It only searches, it downloads nothing.
+Okunamadı	Could not be read
+BIOS tarihi {0:yyyy-MM-dd} ({1:0.0} yıl önce). BIOS kendiliğinden güncellenmez; ASUS destek sayfasından sen karar verirsin.	BIOS date {0:yyyy-MM-dd} ({1:0.0} years ago). The BIOS doesn't update itself; you decide from the ASUS support page.
+NVIDIA sürücüsü {0}	NVIDIA driver {0}
+{0}  ·  sürüm {1}  ·  {2:yyyy-MM-dd}	{0}  ·  version {1}  ·  {2:yyyy-MM-dd}
+ESKİ	OLD
+Windows Update'te sürücü güncellemeleri aranıyor (yaklaşık bir dakika sürebilir)…	Searching Windows Update for driver updates (can take about a minute)…
+YENİ	NEW
+Bekleyen sürücü güncellemesi yok.	There is no pending driver update.
+{0} öneri var ama hiçbiri kurulu sürümden yeni değil. Yapılacak bir şey yok.	There are {0} suggestions but none is newer than the installed version. Nothing to do.
+{0} gerçekten yeni güncelleme var. Windows Update'ten kurabilirsin (Windows kendi geri alma desteğiyle kurar).	There are {0} genuinely new updates. You can install them from Windows Update (Windows installs them with its own rollback support).
+AKTİF	ACTIVE
+Seçili limit: %{0}. Açılışta yeniden uygulanır.	Selected limit: {0}%. It is re-applied at every start.
+Limit seçilmedi. Pil %100'e kadar şarj olur.	No limit selected. The battery charges up to 100%.
+Klavye ışığı bu cihazda okunamıyor.	The keyboard light cannot be read on this device.
+Şu an: {0}.	Now: {0}.
+Ekran kartı kontrol ediliyor…	Checking the graphics card…
+Bu ekran kartında hız ayarı yapılamıyor ya da kart uyuyor. Birkaç saniye sonra sayfayı yeniden aç.	Speed adjustment cannot be done on this graphics card or the card is asleep. Reopen the page in a few seconds.
+Renk döngüsü	Color cycle
+Gökkuşağı	Rainbow
+Yavaş	Slow
+Kırmızı	Red
+Sarı	Yellow
+Yeşil	Green
+Seçtiğin renk uygulanır ve her açılışta yeniden yazılır.	The color you choose is applied and re-written at every start.
+Yüksek +150 / +700	High +150 / +700
+Her eyleme istediğin tuşu ata. Hangi pencere açık olursa olsun, tepsideyken de çalışır.	Assign any key you like to each action. It works whichever window is open, also from the tray.
+Şu kısayollar başka bir program tarafından kullanıldığı için alınamadı: 	These shortcuts could not be taken because another program is using them: 
+. “Değiştir” ile başka bir tuş seç.	. Choose another key with “Change”.
+Atanmamış	Not assigned
+{0} zaten “{1}” için kullanılıyor. Önce onu değiştir ya da başka bir tuş seç.	{0} is already used for “{1}”. Change that one first or choose another key.
+{0}: {1} atandı ve kaydedildi.	{0}: {1} was assigned and saved.
+{0}: atama kaldırıldı.	{0}: assignment was removed.
+Fabrika hızı. Seçtiğin ayar yalnızca Oyun modunda uygulanır, başka modda ya da yeniden başlatınca fabrika hızına döner.	Factory speed. The setting you choose applies only in Game mode; in other modes or after a restart it returns to factory speed.
+Oyun modunda çekirdek +{0}, bellek +{1} MHz uygulanır. Başka modda ya da yeniden başlatınca fabrika hızına döner.	In Game mode core +{0}, memory +{1} MHz is applied. In other modes or after a restart it returns to factory speed.
+Bu işlem için KLYC-Pulse'ın yönetici olarak çalışması gerekir.	KLYC-Pulse must run as administrator for this action.
+Ekran kartı hızlandırılıyor ve kontrol ediliyor…	Boosting the graphics card and checking…
+ Oyun moduna geçince uygulanır.	 Applied when you switch to Game mode.
+Ekran kartı için en iyi ayarı arayacağım.\n\n• Yaklaşık 2 dakika sürer, ekranda ağır bir grafik penceresi açılır, fanlar hızlanır\n• Çekirdek ve bellek saati kademe kademe artırılır; her kademede kare hızı, ısı ve sürücü hataları ölçülür\n• Kare hızı artmayı bırakınca, 84 °C geçilince ya da sürücü hata verince durur\n• Bitince ekran kartı fabrika hızına döner; sonucu sen seçersin\n\nÇalışan oyunları ve açık işlerini kaydedip öyle başla. Devam edilsin mi?	I will look for the best setting for the graphics card.\n\n• It takes about 2 minutes, a heavy graphics window opens on screen, the fans speed up\n• Core and memory clocks are raised step by step; at each step frame rate, heat and driver errors are measured\n• It stops when frame rate stops increasing, 84 °C is exceeded or the driver reports an error\n• When it finishes the graphics card returns to factory speed; you choose the result\n\nSave your running games and work first. Continue?
+Ekran kartı hızını otomatik bul	Find the graphics card speed automatically
+Ekran kartı hızlandırma aranıyor…	Searching for a graphics card boost…
+{0}\n\n{1}\n\nBu ayar Oyun modunda kullanılsın mı?	{0}\n\n{1}\n\nShould this setting be used in Game mode?
+Sonuç	Result
+Arama tamamlanamadı: 	The search could not be completed: 
+Klavye rengi yazılıyor…	Writing the keyboard color…
+{0}: bilgisayar kabul etti. Rengi bilgisayar geri söyleyemiyor, klavyene bakıp sen kontrol et.	{0}: the computer accepted it. The computer can't report the color back, check your keyboard yourself.
+Hız {0}	Speed {0}
+Pil sınırı ayarlanıyor…	Setting the battery limit…
+(Bu model değeri geri söylemiyor, bilgisayarın kabul ettiğini biliyoruz.)	(This model doesn't report the value back, we know the computer accepted it.)
+Klavye ışığı ayarlanıyor…	Setting the keyboard light…
+G-Helper ve Armoury Crate'in gereksiz parçaları kapalı. KLYC-Pulse tek başına yönetiyor.	The unneeded parts of G-Helper and Armoury Crate are off. KLYC-Pulse manages on its own.
+G-Helper veya Armoury Crate hâlâ arka planda çalışıyor, modları bozabilir.	G-Helper or Armoury Crate is still running in the background and can break modes.
+Şunlar yapılacak:\n\n• G-Helper kapatılır ve Windows açılışında başlamaz\n• Armoury Crate'in 5 arka plan servisi "elle başlat"a alınır\n\nHiçbir program silinmez. İstediğin an "Geri al" ile her şey eski haline döner.\n\nDevam edilsin mi?	These will be done:\n\n• G-Helper is closed and won't start with Windows\n• Armoury Crate's 5 background services are set to "start manually"\n\nNo program is deleted. You can restore everything any time with "Undo".\n\nContinue?
+G-Helper'ı kapat	Close G-Helper
+Uygulanıyor ve doğrulanıyor…	Applying and verifying…
+G-Helper kapatılıyor ve Armoury Crate'in gereksiz parçaları durduruluyor…	Closing G-Helper and stopping the unneeded parts of Armoury Crate…
+Tamam: her adım yapıldı ve kontrol edildi.	Done: every step was carried out and checked.
+{0} adım doğrulanamadı, yukarıdaki listeye bak.	{0} steps could not be verified, see the list above.
+Geri alınıyor…	Undoing…
+Yedekten eski ayarlar geri yükleniyor…	Restoring the old settings from the backup…
+Geri alındı: her şey eski haline döndü.	Undone: everything returned to its old state.
+{0} adım geri alınamadı.	{0} steps could not be undone.
+Aracı aç	Open the tool
+Çalışıyor / açılışta başlıyor	Running / starts at boot
+Çalışmıyor	Not running
+ASUS dizüstüler için performans modu, pil sınırı, klavye ışığı ve ekran ayarı programı.	A performance-mode, battery-limit, keyboard-light and screen-setting program for ASUS laptops.
+Oyun, Günlük, Sessiz ve Boşta modları; her ayarın tuttuğu kontrol edilir	Game, Daily, Quiet and Idle modes; every setting is checked to have held
+Pil şarj sınırı, klavye ışığı ve rengi (Dizüstü sayfası)	Battery charge limit, keyboard light and color (Laptop page)
+Ekran hızı, parlaklık ve ekran kartı hız sınırı (modlarla birlikte)	Refresh rate, brightness and graphics card speed limit (together with modes)
+Canlı sıcaklık ve fan hızı (İzleme sayfası)	Live temperature and fan speed (Monitor page)
+Fan hızı ayarı: bu bilgisayarın fanı yazılımla ayarlanamıyor (G-Helper da yapamaz). Onun yerine Pulse'ın “Sıcaklık sınırı” özelliği (Ayarlar) bilgisayarı serin tutar	Fan speed control: this computer's fan cannot be controlled by software (G-Helper can't either). Instead Pulse's “Temperature limit” feature (Settings) keeps the computer cool
+Fn tuşları: ASUS bu tuşları yalnızca kendi programına veriyor. Pulse'ta her işe istediğin başka bir tuşu atarsın (Dizüstü > Kısayollar)	Fn keys: ASUS gives these keys only to its own program. In Pulse you assign any other key you like to each action (Laptop > Shortcuts)
+Ekran kartı Eco/MUX anahtarı: bu bilgisayarda yok. Ekran kartı Windows'un grafik tercihi ve hız sınırıyla yönetilir	Graphics card Eco/MUX switch: not present on this computer. The graphics card is managed with Windows' graphics preference and speed limit
+İkisi aynı anda açıksa birbirinin ayarını bozabilir. G-Helper'ı kullanmayacaksan kapalı tut; Pulse onun yaptığı her şeyi yapıyor.	If both are open at the same time they can break each other's settings. If you won't use G-Helper keep it closed; Pulse does everything it does.
+G-Helper'ı Pulse ile birlikte aç	Open G-Helper together with Pulse
+Normalde gerek yok. G-Helper'ın kendi ekranını da kullanmak istersen aç.	Normally not needed. Turn it on if you also want to use G-Helper's own screen.
+G-Helper'ı aç	Open G-Helper
+Ekran kartını izleyen, oyun sırasında ekranda bilgi gösteren ve ekran kartını hızlandıran program.	A program that monitors the graphics card, shows information on screen during games and boosts the graphics card.
+Canlı sıcaklık, hız, güç, bellek ve kullanım (İzleme sayfası)	Live temperature, speed, power, memory and usage (Monitor page)
+Oyun sırasında ekranda gösterge ve kare hızı (FPS)	On-screen indicator and frame rate (FPS) during games
+Ekran kartı hız sınırı (güç ve ısı için) Pulse'ın kendisinde	Graphics card speed limit (for power and heat) is in Pulse itself
+Ekran kartını hızlandırma: Pulse kendisi de yapabiliyor (Dizüstü sayfası). Afterburner'da kaydettiğin özel bir profilin varsa Pulse hangi modda hangisinin kullanılacağını yönetir	Graphics card boost: Pulse can do it itself (Laptop page). If you have a custom profile saved in Afterburner, Pulse manages which one is used in which mode
+{0} kayıtlı profilin var; aşağıdan hangi modda hangisinin kullanılacağını seç.	You have {0} saved profiles; choose below which one to use in which mode.
+Afterburner'da kayıtlı profilin yok. Gerekmiyor: Pulse ekran kartını kendisi de hızlandırabiliyor. İstersen Afterburner'da bir profil kaydedip burada bir moda bağlayabilirsin.	You have no saved profile in Afterburner. It isn't needed: Pulse can boost the graphics card itself. If you like you can save a profile in Afterburner and link it to a mode here.
+Afterburner'ı Pulse ile birlikte aç	Open Afterburner together with Pulse
+Seçtiğin moda geçince Pulse, Afterburner'a o profili uygulamasını söyler. Afterburner cevap vermediği için burada “komut gönderildi” yazar.	When you switch to the mode you chose, Pulse tells Afterburner to apply that profile. Because Afterburner doesn't answer, it says “command sent” here.
+Afterburner'ı aç	Open Afterburner
+İşlemciyi izleyen, voltajını düşürüp güç sınırını ayarlayan program.	A program that monitors the CPU, lowers its voltage and sets the power limit.
+İşlemci sıcaklığı, hızı, yükü ve yavaşlama nedeni (İzleme sayfası)	CPU temperature, speed, load and the reason for slowing down (Monitor page)
+İşlemciyi daha az voltajla çalıştırma (undervolt) ve güç sınırı: bu bilgisayarın BIOS'u bunları kilitlemiş, ThrottleStop dahil hiçbir program değiştiremiyor (denedik). Başka bir bilgisayarda mümkünse: ThrottleStop'ta bir kez ayarlarsın, Pulse onu başlatır ve moda göre profilini seçer	Running the CPU at lower voltage (undervolt) and the power limit: this computer's BIOS has locked these, no program including ThrottleStop can change them (we tried). If it's possible on another computer: you set it once in ThrottleStop, Pulse starts it and picks its profile by mode
+Bu bilgisayarda ThrottleStop'tan kazanacağın bir şey yok: ayarların hepsi kilitli. Kapalı tutmak en iyisi.	There's nothing to gain from ThrottleStop on this computer: all the settings are locked. Keeping it closed is best.
+ThrottleStop'u Pulse ile birlikte aç	Open ThrottleStop together with Pulse
+Mod değişince Pulse, ThrottleStop'un profilini seçer. Bu bilgisayarda bir etkisi olmaz, başka bir bilgisayar için var.	When the mode changes Pulse picks ThrottleStop's profile. It has no effect on this computer, it is there for another computer.
+ThrottleStop'u aç	Open ThrottleStop
+Intel sürücülerini denetleyip güncelleyen, sürekli arka planda çalışan yardımcı.	A helper that checks and updates Intel drivers and runs in the background all the time.
+BIOS ve sürücü sürümleri, eskiyenlerin işaretlenmesi (Sürücüler sayfası)	BIOS and driver versions, marking the ones that are getting old (Drivers page)
+Windows Update'te bekleyen sürücü taraması; gerçekten yeni olanı ayırır	Pending driver scan in Windows Update; separates the genuinely new ones
+Kurulumu Windows Update ya da NVIDIA App yapar (güvenli, geri alınabilir). Pulse seni oraya götürür	Installation is done by Windows Update or the NVIDIA App (safe, can be rolled back). Pulse takes you there
+Temizlik, hızlandırma, süreç ve başlangıç yönetimi aracı.	A cleanup, speed-up, process and startup management tool.
+Geçici dosya temizliği ve derin temizlik (Temizlik sayfası)	Temporary file cleanup and deep cleanup (Cleanup page)
+Tek tuşla hızlandır, açılış ve arka plan yönetimi, sağlık raporu	One-click speed up, startup and background management, health report
+Süreç yöneticisi: kapat, öncelik, Eko mod (Süreçler sayfası)	Process manager: close, priority, Eco mode (Processes page)
+{0} kapatılacak ve Windows ile başlamayacak.\n\nHiçbir şey silinmez. "Geri al" ile eski haline döner.{1}\n\nDevam edilsin mi?	{0} will be closed and won't start with Windows.\n\nNothing is deleted. "Undo" returns it to its old state.{1}\n\nContinue?
+{0}'ı kapat	Close {0}
+{0} kapatılıyor ve doğrulanıyor…	Closing {0} and verifying…
+{0}: tamam, her adım doğrulandı.	{0}: done, every step was verified.
+{0}: {1} adım doğrulanamadı.	{0}: {1} steps could not be verified.
+{0} eski haline döndürülüyor…	Returning {0} to its old state…
+{0}: geri alındı.	{0}: undone.
+{0}: {1} adım geri alınamadı.	{0}: {1} steps could not be undone.
+Sıcaklık sınırı: işlemci {0:0}°C, en yüksek frekans {1}.	Temperature limit: CPU {0:0}°C, top frequency {1}.
+Sıcaklık sınırı: frekans sınırı {0} yazıldı ama {1} okundu.	Temperature limit: frequency limit {0} was written but {1} was read.
+Sıcaklık sınırı: ekran kartı {0:0}°C, saat sınırı {1} MHz.	Temperature limit: graphics card {0:0}°C, clock limit {1} MHz.
+yüksek	high
+Isı yüksek ({0}): önce fan desteği açıldı.	Heat is high ({0}): fan boost was turned on first.
+Çok sıcak ({0}): işlemci hızı küçük adımlarla kısılıyor, serinleyince geri verilir.	Very hot ({0}): the CPU speed is being trimmed in small steps and restored when it cools.
+Fan yetmedi ({0}): işlemci hızı kademeli düşürülüyor, serinleyince geri verilir.	The fan wasn't enough ({0}): the CPU speed is being lowered step by step and restored when it cools.
+Isı yüksek: {0}.	Heat is high: {0}.
+Çok sıcak: {0}.	Very hot: {0}.
+Sıcaklık tehlikeli seviyede kaldı ({0}). Sessiz moda geçiliyor, ısı düşünce eski moda dönülecek.	The temperature stayed at a dangerous level ({0}). Switching to Quiet mode; it will go back to the old mode when the heat drops.
+Sıcaklık normale döndü. {0} moduna geri dönülüyor.	The temperature returned to normal. Going back to {0} mode.
+Pilde oynuyorsun. Prize takarsan FPS belirgin artar (pilde işlemci ve ekran kartı güç sınırına girer).	You're playing on battery. If you plug in, FPS rises noticeably (on battery the CPU and graphics card hit their power limits).
+Oyun sırasında sıcaklık 95 °C'yi aştığı için işlemci hızı {0} kez küçük adımlarla kısıldı (donanımın ani kısmasını önlemek için). Bu, FPS'i hafifçe düşürmüş olabilir.	Because the temperature exceeded 95 °C during the game, the CPU speed was trimmed {0} times in small steps (to prevent the hardware's sudden throttling). This may have lowered FPS slightly.
+Oyun sırasında hız {0:0} MHz'e çıktı ama sınır {1} MHz'di: bu bilgisayar sınırı uygulamıyor.	During the game the speed reached {0:0} MHz but the limit was {1} MHz: this computer does not apply the limit.
+ Otomatik ayar durduruldu (Oyunlar sayfasından yeniden denenebilir).	 Auto-tune was stopped (it can be retried from the Games page).
+Bu bilgisayar işlemci hız sınırını uygulamıyor (denemede ölçüldü); otomatik ayar yapılmıyor.	This computer does not apply the CPU speed limit (measured in the test); auto-tune is not done.
+Frekans sınırı denemesi prizde yapılır; prize takılıyken bir sonraki oyundan sonra denenecek.	The frequency-limit test is done while plugged in; it will be tried after the next game while plugged in.
+Bu bilgisayarda işlemci hız sınırının işe yarayıp yaramadığı ölçülüyor (~20 sn, işlemci tam yüklenir). Sonuç gelince ayar uygulanır.	Measuring whether the CPU speed limit works on this computer (~20 s, the CPU is fully loaded). The setting is applied when the result comes.
+ Otomatik ayar yapılmıyor.	 Auto-tune is not done.
+ThrottleStop çalışmıyor, profil uygulanamadı.	ThrottleStop is not running, the profile could not be applied.
+Afterburner'da kayıtlı profil yok; önce Afterburner'da bir profil kaydet.	There is no saved profile in Afterburner; save a profile in Afterburner first.
+Tıkla, aç ›	Click to open ›
+{0} önbelleği	{0} cache
+{0} geçici verileri.	{0} temporary data.
+Gereksiz olabilir	May be unneeded
+İsteğe bağlı	Optional
+Servis  ·  {0}  ·  {1}	Service  ·  {0}  ·  {1}
+çalışıyor	running
+durmuş	stopped
+Görev  ·  {0}	Task  ·  {0}
+{0}: öncelik {1} yapıldı ve doğrulandı.	{0}: priority set to {1} and verified.
+{0}: Verimlilik Modu {1} ve doğrulandı.	{0}: Efficiency Mode {1} and verified.
+açıldı	turned on
+kapatıldı	turned off
+Ekran	Display
+Ağ	Network
+Ses	Sound
+{0} başka bir program tarafından kullanılıyor, kaydedilemedi. Başka bir tuş seç.	{0} is used by another program and could not be registered. Choose another key.
+kararlı	stable
+KARARSIZ	UNSTABLE
++{0}/+{1}: {2:0.0} kare/sn, {3:0} MHz, {4:0} °C {5} {6}	+{0}/+{1}: {2:0.0} frames/s, {3:0} MHz, {4:0} °C {5} {6}
+Seviye 1	Level 1
+Seviye 2	Level 2
+Seviye 3	Level 3
+Yok	None
+{0} elle başlatmaya alındı	{0} set to manual start
+Başlangıç: {0}, {1}	Start: {0}, {1}
+durdu	stopped
+Yedek	Backup
+Geri alınacak yedek bulunamadı.	No backup to restore was found.
+Geri Yükleme Noktası oluşturuldu.	Restore point created.
+Son 24 saatte zaten bir nokta var, o geçerli.	There is already a restore point from the last 24 hours; that one counts.
+Yazıldı ama okunan değerler farklı (çekirdek {0}, bellek {1}).	Written but the values read back differ (core {0}, memory {1}).
+işlemci {0:0}°C, ekran kartı {1}°C	CPU {0:0}°C, graphics card {1}°C
+Kısayol ata	Assign shortcut
+Şimdi atamak istediğin tuşa ya da kombinasyona bas (örn. Ctrl+Alt+G, F13, Pause). Esc: iptal.	Now press the key or combination you want to assign (e.g. Ctrl+Alt+G, F13, Pause). Esc: cancel.
+“{0}” olmaz: düz tuşlar her yazışta tetiklenir. Ctrl, Alt ya da Win ile birlikte bas (ya da F13-F24, Pause, Print Screen).	“{0}” won't work: plain keys fire on every keystroke. Press it together with Ctrl, Alt or Win (or use F13-F24, Pause, Print Screen).
+Başka bir program güç ayarlarını değiştirmişti. Seçtiğin modun ayarlarını geri düzelttim.	Another program had changed the power settings. I fixed the settings of the mode you chose back.
+Günlük mod	Daily mode
+Boşta modu	Idle mode
+Sonraki mod (Oyun, Günlük, Sessiz sırayla)	Next mode (Game, Daily, Quiet in turn)
+Klavye ışığı seviyesi	Keyboard light level
+Oyun üstü gösterge	On-screen indicator in games
+Zaman aşımı	Timed out
+İşlemci denemede taban hızın ({0:0} MHz) üstüne çıkmadı ({1:0} MHz); güç/ısı sınırı ya da pil olabilir. Sınır denenemedi.	The CPU did not go above the base speed ({0:0} MHz) during the test ({1:0} MHz); it may be a power/heat limit or the battery. The limit could not be tested.
+Windows frekans sınırını uyguluyor: sınırsız {0:0} MHz → {1} MHz sınırıyla {2:0} MHz.	Windows applies the frequency limit: unlimited {0:0} MHz → {2:0} MHz with a {1} MHz limit.
+Windows frekans sınırını uygulamıyor: sınırsız {0:0} MHz, {1} MHz sınırıyla {2:0} MHz. Bu bilgisayarda (Ryzen/HWP ya da üretici yazılımı) sınır çalışmıyor.	Windows does not apply the frequency limit: unlimited {0:0} MHz, {2:0} MHz with a {1} MHz limit. On this computer (Ryzen/HWP or vendor firmware) the limit does not work.
+Parlaklık okunamadı: 	Brightness could not be read: 
+Parlaklık yazılamadı: 	Brightness could not be written: 
+Açılışta otomatik başlatma etkin.	Starting at boot is enabled.
+Açılışta başlatma kapatıldı.	Starting at boot was turned off.
+Karşılaştırılıyor ({0}/{1})…	Comparing ({0}/{1})…
+ (geri yüklendi)	 (restored)
+Bu ekran kartında hız ayarı kapalı.	Speed adjustment is turned off on this graphics card.
+Yük üretmek için Microsoft Edge bulunamadı.	Microsoft Edge was not found to create the load.
+Yük sayfası açılıyor…	Opening the load page…
+Fabrika hızı ölçülüyor…	Measuring factory speed…
+Deneniyor: çekirdek +{0}, bellek +{1} MHz…	Trying: core +{0}, memory +{1} MHz…
+Sürücü ofseti kabul etmedi	The driver did not accept the offset
+Kazanç %{0:0.0}, artık değmiyor	Gain {0:0.0}%, no longer worth it
+Hız aşırtma kayda değer kazanç vermedi (güç ya da ısı sınırı). Fabrika hızı en iyisi.	Overclocking gave no noticeable gain (power or heat limit). Factory speed is best.
+En iyi kararlı ayar: çekirdek +{0}, bellek +{1} MHz. Fabrika hızına göre kare hızı %{2:0.0} daha yüksek.	Best stable setting: core +{0}, memory +{1} MHz. Frame rate is {2:0.0}% higher than at factory speed.
+Ekran sürücüsü hata verdi (TDR)	The display driver reported an error (TDR)
+Grafik kartı yanıt vermedi	The graphics card did not respond
+Kare hızı ölçülemedi	Frame rate could not be measured
+Sıcaklık sınırı aşıldı ({0:0} °C)	Temperature limit exceeded ({0:0} °C)
+Isı ya da donanım kısıtlaması sürekli devrede	Heat or hardware throttling was constantly active
+Listeyi okumak için KLYC-Pulse'ın yönetici olarak çalışması gerekir.	KLYC-Pulse must run as administrator to read the list.
+Liste okunamadı.	The list could not be read.
+winget çalışmadı (kod {0}).	winget did not run (code {0}).
+Sağlıklı	Healthy
+Uyarı	Warning
+Sağlıksız	Unhealthy
+Bilinmiyor	Unknown
+Disk neredeyse dolu	Disk is almost full
+1 ciddi sorun var	1 serious problem
+{0} ciddi sorun var	{0} serious problems
+{0} uygulama	{0} apps
+Karantinada dosya yok.	There are no files in quarantine.
+Zorla kapat	Force close
+Oyun anti-hile hizmeti.	Game anti-cheat service.
+Kurulu uygulamalar	Installed apps
+Arka plan	Background
+Sabit	Static
+Nefes	Breathing
+{0} modunda	In {0} mode
+Dokunma	Leave alone
+Fabrika	Factory
+Hafif +50 / +250	Light +50 / +250
+Orta +100 / +500	Medium +100 / +500
+Beyaz	White
+Turuncu	Orange
+Turkuaz	Turquoise
+Mavi	Blue
+Mor	Purple
+Pembe	Pink
+SORUN	PROBLEM
+Oyun modu	Game mode
+Sessiz mod	Quiet mode
+temizlenebilir	can be cleaned
+Okunuyor…	Reading…
+{0} program, toplam {1:0.0} GB bellek	{0} programs, {1:0.0} GB memory in total
+VAR	YES
+ORTAK	SHARED
+KISMEN	PARTLY
+Discord kod	Discord code

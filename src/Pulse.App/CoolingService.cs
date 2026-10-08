@@ -1,3 +1,4 @@
+using Pulse.Core.Localization;
 using Pulse.Core.Diagnostics;
 using Pulse.Core.Modes;
 using Pulse.Core.Monitoring;
@@ -84,14 +85,14 @@ public sealed class CoolingService : IDisposable
 
     private async Task Handle(CoolingAction action, double? temp, bool inGame)
     {
-        var t = temp is { } v ? $"{v:0} °C" : "yüksek";
+        var t = temp is { } v ? $"{v:0} °C" : Loc.T("yüksek");
         switch (action)
         {
             case CoolingAction.FanOn:
                 var r = await AppServices.Modes.SetFanBoostAsync(true);
                 if (r is null) { _gov.Reset(); return; }                         // mod uygulanıyordu: sonra yeniden denenir
                 Journal.Write($"Soğutma önceliği: {t} uzun süre; fan desteği ({r.Status}).");
-                if (!inGame) Notify($"Isı yüksek ({t}): önce fan desteği açıldı.");
+                if (!inGame) Notify(Loc.F("Isı yüksek ({0}): önce fan desteği açıldı.", t));
                 break;
 
             case CoolingAction.ThrottleOn:
@@ -100,8 +101,8 @@ public sealed class CoolingService : IDisposable
                 if (inGame) Interlocked.Increment(ref _gameThrottles);
                 Journal.Write($"Soğutma önceliği: {(inGame ? "oyunda " : "")}fan yetmedi ({t}); işlemci hızı kademeli düşürülüyor (hedef {target} °C).");
                 Notify(inGame
-                    ? $"Çok sıcak ({t}): işlemci hızı küçük adımlarla kısılıyor, serinleyince geri verilir."
-                    : $"Fan yetmedi ({t}): işlemci hızı kademeli düşürülüyor, serinleyince geri verilir.");
+                    ? Loc.F("Çok sıcak ({0}): işlemci hızı küçük adımlarla kısılıyor, serinleyince geri verilir.", t)
+                    : Loc.F("Fan yetmedi ({0}): işlemci hızı kademeli düşürülüyor, serinleyince geri verilir.", t));
                 break;
 
             case CoolingAction.ThrottleOff:

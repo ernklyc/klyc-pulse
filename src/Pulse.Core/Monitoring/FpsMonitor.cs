@@ -1,3 +1,4 @@
+using Pulse.Core.Localization;
 using System.Collections.Concurrent;
 using System.Diagnostics;
 using Microsoft.Diagnostics.Tracing;
@@ -33,7 +34,7 @@ public sealed class FpsMonitor : IDisposable
         if (_session is not null) return true;
         try
         {
-            if (!TraceEventSession.IsElevated() ?? true) { Error = "Kare hızı ölçümü için KLYC-Pulse'ın yönetici olarak çalışması gerekir."; return false; }
+            if (!TraceEventSession.IsElevated() ?? true) { Error = Loc.T("Kare hızı ölçümü için KLYC-Pulse'ın yönetici olarak çalışması gerekir."); return false; }
             _session = new TraceEventSession(_sessionName) { StopOnDispose = true };
             _session.EnableProvider(DxgiProvider, TraceEventLevel.Informational, ulong.MaxValue);
             _session.Source.Dynamic.All += OnEvent;
@@ -48,7 +49,7 @@ public sealed class FpsMonitor : IDisposable
         }
         catch (Exception ex)
         {
-            Error = "Kare hızı ölçümü başlatılamadı: " + ex.Message;
+            Error = Loc.T("Kare hızı ölçümü başlatılamadı: ") + ex.Message;
             Journal.Write(Error);
             _session?.Dispose();
             _session = null;

@@ -1,3 +1,4 @@
+using Pulse.Core.Localization;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Text;
@@ -177,7 +178,7 @@ public sealed class BackgroundLoadTracker
 
     private static (string Display, string Kind) Describe(string name)
     {
-        if (Known.TryGetValue(name, out var k)) return k;
+        if (Known.TryGetValue(name, out var k)) return (Loc.T(k.Display), k.Kind);
         if (name.StartsWith("asus", StringComparison.OrdinalIgnoreCase) || name.StartsWith("armoury", StringComparison.OrdinalIgnoreCase)) return (name, "system");
         return (name, "other");
     }

@@ -1,3 +1,4 @@
+using Pulse.Core.Localization;
 using System.Diagnostics;
 using System.Text.Json;
 using System.Text.RegularExpressions;
@@ -58,14 +59,14 @@ public sealed class GHelperExit
     {
         var steps = new List<ExitStep>();
         var running = Process.GetProcessesByName(_processName).Length > 0;
-        steps.Add(new($"{_processName} çalışıyor mu", !running, running ? "Evet, çalışıyor" : "Hayır"));
+        steps.Add(new(Loc.F("{0} çalışıyor mu", _processName), !running, running ? Loc.T("Evet, çalışıyor") : Loc.T("Hayır")));
         var task = TaskEnabled();
-        steps.Add(new($"{_processName} açılış görevi", task != true, task switch { null => "Yok", true => "Açık", false => "Kapalı" }));
+        steps.Add(new(Loc.F("{0} açılış görevi", _processName), task != true, task switch { null => Loc.T("Yok"), true => Loc.T("Açık"), false => Loc.T("Kapalı") }));
         foreach (var s in _services)
         {
             var st = StartType(s);
-            if (st is null) { steps.Add(new(s, true, "Kurulu değil")); continue; }
-            steps.Add(new(s, st != "auto" && st != "delayed-auto", $"Başlangıç: {st}"));
+            if (st is null) { steps.Add(new(s, true, Loc.T("Kurulu değil"))); continue; }
+            steps.Add(new(s, st != "auto" && st != "delayed-auto", Loc.F("Başlangıç: {0}", st)));
         }
         return steps;
     }
@@ -93,7 +94,7 @@ public sealed class GHelperExit
             }
             Directory.CreateDirectory(Path.GetDirectoryName(_backupPath)!);
             File.WriteAllText(_backupPath, JsonSerializer.Serialize(backup, new JsonSerializerOptions { WriteIndented = true }));
-            steps.Add(new("Yedek alındı", File.Exists(_backupPath), _backupPath));
+            steps.Add(new(Loc.T("Yedek alındı"), File.Exists(_backupPath), _backupPath));
         }
 
         // 1) G-Helper'ı kapat
@@ -103,26 +104,26 @@ public sealed class GHelperExit
             catch (Exception ex) { Journal.Write($"{_processName} kapatılamadı: {ex.Message}"); }
         }
         var stillRunning = Process.GetProcessesByName(_processName).Length > 0;
-        steps.Add(new($"{_processName} kapatıldı", !stillRunning, stillRunning ? "Hâlâ çalışıyor" : "Kapalı"));
+        steps.Add(new(Loc.F("{0} kapatıldı", _processName), !stillRunning, stillRunning ? Loc.T("Hâlâ çalışıyor") : Loc.T("Kapalı")));
 
         // 2) Açılış görevini kapat (silmeden)
         if (TaskEnabled() is not null)
         {
             Schtasks("/Change", "/TN", _taskName, "/DISABLE");
             var t = TaskEnabled();
-            steps.Add(new($"{_processName} açılışta başlamasın", t == false, t == false ? "Görev kapatıldı" : "Görev kapatılamadı"));
+            steps.Add(new(Loc.F("{0} açılışta başlamasın", _processName), t == false, t == false ? Loc.T("Görev kapatıldı") : Loc.T("Görev kapatılamadı")));
         }
-        else steps.Add(new($"{_processName} açılış görevi", true, "Zaten yok"));
+        else steps.Add(new(Loc.F("{0} açılış görevi", _processName), true, "Zaten yok"));
 
         // 3) Armoury Crate servislerini "elle başlat"a al ve durdur
         foreach (var s in _services)
         {
-            if (StartType(s) is null) { steps.Add(new(s, true, "Kurulu değil, atlandı")); continue; }
+            if (StartType(s) is null) { steps.Add(new(s, true, Loc.T("Kurulu değil, atlandı"))); continue; }
             Sc("config", s, "start=", "demand");
             ServiceControl.Stop(s, 10);
             var st = StartType(s);
             var running = ServiceControl.State(s) == 4;
-            steps.Add(new($"{s} elle başlatmaya alındı", st == "demand" && !running, $"Başlangıç: {st}, {(running ? "çalışıyor" : "durdu")}"));
+            steps.Add(new(Loc.F("{0} elle başlatmaya alındı", s), st == "demand" && !running, Loc.F("Başlangıç: {0}, {1}", st, Loc.T(running ? "çalışıyor" : "durdu"))));
         }
 
         Journal.Write("G-Helper'ı kapat uygulandı: " + string.Join("; ", steps.Select(s => $"{s.Name}={(s.Ok ? "ok" : "HATA")}")));
@@ -134,27 +135,27 @@ public sealed class GHelperExit
     {
         var steps = new List<ExitStep>();
         var backup = ReadBackup();
-        if (backup is null) return [new("Yedek", false, "Geri alınacak yedek bulunamadı.")];
+        if (backup is null) return [new(Loc.T("Yedek"), false, Loc.T("Geri alınacak yedek bulunamadı."))];
 
         foreach (var s in backup.Services)
         {
             Sc("config", s.Name, "start=", s.StartType);
             if (s.WasRunning) ServiceControl.Start(s.Name);
             var st = StartType(s.Name);
-            steps.Add(new($"{s.Name} eski haline döndü", st == s.StartType, $"Başlangıç: {st}"));
+            steps.Add(new(Loc.F("{0} eski haline döndü", s.Name), st == s.StartType, Loc.F("Başlangıç: {0}", st)));
         }
 
         if (backup.TaskExisted)
         {
             Schtasks("/Change", "/TN", _taskName, backup.TaskWasEnabled ? "/ENABLE" : "/DISABLE");
             var t = TaskEnabled();
-            steps.Add(new($"{_processName} açılış görevi eski haline döndü", t == backup.TaskWasEnabled, t == true ? "Açık" : "Kapalı"));
+            steps.Add(new(Loc.F("{0} açılış görevi eski haline döndü", _processName), t == backup.TaskWasEnabled, t == true ? Loc.T("Açık") : Loc.T("Kapalı")));
         }
 
         if (backup.ProcessWasRunning && backup.ProcessPath is { } path && File.Exists(path))
         {
-            try { Process.Start(new ProcessStartInfo(path) { UseShellExecute = true }); steps.Add(new($"{_processName} yeniden başlatıldı", true, "Başlatıldı")); }
-            catch (Exception ex) { steps.Add(new($"{_processName} yeniden başlatıldı", false, ex.Message)); }
+            try { Process.Start(new ProcessStartInfo(path) { UseShellExecute = true }); steps.Add(new(Loc.F("{0} yeniden başlatıldı", _processName), true, Loc.T("Başlatıldı"))); }
+            catch (Exception ex) { steps.Add(new(Loc.F("{0} yeniden başlatıldı", _processName), false, ex.Message)); }
         }
 
         if (steps.All(s => s.Ok)) { try { File.Delete(_backupPath); } catch { } }

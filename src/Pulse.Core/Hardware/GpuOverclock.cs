@@ -1,3 +1,4 @@
+using Pulse.Core.Localization;
 using NvAPIWrapper.GPU;
 using NvAPIWrapper.Native;
 using NvAPIWrapper.Native.GPU;
@@ -98,8 +99,8 @@ public static class GpuOverclock
     {
         var gpu = Gpu();
         var before = Read();
-        if (gpu is null || before is null) return new(false, false, "NVIDIA ekran kartı bulunamadı.");
-        if (!before.Editable) return new(false, false, "Bu ekran kartında hız ayarı sürücü tarafından kapalı.", before);
+        if (gpu is null || before is null) return new(false, false, Loc.T("NVIDIA ekran kartı bulunamadı."));
+        if (!before.Editable) return new(false, false, Loc.T("Bu ekran kartında hız ayarı sürücü tarafından kapalı."), before);
 
         coreMhz = Math.Clamp(coreMhz, Math.Max(before.CoreMin, -SafeCoreCeiling), Math.Min(before.CoreMax, SafeCoreCeiling));
         memMhz = Math.Clamp(memMhz, Math.Max(before.MemMin, -SafeMemCeiling), Math.Min(before.MemMax, SafeMemCeiling));
@@ -117,7 +118,7 @@ public static class GpuOverclock
         catch (Exception ex)
         {
             Journal.Write("GPU ofset yazılamadı: " + ex.Message);
-            return new(false, false, "Sürücü ofseti kabul etmedi: " + ex.Message, before);
+            return new(false, false, Loc.T("Sürücü ofseti kabul etmedi: ") + ex.Message, before);
         }
 
         Thread.Sleep(300);
@@ -125,8 +126,8 @@ public static class GpuOverclock
         var verified = after is not null && after.CoreMhz == coreMhz && after.MemMhz == memMhz;
         Journal.Write($"GPU ofset: çekirdek {coreMhz:+0;-0;0}, bellek {memMhz:+0;-0;0} MHz; okunan {after?.CoreMhz}/{after?.MemMhz}.");
         return verified
-            ? new(true, true, coreMhz == 0 && memMhz == 0 ? "Fabrika hızına dönüldü (doğrulandı)." : $"Çekirdek {coreMhz:+0;-0;0} MHz, bellek {memMhz:+0;-0;0} MHzuygulandı ve kontrol edildi.", after)
-            : new(true, false, $"Yazıldı ama okunan değerler farklı (çekirdek {after?.CoreMhz}, bellek {after?.MemMhz}).", after);
+            ? new(true, true, coreMhz == 0 && memMhz == 0 ? Loc.T("Fabrika hızına dönüldü (doğrulandı).") : Loc.F("Çekirdek {0:+0;-0;0} MHz, bellek {1:+0;-0;0} MHzuygulandı ve kontrol edildi.", coreMhz, memMhz), after)
+            : new(true, false, Loc.F("Yazıldı ama okunan değerler farklı (çekirdek {0}, bellek {1}).", after?.CoreMhz, after?.MemMhz), after);
     }
 
     public static GpuOcResult Reset() => Apply(0, 0);

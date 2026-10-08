@@ -1,3 +1,4 @@
+using Pulse.Core.Localization;
 using System.Collections.ObjectModel;
 using System.IO;
 using System.Runtime.InteropServices;
@@ -16,7 +17,7 @@ public sealed class OptRowVm
     {
         Name = name;
         Detail = detail;
-        Label = ok ? "TAMAM" : "DİKKAT";
+        Label = Loc.T(ok ? "TAMAM" : "DİKKAT");
         Brush = (System.Windows.Media.Brush)System.Windows.Application.Current.FindResource(ok ? "GoodBrush" : "WarnBrush");
     }
 
@@ -55,7 +56,7 @@ public partial class HomeViewModel : ObservableObject, IDisposable
     // ---- Güncelleme kartı ----
     [ObservableProperty] private bool _hasUpdate = AppServices.Update.ShowBanner;
     [ObservableProperty] private string _updateTitle = UpdateTitleText();
-    private static string UpdateTitleText() => AppServices.Update.Available is { } a ? $"Yeni sürüm var: KLYC-Pulse {a.Version.ToString(3)} (şu an {UpdateService.CurrentText})" : "";
+    private static string UpdateTitleText() => AppServices.Update.Available is { } a ? Loc.F("Yeni sürüm var: KLYC-Pulse {0} (şu an {1})", a.Version.ToString(3), UpdateService.CurrentText) : "";
     // Tur bitince (OnboardingDone) eski "hoş geldin" kartı kendiliğinden kaybolsun
     private void OnSettingsChanged() => System.Windows.Application.Current?.Dispatcher.BeginInvoke(() => { if (AppServices.Settings.Current.OnboardingDone) ShowWelcome = false; });
     private void OnUpdateChanged() => System.Windows.Application.Current?.Dispatcher.BeginInvoke(() => { HasUpdate = AppServices.Update.ShowBanner; UpdateTitle = UpdateTitleText(); });
@@ -77,13 +78,13 @@ public partial class HomeViewModel : ObservableObject, IDisposable
     {
         if (IsOptimizing) return;
         var ask = System.Windows.MessageBox.Show(
-            "Şunlar yapılacak:\n\n• 2 günden eski zararsız geçici dosyalar silinir (belgelerine, oyunlarına, indirilenlerine dokunulmaz)\n• Arka plandaki büyük uygulamaların belleği rahatlatılır (hiçbir uygulama kapanmaz)\n• Seçili modun ayarları yeniden uygulanıp doğrulanır\n• Windows oyun ayarları ve açılış öğeleri denetlenir (değiştirilmez)\n\nİşlem bitince önce/sonra ölçümü gösterilir. Devam edilsin mi?",
-            "Hızlandır", System.Windows.MessageBoxButton.YesNo, System.Windows.MessageBoxImage.Question);
+            Loc.T("Şunlar yapılacak:\n\n• 2 günden eski zararsız geçici dosyalar silinir (belgelerine, oyunlarına, indirilenlerine dokunulmaz)\n• Arka plandaki büyük uygulamaların belleği rahatlatılır (hiçbir uygulama kapanmaz)\n• Seçili modun ayarları yeniden uygulanıp doğrulanır\n• Windows oyun ayarları ve açılış öğeleri denetlenir (değiştirilmez)\n\nİşlem bitince önce/sonra ölçümü gösterilir. Devam edilsin mi?"),
+            Loc.T("Hızlandır"), System.Windows.MessageBoxButton.YesNo, System.Windows.MessageBoxImage.Question);
         if (ask != System.Windows.MessageBoxResult.Yes) return;
 
         IsOptimizing = true;
         HasOpt = false;
-        Op.Begin("Başlıyor…", Core.Optimize.Optimizer.StepCount);
+        Op.Begin(Loc.T("Başlıyor…"), Core.Optimize.Optimizer.StepCount);
         try
         {
             var progress = new Progress<string>(text => Op.Step(text));
@@ -94,17 +95,17 @@ public partial class HomeViewModel : ObservableObject, IDisposable
 
             OptStats.Clear();
             string F(long b) => Core.Optimize.Optimizer.Format(b);
-            OptStats.Add(new OptRowVm("Boş RAM", $"{F(report.Before.FreeRamBytes)}  →  {F(report.After.FreeRamBytes)}", report.RamGained >= 0));
-            OptStats.Add(new OptRowVm("Boş disk (C:)", $"{F(report.Before.FreeDiskBytes)}  →  {F(report.After.FreeDiskBytes)}", report.After.FreeDiskBytes >= report.Before.FreeDiskBytes));
-            OptStats.Add(new OptRowVm("Açılışta başlayan", $"{report.Before.StartupEnabled}  →  {report.After.StartupEnabled} uygulama", true));
+            OptStats.Add(new OptRowVm(Loc.T("Boş RAM"), $"{F(report.Before.FreeRamBytes)}  →  {F(report.After.FreeRamBytes)}", report.RamGained >= 0));
+            OptStats.Add(new OptRowVm(Loc.T("Boş disk (C:)"), $"{F(report.Before.FreeDiskBytes)}  →  {F(report.After.FreeDiskBytes)}", report.After.FreeDiskBytes >= report.Before.FreeDiskBytes));
+            OptStats.Add(new OptRowVm(Loc.T("Açılışta başlayan"), Loc.F("{0}  →  {1} uygulama", report.Before.StartupEnabled, report.After.StartupEnabled), true));
 
-            OptTitle = "Hızlandır raporu";
-            OptSummary = report.AllOk ? "Her adım tamam" : $"{report.Steps.Count(s => !s.Ok)} adım dikkat istiyor";
+            OptTitle = Loc.T("Hızlandır raporu");
+            OptSummary = report.AllOk ? Loc.T("Her adım tamam") : Loc.F("{0} adım dikkat istiyor", report.Steps.Count(s => !s.Ok));
             HasOpt = true;
         }
         catch (Exception ex)
         {
-            OptTitle = "Hızlandır tamamlanamadı";
+            OptTitle = Loc.T("Hızlandır tamamlanamadı");
             OptSummary = ex.Message;
             OptRows.Clear();
             OptStats.Clear();
@@ -163,7 +164,7 @@ public partial class HomeViewModel : ObservableObject, IDisposable
         {
             foreach (var m in Modes) m.IsBusy = m.Key == key;
             var title = Modes.FirstOrDefault(m => m.Key == key)?.Title ?? key;
-            Op.Begin($"{title} modu uygulanıyor ve doğrulanıyor (güç planı, ekran, fan profili)…");
+            Op.Begin(Loc.F("{0} modu uygulanıyor ve doğrulanıyor (güç planı, ekran, fan profili)…", title));
         });
 
     private void OnApplied(ModeResult result) =>
@@ -177,11 +178,11 @@ public partial class HomeViewModel : ObservableObject, IDisposable
             var bad = result.Steps.Count(s => s.Status == StepStatus.Failed);
             var warn = result.Steps.Count(s => s.Status == StepStatus.Warning);
             var applied = result.Steps.Any(s => s.Status == StepStatus.Applied);
-            ResultTitle = $"{result.Mode.Title} modu";
-            ResultSummary = bad > 0 ? $"{bad} ayar doğrulanamadı"
-                : warn > 0 ? $"Uygulandı, {warn} uyarı var"
-                : applied ? "Windows ayarları doğrulandı, ASUS profili kabul edildi"
-                : "Tüm ayarlar uygulandı ve doğrulandı";
+            ResultTitle = Loc.F("{0} modu", Loc.T(result.Mode.Title));
+            ResultSummary = bad > 0 ? Loc.F("{0} ayar doğrulanamadı", bad)
+                : warn > 0 ? Loc.F("Uygulandı, {0} uyarı var", warn)
+                : applied ? Loc.T("Windows ayarları doğrulandı, ASUS profili kabul edildi")
+                : Loc.T("Tüm ayarlar uygulandı ve doğrulandı");
             HasResult = true;
         });
     public void Dispose()

@@ -1,3 +1,4 @@
+using Pulse.Core.Localization;
 using System.Text.Json;
 using Pulse.Core.Diagnostics;
 
@@ -60,7 +61,7 @@ public sealed class QuarantineStore
                 var target = item.OriginalPath;
                 Directory.CreateDirectory(Path.GetDirectoryName(target)!);
                 if (File.Exists(target))
-                    target = Path.Combine(Path.GetDirectoryName(target)!, Path.GetFileNameWithoutExtension(target) + " (geri yüklendi)" + Path.GetExtension(target));
+                    target = Path.Combine(Path.GetDirectoryName(target)!, Path.GetFileNameWithoutExtension(target) + Loc.T(" (geri yüklendi)") + Path.GetExtension(target));
                 File.Move(item.StoredPath, target);
                 all.Remove(item);
                 Save(all);

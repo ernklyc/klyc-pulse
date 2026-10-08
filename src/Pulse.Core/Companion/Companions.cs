@@ -1,3 +1,4 @@
+using Pulse.Core.Localization;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Text;
@@ -54,18 +55,18 @@ public static class ThrottleStopControl
 
     public static CompanionResult Launch(bool minimized = true)
     {
-        if (IsRunning) return new(true, "ThrottleStop zaten çalışıyor.");
+        if (IsRunning) return new(true, Loc.T("ThrottleStop zaten çalışıyor."));
         var exe = FindExe();
-        if (exe is null) return new(false, "ThrottleStop bulunamadı.");
+        if (exe is null) return new(false, Loc.T("ThrottleStop bulunamadı."));
         try
         {
             var p = Process.Start(new ProcessStartInfo(exe) { UseShellExecute = true, WorkingDirectory = Path.GetDirectoryName(File.ResolveLinkTarget(exe, true)?.FullName ?? exe)! });
-            if (p is null) return new(false, "ThrottleStop başlatılamadı.");
+            if (p is null) return new(false, Loc.T("ThrottleStop başlatılamadı."));
             var hwnd = WaitForWindow(8000);
-            if (hwnd == IntPtr.Zero) return new(false, "ThrottleStop penceresi görünmedi.");
+            if (hwnd == IntPtr.Zero) return new(false, Loc.T("ThrottleStop penceresi görünmedi."));
             if (minimized) ShowWindow(hwnd, 6);   // SW_MINIMIZE
             Journal.Write("ThrottleStop başlatıldı (Pulse ile birlikte).");
-            return new(true, "ThrottleStop arka planda başlatıldı.");
+            return new(true, Loc.T("ThrottleStop arka planda başlatıldı."));
         }
         catch (Exception ex) { return new(false, ex.Message); }
     }
@@ -73,11 +74,11 @@ public static class ThrottleStopControl
     /// <summary>Profili seçer (1-4) ve pencerenin profil etiketinden doğrular.</summary>
     public static CompanionResult SetProfile(int profile1To4)
     {
-        if (profile1To4 is < 1 or > 4) return new(false, "Profil 1-4 arasında olmalı.");
+        if (profile1To4 is < 1 or > 4) return new(false, Loc.T("Profil 1-4 arasında olmalı."));
         var hwnd = FindWindow();
-        if (hwnd == IntPtr.Zero) return new(false, "ThrottleStop çalışmıyor.");
+        if (hwnd == IntPtr.Zero) return new(false, Loc.T("ThrottleStop çalışmıyor."));
         var button = GetDlgItem(hwnd, FirstProfileButton + profile1To4 - 1);
-        if (button == IntPtr.Zero) return new(false, "Profil düğmesi bulunamadı (ThrottleStop sürümü farklı olabilir).");
+        if (button == IntPtr.Zero) return new(false, Loc.T("Profil düğmesi bulunamadı (ThrottleStop sürümü farklı olabilir)."));
 
         SendMessage(button, 0x00F5, IntPtr.Zero, IntPtr.Zero);   // BM_CLICK
         var expected = ProfileNames()[profile1To4 - 1];
@@ -87,19 +88,19 @@ public static class ThrottleStopControl
             if (WindowText(GetDlgItem(hwnd, ProfileLabel)).Equals(expected, StringComparison.OrdinalIgnoreCase))
             {
                 Journal.Write($"ThrottleStop profili: {expected}");
-                return new(true, $"ThrottleStop profili “{expected}” seçildi ve doğrulandı.");
+                return new(true, Loc.F("ThrottleStop profili “{0}” seçildi ve doğrulandı.", expected));
             }
         }
-        return new(false, $"Profil “{expected}” seçilemedi (okunan: {WindowText(GetDlgItem(hwnd, ProfileLabel))}).");
+        return new(false, Loc.F("Profil “{0}” seçilemedi (okunan: {1}).", expected, WindowText(GetDlgItem(hwnd, ProfileLabel))));
     }
 
     public static CompanionResult Close()
     {
         var hwnd = FindWindow();
-        if (hwnd == IntPtr.Zero) return new(true, "ThrottleStop zaten kapalı.");
+        if (hwnd == IntPtr.Zero) return new(true, Loc.T("ThrottleStop zaten kapalı."));
         PostMessage(hwnd, 0x0010, IntPtr.Zero, IntPtr.Zero);   // WM_CLOSE
         for (var i = 0; i < 20 && IsRunning; i++) Thread.Sleep(200);
-        return IsRunning ? new(false, "ThrottleStop kapanmadı.") : new(true, "ThrottleStop kapatıldı.");
+        return IsRunning ? new(false, Loc.T("ThrottleStop kapanmadı.")) : new(true, Loc.T("ThrottleStop kapatıldı."));
     }
 
     // ---- Pencere bulma (gizli/küçültülmüş pencereler dahil) -----------------
@@ -168,14 +169,14 @@ public static class AfterburnerControl
 
     public static CompanionResult Launch()
     {
-        if (IsRunning) return new(true, "Afterburner zaten çalışıyor.");
+        if (IsRunning) return new(true, Loc.T("Afterburner zaten çalışıyor."));
         var exe = FindExe();
-        if (exe is null) return new(false, "Afterburner bulunamadı.");
+        if (exe is null) return new(false, Loc.T("Afterburner bulunamadı."));
         try
         {
             Process.Start(new ProcessStartInfo(exe) { UseShellExecute = true, WorkingDirectory = Path.GetDirectoryName(exe)! });
             Journal.Write("Afterburner başlatıldı (Pulse ile birlikte).");
-            return new(true, "Afterburner başlatıldı.");
+            return new(true, Loc.T("Afterburner başlatıldı."));
         }
         catch (Exception ex) { return new(false, ex.Message); }
     }
@@ -184,13 +185,13 @@ public static class AfterburnerControl
     public static CompanionResult ApplyProfile(int profile1To5)
     {
         var exe = FindExe();
-        if (exe is null) return new(false, "Afterburner bulunamadı.");
-        if (profile1To5 is < 1 or > 5) return new(false, "Profil 1-5 arasında olmalı.");
+        if (exe is null) return new(false, Loc.T("Afterburner bulunamadı."));
+        if (profile1To5 is < 1 or > 5) return new(false, Loc.T("Profil 1-5 arasında olmalı."));
         try
         {
             Process.Start(new ProcessStartInfo(exe, $"-Profile{profile1To5}") { UseShellExecute = true, WorkingDirectory = Path.GetDirectoryName(exe)! });
             Journal.Write($"Afterburner profili {profile1To5} istendi.");
-            return new(true, $"Afterburner’a Profil {profile1To5} uygulama komutu gönderildi (Afterburner geri bildirim vermez).");
+            return new(true, Loc.F("Afterburner’a Profil {0} uygulama komutu gönderildi (Afterburner geri bildirim vermez).", profile1To5));
         }
         catch (Exception ex) { return new(false, ex.Message); }
     }
@@ -219,10 +220,10 @@ public static class GHelperControl
 
     public static CompanionResult Launch()
     {
-        if (IsRunning) return new(true, "G-Helper zaten çalışıyor.");
+        if (IsRunning) return new(true, Loc.T("G-Helper zaten çalışıyor."));
         var exe = FindExe();
-        if (exe is null) return new(false, "G-Helper bulunamadı.");
-        try { Process.Start(new ProcessStartInfo(exe) { UseShellExecute = true }); return new(true, "G-Helper başlatıldı."); }
+        if (exe is null) return new(false, Loc.T("G-Helper bulunamadı."));
+        try { Process.Start(new ProcessStartInfo(exe) { UseShellExecute = true }); return new(true, Loc.T("G-Helper başlatıldı.")); }
         catch (Exception ex) { return new(false, ex.Message); }
     }
 }

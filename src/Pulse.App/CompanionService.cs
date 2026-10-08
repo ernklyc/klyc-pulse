@@ -1,3 +1,4 @@
+using Pulse.Core.Localization;
 using Pulse.Core.Companion;
 using Pulse.Core.Diagnostics;
 using Pulse.Core.Modes;
@@ -51,13 +52,13 @@ public sealed class CompanionService
             if (ts.ModeProfiles.TryGetValue(modeKey, out var tsProfile) && tsProfile > 0 && ThrottleStopControl.IsInstalled)
             {
                 if (!ThrottleStopControl.IsRunning && ts.StartWithPulse) ThrottleStopControl.Launch();
-                Set("ThrottleStop", ThrottleStopControl.IsRunning ? ThrottleStopControl.SetProfile(tsProfile).Message : "ThrottleStop çalışmıyor, profil uygulanamadı.");
+                Set("ThrottleStop", ThrottleStopControl.IsRunning ? ThrottleStopControl.SetProfile(tsProfile).Message : Loc.T("ThrottleStop çalışmıyor, profil uygulanamadı."));
             }
 
             var ab = _settings.Current.AfterburnerLink;
             if (ab.ModeProfiles.TryGetValue(modeKey, out var abProfile) && abProfile > 0 && AfterburnerControl.IsInstalled)
                 Set("Afterburner", AfterburnerControl.SavedProfileCount() == 0
-                    ? "Afterburner'da kayıtlı profil yok; önce Afterburner'da bir profil kaydet."
+                    ? Loc.T("Afterburner'da kayıtlı profil yok; önce Afterburner'da bir profil kaydet.")
                     : AfterburnerControl.ApplyProfile(abProfile).Message);
         }
     }

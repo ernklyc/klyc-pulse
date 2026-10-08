@@ -1,3 +1,4 @@
+using Pulse.Core.Localization;
 using System.Collections.ObjectModel;
 using System.Windows.Media;
 using System.Windows.Threading;
@@ -16,10 +17,10 @@ public sealed class FindingVm
         Detail = f.Detail;
         (Label, Brush) = f.Level switch
         {
-            FindingLevel.Bad => ("SORUN", Res("BadBrush")),
-            FindingLevel.Warning => ("DİKKAT", Res("WarnBrush")),
-            FindingLevel.Info => ("BİLGİ", Res("InfoBrush")),
-            _ => ("İYİ", Res("GoodBrush")),
+            FindingLevel.Bad => (Loc.T("SORUN"), Res("BadBrush")),
+            FindingLevel.Warning => (Loc.T("DİKKAT"), Res("WarnBrush")),
+            FindingLevel.Info => (Loc.T("BİLGİ"), Res("InfoBrush")),
+            _ => (Loc.T("İYİ"), Res("GoodBrush")),
         };
     }
 
@@ -54,16 +55,16 @@ public partial class HealthViewModel : ObservableObject, IDisposable
     [ObservableProperty] private IReadOnlyList<double> _fanHistory = Array.Empty<double>();
 
     [ObservableProperty] private string _cpuText = "—";
-    [ObservableProperty] private string _cpuNote = "Yaklaşık sıcaklık";
+    [ObservableProperty] private string _cpuNote = Loc.T("Yaklaşık sıcaklık");
     [ObservableProperty] private string _gpuText = "—";
     [ObservableProperty] private string _gpuNote = "";
     [ObservableProperty] private string _fanText = "—";
-    [ObservableProperty] private string _fanNote = "CPU fanı";
+    [ObservableProperty] private string _fanNote = Loc.T("CPU fanı");
     [ObservableProperty] private string _batteryText = "—";
     [ObservableProperty] private string _batteryNote = "";
     [ObservableProperty] private Brush _batteryBrush = (Brush)System.Windows.Application.Current.FindResource("InkBrush");
 
-    [ObservableProperty] private string _summaryText = "Ölçülüyor…";
+    [ObservableProperty] private string _summaryText = Loc.T("Ölçülüyor…");
     [ObservableProperty] private Brush _summaryBrush = (Brush)System.Windows.Application.Current.FindResource("MutedBrush");
 
     [RelayCommand]
@@ -80,16 +81,16 @@ public partial class HealthViewModel : ObservableObject, IDisposable
             CpuHistory = _cpu.ToList(); GpuHistory = _gpu.ToList(); FanHistory = _fan.ToList();
 
             CpuText = s.CpuTempC is { } c ? $"{c:N0} °C" : "—";
-            CpuNote = s.CpuTempC is null ? (CleanupEngine.IsAdmin ? "Sensör okunamadı" : "Yönetici izni gerekir") : "Yaklaşık sıcaklık";
+            CpuNote = s.CpuTempC is null ? (CleanupEngine.IsAdmin ? Loc.T("Sensör okunamadı") : Loc.T("Yönetici izni gerekir")) : Loc.T("Yaklaşık sıcaklık");
             GpuText = s.GpuTempC is { } g ? $"{g:N0} °C" : "—";
-            GpuNote = s.GpuUtilPercent is { } u ? $"%{u} kullanım" : "";
+            GpuNote = s.GpuUtilPercent is { } u ? Loc.F("%{0} kullanım", u) : "";
             FanText = s.CpuFanRpm is { } f ? $"{f:N0}" : "—";
-            FanNote = s.GpuFanRpm is { } gf ? $"CPU fanı · GPU {gf:N0} RPM" : "CPU fanı (RPM)";
+            FanNote = s.GpuFanRpm is { } gf ? Loc.F("CPU fanı · GPU {0:N0} RPM", gf) : Loc.T("CPU fanı (RPM)");
 
             var b = s.Battery;
-            if (!b.Present) { BatteryText = "Yok"; BatteryNote = "Pil algılanmadı"; BatteryBrush = Res("WarnBrush"); }
-            else if (b.Volts is < 6.0) { BatteryText = $"{b.Volts:N2} V"; BatteryNote = "Pil sorunlu görünüyor"; BatteryBrush = Res("BadBrush"); }
-            else { BatteryText = b.WearPercent is { } w ? $"%{100 - w:N0}" : "—"; BatteryNote = "Kalan kapasite (tasarıma göre)"; BatteryBrush = Res("InkBrush"); }
+            if (!b.Present) { BatteryText = "Yok"; BatteryNote = Loc.T("Pil algılanmadı"); BatteryBrush = Res("WarnBrush"); }
+            else if (b.Volts is < 6.0) { BatteryText = $"{b.Volts:N2} V"; BatteryNote = Loc.T("Pil sorunlu görünüyor"); BatteryBrush = Res("BadBrush"); }
+            else { BatteryText = b.WearPercent is { } w ? $"%{100 - w:N0}" : "—"; BatteryNote = Loc.T("Kalan kapasite (tasarıma göre)"); BatteryBrush = Res("InkBrush"); }
 
             if (forceFindings || _tick++ % 5 == 0)
             {

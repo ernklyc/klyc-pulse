@@ -1,3 +1,4 @@
+using Pulse.Core.Localization;
 using System.Windows;
 
 namespace Pulse.App;
@@ -80,18 +81,18 @@ public partial class TourWindow : Window
     {
         _index = Math.Clamp(i, 0, Steps.Length - 1);
         var s = Steps[_index];
-        StepLabel.Text = $"HIZLI TUR  ·  {_index + 1} / {Steps.Length}";
-        TitleText.Text = s.Title;
-        LeadText.Text = s.Lead;
-        Bullets.ItemsSource = s.Bullets;
+        StepLabel.Text = Loc.F("HIZLI TUR  ·  {0} / {1}", _index + 1, Steps.Length);
+        TitleText.Text = Loc.T(s.Title);
+        LeadText.Text = Loc.T(s.Lead);
+        Bullets.ItemsSource = s.Bullets.Select(b => new Bullet(Loc.T(b.Head), Loc.T(b.Body))).ToArray();
         TipBox.Visibility = s.Tip is null ? Visibility.Collapsed : Visibility.Visible;
-        TipText.Text = s.Tip ?? "";
+        TipText.Text = Loc.T(s.Tip ?? "");
         GoButton.Visibility = s.GoLabel is null ? Visibility.Collapsed : Visibility.Visible;
-        GoButton.Content = s.GoLabel ?? "";
+        GoButton.Content = Loc.T(s.GoLabel ?? "");
         _goPage = s.GoPage;
         BackButton.IsEnabled = _index > 0;
         var last = _index == Steps.Length - 1;
-        NextButton.Content = last ? "Başlayalım" : "İleri";
+        NextButton.Content = Loc.T(last ? "Başlayalım" : "İleri");
         SkipButton.Visibility = last ? Visibility.Collapsed : Visibility.Visible;
         Dots.Text = string.Concat(Enumerable.Range(0, Steps.Length).Select(k => k == _index ? "●  " : "○  "));
     }

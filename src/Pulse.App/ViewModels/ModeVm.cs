@@ -1,3 +1,4 @@
+using Pulse.Core.Localization;
 using CommunityToolkit.Mvvm.ComponentModel;
 using Pulse.Core.Modes;
 
@@ -10,8 +11,8 @@ public partial class ModeVm : ObservableObject
     {
         Definition = def;
         Key = def.Key;
-        Title = def.Title;
-        Subtitle = def.Subtitle;
+        Title = Loc.T(def.Title);
+        Subtitle = Loc.T(def.Subtitle);
         Glyph = def.Key switch
         {
             Modes.Game => "",
@@ -21,13 +22,13 @@ public partial class ModeVm : ObservableObject
         };
         Chips =
         [
-            def.Asus.ToString() switch { "Turbo" => "Turbo", "Silent" => "Sessiz profil", _ => "Dengeli profil" },
-            def.Boost > 0 ? "CPU turbo açık" : "CPU turbo kapalı",
-            def.RefreshHz == Modes.MaxHz ? "Ekranın en yüksek Hz'i" : $"{def.RefreshHz} Hz",
-            $"Parlaklık %{def.Brightness}",
-            .. def.MaxState < 100 ? new[] { $"CPU ≤ %{def.MaxState}" } : [],
+            def.Asus.ToString() switch { "Turbo" => "Turbo", "Silent" => Loc.T("Sessiz profil"), _ => Loc.T("Dengeli profil") },
+            Loc.T(def.Boost > 0 ? "CPU turbo açık" : "CPU turbo kapalı"),
+            def.RefreshHz == Modes.MaxHz ? Loc.T("Ekranın en yüksek Hz'i") : $"{def.RefreshHz} Hz",
+            Loc.F("Parlaklık %{0}", def.Brightness),
+            .. def.MaxState < 100 ? new[] { Loc.F("CPU ≤ %{0}", def.MaxState) } : [],
             .. def.GpuCapMhz is { } cap ? new[] { $"GPU ≤ {cap} MHz" } : [],
-            .. def.IdlePower ? new[] { "Uyku kapalı" } : [],
+            .. def.IdlePower ? new[] { Loc.T("Uyku kapalı") } : [],
         ];
     }
 

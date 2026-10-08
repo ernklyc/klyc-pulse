@@ -7,6 +7,7 @@ public static class Program
     {
         // Kurulum paketi (Velopack) kurulum/güncelleme/kaldırma sırasında uygulamayı özel parametrelerle çağırabilir; burada karşılanır.
         // Velopack ile kurulmamış (zip / tek exe) çalıştırmada hiçbir şey yapmaz.
+        Pulse.Core.Localization.Loc.ConfigureEarly();
         Velopack.VelopackApp.Build().Run();
 
         var app = new App();

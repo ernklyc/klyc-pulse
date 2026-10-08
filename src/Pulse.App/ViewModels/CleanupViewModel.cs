@@ -1,3 +1,4 @@
+using Pulse.Core.Localization;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -13,7 +14,7 @@ public partial class CategoryVm : ObservableObject
     {
         Category = c;
         IsSelected = c.SelectedByDefault && !(c.NeedsAdmin && !CleanupEngine.IsAdmin);
-        Badge = c.Safety == CleanupSafety.Quarantine ? "7 gün karantina" : c.NeedsAdmin && !CleanupEngine.IsAdmin ? "Yönetici gerekir" : "";
+        Badge = c.Safety == CleanupSafety.Quarantine ? Loc.T("7 gün karantina") : c.NeedsAdmin && !CleanupEngine.IsAdmin ? Loc.T("Yönetici gerekir") : "";
     }
 
     public CleanupCategory Category { get; }
@@ -55,7 +56,7 @@ public sealed partial class OrphanVm : ObservableObject
     public OrphanVm(OrphanFolder f)
     {
         Folder = f;
-        Detail = $"{f.Where}  ·  son kullanım {f.LastActivity:dd.MM.yyyy}  ·  {f.Path}";
+        Detail = Loc.F("{0}  ·  son kullanım {1:dd.MM.yyyy}  ·  {2}", f.Where, f.LastActivity, f.Path);
         SizeText = FolderVm.Format(f.Bytes);
     }
 
@@ -73,7 +74,7 @@ public sealed partial class DupFileVm : ObservableObject
         File = f;
         IsKeeper = keeper;
         Path = f.Path;
-        Detail = $"{f.Modified:dd.MM.yyyy}" + (keeper ? "  ·  KORUNUR (asıl kopya)" : "");
+        Detail = $"{f.Modified:dd.MM.yyyy}" + (keeper ? Loc.T("  ·  KORUNUR (asıl kopya)") : "");
     }
 
     public DupFile File { get; }
@@ -89,7 +90,7 @@ public sealed class DupGroupVm
     public DupGroupVm(DuplicateGroup g)
     {
         Group = g;
-        Header = $"{g.Files.Count} aynı dosya  ·  {FolderVm.Format(g.Size)} × {g.Files.Count - 1} fazla = {FolderVm.Format(g.WastedBytes)} boşa";
+        Header = Loc.F("{0} aynı dosya  ·  {1} × {2} fazla = {3} boşa", g.Files.Count, FolderVm.Format(g.Size), g.Files.Count - 1, FolderVm.Format(g.WastedBytes));
         Name = System.IO.Path.GetFileName(g.Keeper.Path);
         Files = g.Files.Select((f, i) => new DupFileVm(f, i == 0)).ToList();
     }
@@ -107,15 +108,15 @@ public partial class CleanupViewModel : ObservableObject
     // ---- Kopya dosyalar ----------------------------------------------------
     public ObservableCollection<DupGroupVm> DupGroups { get; } = new();
     [ObservableProperty] private bool _hasDups;
-    [ObservableProperty] private string _dupNote = "Belgeler, Masaüstü, Resimler, Videolar, Müzik ve İndirilenler klasörlerinde birebir aynı büyük dosyaları bulur. Hiçbir şeyi kendiliğinden silmez.";
+    [ObservableProperty] private string _dupNote = Loc.T("Belgeler, Masaüstü, Resimler, Videolar, Müzik ve İndirilenler klasörlerinde birebir aynı büyük dosyaları bulur. Hiçbir şeyi kendiliğinden silmez.");
 
     [RelayCommand]
     private async Task FindDuplicates()
     {
         if (IsBusy) return;
         IsBusy = true;
-        Op.Begin("Kopya dosyalar aranıyor…");
-        DupNote = "Aranıyor…";
+        Op.Begin(Loc.T("Kopya dosyalar aranıyor…"));
+        DupNote = Loc.T("Aranıyor…");
         try
         {
             var progress = new Progress<string>(m => { Op.Message(m); });
@@ -124,8 +125,8 @@ public partial class CleanupViewModel : ObservableObject
             foreach (var g in found) DupGroups.Add(new DupGroupVm(g));
             HasDups = DupGroups.Count > 0;
             DupNote = DupGroups.Count == 0
-                ? "Birebir aynı büyük dosya bulunamadı."
-                : $"{DupGroups.Count} grup, fazladan {FolderVm.Format(found.Sum(g => g.WastedBytes))}. Her grupta en eski kopya korunur, silinmez. Hiçbiri seçili değil.";
+                ? Loc.T("Birebir aynı büyük dosya bulunamadı.")
+                : Loc.F("{0} grup, fazladan {1}. Her grupta en eski kopya korunur, silinmez. Hiçbiri seçili değil.", DupGroups.Count, FolderVm.Format(found.Sum(g => g.WastedBytes)));
         }
         finally { IsBusy = false; Op.End(); }
     }
@@ -134,7 +135,7 @@ public partial class CleanupViewModel : ObservableObject
     private void SelectDupExtras()
     {
         foreach (var g in DupGroups) foreach (var f in g.Files) f.IsSelected = !f.IsKeeper;
-        DupNote = "Her grubun korunan kopyası dışındakiler seçildi. Gözden geçirip gönderebilirsin.";
+        DupNote = Loc.T("Her grubun korunan kopyası dışındakiler seçildi. Gözden geçirip gönderebilirsin.");
     }
 
     [RelayCommand]
@@ -142,26 +143,26 @@ public partial class CleanupViewModel : ObservableObject
     {
         if (IsBusy) return;
         var chosen = DupGroups.SelectMany(g => g.Files.Where(f => f.IsSelected && !f.IsKeeper).Select(f => (g, f))).ToList();
-        if (chosen.Count == 0) { DupNote = "Hiçbir dosya seçili değil."; return; }
+        if (chosen.Count == 0) { DupNote = Loc.T("Hiçbir dosya seçili değil."); return; }
         var total = chosen.Sum(c => c.f.File.Bytes);
         var ok = System.Windows.MessageBox.Show(
-            $"{chosen.Count} fazlalık kopya ({FolderVm.Format(total)}) Geri Dönüşüm Kutusu'na gönderilecek. Her grubun asıl kopyası yerinde kalır. Kutudan geri alabilirsin. Devam edilsin mi?",
-            "Kopyaları onayla", System.Windows.MessageBoxButton.YesNo, System.Windows.MessageBoxImage.Question);
+            Loc.F("{0} fazlalık kopya ({1}) Geri Dönüşüm Kutusu'na gönderilecek. Her grubun asıl kopyası yerinde kalır. Kutudan geri alabilirsin. Devam edilsin mi?", chosen.Count, FolderVm.Format(total)),
+            Loc.T("Kopyaları onayla"), System.Windows.MessageBoxButton.YesNo, System.Windows.MessageBoxImage.Question);
         if (ok != System.Windows.MessageBoxResult.Yes) return;
 
         IsBusy = true;
-        Op.Begin("Geri Dönüşüm Kutusu'na gönderiliyor…", chosen.Count);
+        Op.Begin(Loc.T("Geri Dönüşüm Kutusu'na gönderiliyor…"), chosen.Count);
         try
         {
             long freed = 0; var done = 0;
             foreach (var (g, f) in chosen)
             {
-                Op.Step($"Gönderiliyor: {System.IO.Path.GetFileName(f.Path)}");
+                Op.Step(Loc.F("Gönderiliyor: {0}", System.IO.Path.GetFileName(f.Path)));
                 var sent = await Task.Run(() => DuplicateFinder.Remove(g.Group, f.File));
                 Pulse.Core.Diagnostics.Journal.Write($"Kopya dosya Geri Dönüşüm Kutusu'na {(sent ? "gönderildi" : "gönderilemedi")}: {f.Path}");
                 if (sent) { freed += f.File.Bytes; done++; }
             }
-            DupNote = $"{done}/{chosen.Count} kopya Geri Dönüşüm Kutusu'na gönderildi ({FolderVm.Format(freed)}). Alan, kutuyu boşaltınca açılır. Listeyi yenilemek için “Kopyaları bul”a bas.";
+            DupNote = Loc.F("{0}/{1} kopya Geri Dönüşüm Kutusu'na gönderildi ({2}). Alan, kutuyu boşaltınca açılır. Listeyi yenilemek için “Kopyaları bul”a bas.", done, chosen.Count, FolderVm.Format(freed));
         }
         finally { IsBusy = false; Op.End(); }
     }
@@ -170,15 +171,15 @@ public partial class CleanupViewModel : ObservableObject
     // ---- Eski kalıntılar ---------------------------------------------------
     public ObservableCollection<OrphanVm> Orphans { get; } = new();
     [ObservableProperty] private bool _hasOrphans;
-    [ObservableProperty] private string _orphanNote = "Eskiden silinmiş uygulamaların bıraktığı klasörleri bulur. Hiçbir şeyi kendiliğinden silmez.";
+    [ObservableProperty] private string _orphanNote = Loc.T("Eskiden silinmiş uygulamaların bıraktığı klasörleri bulur. Hiçbir şeyi kendiliğinden silmez.");
 
     [RelayCommand]
     private async Task FindOrphans()
     {
         if (IsBusy) return;
         IsBusy = true;
-        Op.Begin("Eski kalıntılar aranıyor…");
-        OrphanNote = "Aranıyor…";
+        Op.Begin(Loc.T("Eski kalıntılar aranıyor…"));
+        OrphanNote = Loc.T("Aranıyor…");
         try
         {
             var found = await Task.Run(() => OrphanScanner.Scan(Core.Apps.InstalledAppsReader.Read()));
@@ -186,8 +187,8 @@ public partial class CleanupViewModel : ObservableObject
             foreach (var f in found) Orphans.Add(new OrphanVm(f));
             HasOrphans = Orphans.Count > 0;
             OrphanNote = Orphans.Count == 0
-                ? "Kalıntı bulunamadı."
-                : $"{Orphans.Count} aday, toplam {FolderVm.Format(found.Sum(o => o.Bytes))}. Hiçbiri seçili değil; emin olduklarını işaretle. Silinenler Geri Dönüşüm Kutusu'na gider, geri alabilirsin.";
+                ? Loc.T("Kalıntı bulunamadı.")
+                : Loc.F("{0} aday, toplam {1}. Hiçbiri seçili değil; emin olduklarını işaretle. Silinenler Geri Dönüşüm Kutusu'na gider, geri alabilirsin.", Orphans.Count, FolderVm.Format(found.Sum(o => o.Bytes)));
         }
         finally { IsBusy = false; Op.End(); }
     }
@@ -197,28 +198,28 @@ public partial class CleanupViewModel : ObservableObject
     {
         if (IsBusy) return;
         var chosen = Orphans.Where(o => o.IsSelected).ToList();
-        if (chosen.Count == 0) { OrphanNote = "Hiçbir klasör seçili değil."; return; }
+        if (chosen.Count == 0) { OrphanNote = Loc.T("Hiçbir klasör seçili değil."); return; }
 
         var list = string.Join("\n", chosen.Select(o => $"• {o.Name}  ({o.SizeText})"));
         var ok = System.Windows.MessageBox.Show(
-            $"Şu klasörler Geri Dönüşüm Kutusu'na gönderilecek:\n\n{list}\n\nİçlerinde işine yarayan bir şey (oyun kayıtları, ayarlar) olabilir. Emin değilsen “Hayır” de. Kutudan geri alabilirsin. Devam edilsin mi?",
-            "Kalıntıları onayla", System.Windows.MessageBoxButton.YesNo, System.Windows.MessageBoxImage.Warning);
+            Loc.F("Şu klasörler Geri Dönüşüm Kutusu'na gönderilecek:\n\n{0}\n\nİçlerinde işine yarayan bir şey (oyun kayıtları, ayarlar) olabilir. Emin değilsen “Hayır” de. Kutudan geri alabilirsin. Devam edilsin mi?", list),
+            Loc.T("Kalıntıları onayla"), System.Windows.MessageBoxButton.YesNo, System.Windows.MessageBoxImage.Warning);
         if (ok != System.Windows.MessageBoxResult.Yes) return;
 
         IsBusy = true;
-        Op.Begin("Geri Dönüşüm Kutusu'na gönderiliyor…", chosen.Count);
+        Op.Begin(Loc.T("Geri Dönüşüm Kutusu'na gönderiliyor…"), chosen.Count);
         try
         {
             long freed = 0; var done = 0;
             foreach (var o in chosen)
             {
-                Op.Step($"Gönderiliyor: {o.Name}");
+                Op.Step(Loc.F("Gönderiliyor: {0}", o.Name));
                 var sent = await Task.Run(() => OrphanScanner.Remove(o.Folder));
                 Pulse.Core.Diagnostics.Journal.Write($"Kalıntı klasör Geri Dönüşüm Kutusu'na {(sent ? "gönderildi" : "gönderilemedi")}: {o.Folder.Path} ({o.SizeText})");
                 if (sent) { freed += o.Folder.Bytes; done++; Orphans.Remove(o); }
             }
             HasOrphans = Orphans.Count > 0;
-            OrphanNote = $"{done}/{chosen.Count} klasör Geri Dönüşüm Kutusu'na gönderildi ({FolderVm.Format(freed)}). Alan, kutuyu boşaltınca açılır.";
+            OrphanNote = Loc.F("{0}/{1} klasör Geri Dönüşüm Kutusu'na gönderildi ({2}). Alan, kutuyu boşaltınca açılır.", done, chosen.Count, FolderVm.Format(freed));
         }
         finally { IsBusy = false; Op.End(); }
     }
@@ -242,23 +243,23 @@ public partial class CleanupViewModel : ObservableObject
 
     public OperationVm Op { get; } = new();
     [ObservableProperty] private bool _isBusy;
-    [ObservableProperty] private string _status = "Taramak için “Tara”ya bas.";
+    [ObservableProperty] private string _status = Loc.T("Taramak için “Tara”ya bas.");
     [ObservableProperty] private string _totalText = "—";
-    [ObservableProperty] private string _totalNote = "temizlenebilir";
+    [ObservableProperty] private string _totalNote = Loc.T("temizlenebilir");
     [ObservableProperty] private string _quarantineText = "";
     [ObservableProperty] private bool _hasFolders;
-    [ObservableProperty] private string _restoreNote = "Geri Yükleme Noktaları okunuyor…";
+    [ObservableProperty] private string _restoreNote = Loc.T("Geri Yükleme Noktaları okunuyor…");
     [ObservableProperty] private bool _hasRestorePoints;
 
     [RelayCommand]
     private async Task LoadRestorePoints()
     {
-        RestoreNote = "Geri Yükleme Noktaları okunuyor…";
+        RestoreNote = Loc.T("Geri Yükleme Noktaları okunuyor…");
         var (items, error) = await RestorePoint.ListAsync();
         RestorePoints.Clear();
         foreach (var i in items) RestorePoints.Add(new RestorePointVm(i));
         HasRestorePoints = RestorePoints.Count > 0;
-        RestoreNote = error ?? (items.Count == 0 ? "Henüz Geri Yükleme Noktası yok. KLYC-Pulse sistem temizliğinden ve uygulama kaldırmadan önce kendiliğinden alır." : $"{items.Count} Geri Yükleme Noktası var.");
+        RestoreNote = error ?? (items.Count == 0 ? Loc.T("Henüz Geri Yükleme Noktası yok. KLYC-Pulse sistem temizliğinden ve uygulama kaldırmadan önce kendiliğinden alır.") : Loc.F("{0} Geri Yükleme Noktası var.", items.Count));
     }
 
     [RelayCommand]
@@ -269,11 +270,11 @@ public partial class CleanupViewModel : ObservableObject
     {
         if (IsBusy) return;
         IsBusy = true;
-        Status = "Taranıyor…";
-        Op.Begin("Taranıyor…", Categories.Count);
+        Status = Loc.T("Taranıyor…");
+        Op.Begin(Loc.T("Taranıyor…"), Categories.Count);
         try
         {
-            var progress = new Progress<string>(name => { Status = $"Taranıyor: {name}"; Op.Step($"Taranıyor: {name}"); });
+            var progress = new Progress<string>(name => { Status = Loc.F("Taranıyor: {0}", name); Op.Step(Loc.F("Taranıyor: {0}", name)); });
             var scans = await _engine.ScanAsync(Categories.Select(c => c.Category), progress);
             foreach (var s in scans)
             {
@@ -283,7 +284,7 @@ public partial class CleanupViewModel : ObservableObject
                 if (vm.Unavailable) vm.IsSelected = false;
             }
             UpdateTotal();
-            Status = "Tarama bitti. İstemediklerinin işaretini kaldırıp “Seçilenleri temizle”ye bas.";
+            Status = Loc.T("Tarama bitti. İstemediklerinin işaretini kaldırıp “Seçilenleri temizle”ye bas.");
         }
         finally { IsBusy = false; Op.End(); }
     }
@@ -293,12 +294,12 @@ public partial class CleanupViewModel : ObservableObject
     {
         if (IsBusy) return;
         var chosen = Categories.Where(c => c.IsSelected && !c.Unavailable).ToList();
-        if (chosen.Count == 0) { Status = "Hiçbir kategori seçili değil."; return; }
+        if (chosen.Count == 0) { Status = Loc.T("Hiçbir kategori seçili değil."); return; }
 
         var list = string.Join("\n", chosen.Select(c => "• " + c.Name + (c.Badge.Length > 0 ? $"  ({c.Badge})" : "")));
         var ok = System.Windows.MessageBox.Show(
-            $"Şunlar temizlenecek:\n\n{list}\n\nÖnbellekler ve geçici dosyalar silinir. Eski kurulum dosyaları silinmez, 7 gün karantinada tutulur. Devam edilsin mi?",
-            "Temizliği onayla", System.Windows.MessageBoxButton.YesNo, System.Windows.MessageBoxImage.Question);
+            Loc.F("Şunlar temizlenecek:\n\n{0}\n\nÖnbellekler ve geçici dosyalar silinir. Eski kurulum dosyaları silinmez, 7 gün karantinada tutulur. Devam edilsin mi?", list),
+            Loc.T("Temizliği onayla"), System.Windows.MessageBoxButton.YesNo, System.Windows.MessageBoxImage.Question);
         if (ok != System.Windows.MessageBoxResult.Yes) return;
 
         IsBusy = true;
@@ -308,9 +309,9 @@ public partial class CleanupViewModel : ObservableObject
         {
             if (needsRestore)
             {
-                Status = "Geri Yükleme Noktası alınıyor…";
-                Op.Step("Geri Yükleme Noktası alınıyor (güvenlik için)…");
-                var rp = await RestorePoint.CreateAsync("KLYC-Pulse sistem temizliği öncesi");
+                Status = Loc.T("Geri Yükleme Noktası alınıyor…");
+                Op.Step(Loc.T("Geri Yükleme Noktası alınıyor (güvenlik için)…"));
+                var rp = await RestorePoint.CreateAsync(Loc.T("KLYC-Pulse sistem temizliği öncesi"));
                 Status = rp.Message;
             }
             var progress = new Progress<string>(name => { Status = $"Temizleniyor: {name}"; Op.Step($"Temizleniyor: {name}"); });
@@ -324,7 +325,7 @@ public partial class CleanupViewModel : ObservableObject
                 vm.SizeText = r.Note ?? "temizlendi";
             }
             UpdateTotal();
-            Status = $"Bitti. {FolderVm.Format(total)} alan açıldı.";
+            Status = Loc.F("Bitti. {0} alan açıldı.", FolderVm.Format(total));
             RefreshQuarantine();
         }
         finally { IsBusy = false; Op.End(); }
@@ -335,8 +336,8 @@ public partial class CleanupViewModel : ObservableObject
     {
         if (IsBusy) return;
         IsBusy = true;
-        Status = "Disk analiz ediliyor (birkaç dakika sürebilir)…";
-        Op.Begin("Disk analiz ediliyor (birkaç dakika sürebilir)…");
+        Status = Loc.T("Disk analiz ediliyor (birkaç dakika sürebilir)…");
+        Op.Begin(Loc.T("Disk analiz ediliyor (birkaç dakika sürebilir)…"));
         try
         {
             var progress = new Progress<string>(p => { Status = $"Analiz: {p}"; Op.Message($"Analiz: {p}"); });
@@ -344,7 +345,7 @@ public partial class CleanupViewModel : ObservableObject
             Folders.Clear();
             foreach (var f in found) Folders.Add(new FolderVm(f));
             HasFolders = Folders.Count > 0;
-            Status = "Analiz bitti. Silme kararı sana ait, KLYC-Pulse bu klasörlere dokunmaz.";
+            Status = Loc.T("Analiz bitti. Silme kararı sana ait, KLYC-Pulse bu klasörlere dokunmaz.");
         }
         finally { IsBusy = false; Op.End(); }
     }
@@ -360,7 +361,7 @@ public partial class CleanupViewModel : ObservableObject
     {
         var n = 0;
         foreach (var i in _quarantine.List()) if (_quarantine.Restore(i.Id)) n++;
-        Status = n > 0 ? $"{n} dosya özgün yerine geri yüklendi." : "Karantinada dosya yok.";
+        Status = n > 0 ? Loc.F("{0} dosya özgün yerine geri yüklendi.", n) : Loc.T("Karantinada dosya yok.");
         RefreshQuarantine();
     }
 
@@ -368,13 +369,13 @@ public partial class CleanupViewModel : ObservableObject
     {
         long sum = Categories.Where(c => c.IsSelected && !c.Unavailable).Sum(c => c.Bytes);
         TotalText = FolderVm.Format(sum);
-        TotalNote = "seçili kategorilerde temizlenebilir";
+        TotalNote = Loc.T("seçili kategorilerde temizlenebilir");
     }
 
     private void RefreshQuarantine()
     {
         _quarantine.PurgeExpired();
         var items = _quarantine.List();
-        QuarantineText = items.Count == 0 ? "Karantinada dosya yok." : $"Karantinada {items.Count} dosya ({FolderVm.Format(items.Sum(i => i.Bytes))}). 7 gün sonra kalıcı silinir.";
+        QuarantineText = items.Count == 0 ? Loc.T("Karantinada dosya yok.") : Loc.F("Karantinada {0} dosya ({1}). 7 gün sonra kalıcı silinir.", items.Count, FolderVm.Format(items.Sum(i => i.Bytes)));
     }
 }

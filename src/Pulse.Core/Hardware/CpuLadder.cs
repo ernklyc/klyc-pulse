@@ -1,3 +1,4 @@
+using Pulse.Core.Localization;
 namespace Pulse.Core.Hardware;
 
 /// <summary>
@@ -41,5 +42,5 @@ public static class CpuLadder
 
     /// <summary>Kademe adı (arayüz için): "En çok 3,5 GHz (daha serin)".</summary>
     public static string Label(int index, int count, int mhz) =>
-        $"En çok {mhz / 1000.0:0.0} GHz" + (index == 1 ? " (hafif)" : index == count - 1 && count > 2 ? " (en serin)" : index >= 2 ? " (daha serin)" : "");
+        Loc.F("En çok {0:0.0} GHz", mhz / 1000.0) + (index == 1 ? " (hafif)" : index == count - 1 && count > 2 ? " (en serin)" : index >= 2 ? " (daha serin)" : "");
 }

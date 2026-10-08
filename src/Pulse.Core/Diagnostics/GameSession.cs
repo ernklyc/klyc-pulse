@@ -1,3 +1,4 @@
+using Pulse.Core.Localization;
 using System.Text.Json;
 using Pulse.Core.Monitoring;
 
@@ -46,7 +47,7 @@ public sealed class GameSessionReport
 
     public List<string> Findings { get; init; } = new();
 
-    public string Title => $"{Game} · {Minutes:0} dk · {Start:d MMMM HH:mm}";
+    public string Title => Loc.F("{0} · {1:0} dk · {2:d MMMM HH:mm}", Game, Minutes, Start);
 }
 
 /// <summary>Oyun süresince saniyede bir örnek toplar, bitince <see cref="GameSessionReport"/> üretir. Hiçbir ayarı değiştirmez.</summary>
@@ -120,23 +121,23 @@ public sealed class GameSessionRecorder
         if (onBatteryPct >= 30)
         {
             severity = 2;
-            findings.Add($"Oyunun %{onBatteryPct}'i pilde oynandı. Pilde işlemci ve ekran kartı güç sınırına girer; FPS yarıya kadar düşebilir. Prize takıp oyna.");
+            findings.Add(Loc.F("Oyunun %{0}'i pilde oynandı. Pilde işlemci ve ekran kartı güç sınırına girer; FPS yarıya kadar düşebilir. Prize takıp oyna.", onBatteryPct));
         }
 
         // 1) Isı
         if (temps.Count == 0)
-            findings.Add("İşlemci sıcaklığı okunamadı (Pulse yönetici olarak çalışmıyor ya da bu bilgisayar sıcaklığı sunmuyor); ısı değerlendirmesi ve otomatik ısı ayarı yapılamadı.");
+            findings.Add(Loc.T("İşlemci sıcaklığı okunamadı (Pulse yönetici olarak çalışmıyor ya da bu bilgisayar sıcaklığı sunmuyor); ısı değerlendirmesi ve otomatik ısı ayarı yapılamadı."));
         if (tempMax is { } tmax)
         {
             if (above95 >= 10 || above90 >= 40)
             {
                 severity = 2;
-                findings.Add($"İşlemci sürenin %{above90}'ında 90 °C'nin üstündeydi (en yüksek {tmax:0} °C). Bu ısıda işlemci kendini yavaşlatır ve oyun takılabilir. İç temizlik, termal macun yenileme ya da soğutma altlığı en etkili çözüm.");
+                findings.Add(Loc.F("İşlemci sürenin %{0}'ında 90 °C'nin üstündeydi (en yüksek {1:0} °C). Bu ısıda işlemci kendini yavaşlatır ve oyun takılabilir. İç temizlik, termal macun yenileme ya da soğutma altlığı en etkili çözüm.", above90, tmax));
             }
             else if (above90 >= 10 || tmax >= 90)
             {
                 severity = Math.Max(severity, 1);
-                findings.Add($"İşlemci zaman zaman 90 °C'ye çıktı (en yüksek {tmax:0} °C). Şimdilik sorun değil ama izlemeye değer.");
+                findings.Add(Loc.F("İşlemci zaman zaman 90 °C'ye çıktı (en yüksek {0:0} °C). Şimdilik sorun değil ama izlemeye değer.", tmax));
             }
         }
 
@@ -145,8 +146,8 @@ public sealed class GameSessionRecorder
         {
             var heatRelated = above90 >= 20;
             severity = Math.Max(severity, heatRelated ? 2 : 1);
-            findings.Add($"Yük altında işlemci hızı ortalama {avg / 1000:0.0} GHz'e düştü (tepe {peak / 1000:0.0} GHz). " +
-                         (heatRelated ? "Isı yüzünden yavaşlamış." : "Isı yüksek değildi; güç veya mod sınırı olabilir."));
+            findings.Add(Loc.F("Yük altında işlemci hızı ortalama {0:0.0} GHz'e düştü (tepe {1:0.0} GHz). ", avg / 1000, peak / 1000) +
+                         (heatRelated ? Loc.T("Isı yüzünden yavaşlamış.") : Loc.T("Isı yüksek değildi; güç veya mod sınırı olabilir.")));
         }
 
         // 3) Ekran kartı kısıldı mı?
@@ -157,12 +158,12 @@ public sealed class GameSessionRecorder
             if (reason.Key == "Güç sınırı")
             {
                 // Dizüstü ekran kartlarının sabit bir güç bütçesi vardır; dolunca sürücü hızı biraz kısar. Normaldir, sorun değildir.
-                findings.Add($"Ekran kartı sürenin %{Pct(throttled.Count, n)}'inde güç bütçesine ulaştı ('Güç sınırı'). Dizüstü ekran kartlarının sabit bir güç bütçesi vardır; dolunca hızı biraz kısılır. Bu normaldir, ısı sorunu değildir.");
+                findings.Add(Loc.F("Ekran kartı sürenin %{0}'inde güç bütçesine ulaştı ('Güç sınırı'). Dizüstü ekran kartlarının sabit bir güç bütçesi vardır; dolunca hızı biraz kısılır. Bu normaldir, ısı sorunu değildir.", Pct(throttled.Count, n)));
             }
             else
             {
                 severity = Math.Max(severity, 1);
-                findings.Add($"Ekran kartı sürenin %{Pct(throttled.Count, n)}'inde kısıldı: {reason.Key}.");
+                findings.Add(Loc.F("Ekran kartı sürenin %{0}'inde kısıldı: {1}.", Pct(throttled.Count, n), Loc.T(reason.Key)));
             }
         }
 
@@ -170,12 +171,12 @@ public sealed class GameSessionRecorder
         if (ramPeak >= 92)
         {
             severity = Math.Max(severity, 2);
-            findings.Add($"Bellek %{ramPeak:0}'ye kadar doldu. Dolunca Windows diske taşır ve bu takılma yapar. Arka plandaki uygulamaları (tarayıcı, launcher) kapatmak iyi olur.");
+            findings.Add(Loc.F("Bellek %{0:0}'ye kadar doldu. Dolunca Windows diske taşır ve bu takılma yapar. Arka plandaki uygulamaları (tarayıcı, launcher) kapatmak iyi olur.", ramPeak));
         }
         else if (ramPeak >= 85)
         {
             severity = Math.Max(severity, 1);
-            findings.Add($"Bellek %{ramPeak:0}'e çıktı; sınıra yakın. Arka plandaki uygulamaları kapatmak iyi olur.");
+            findings.Add(Loc.F("Bellek %{0:0}'e çıktı; sınıra yakın. Arka plandaki uygulamaları kapatmak iyi olur.", ramPeak));
         }
 
         // 4b) Ekran kartı belleği (VRAM): dolunca dokular sistem belleğine taşar ve takılma yapar (4 GB'lık kartlarda sık)
@@ -183,19 +184,19 @@ public sealed class GameSessionRecorder
         if (vramPeak >= 95)
         {
             severity = Math.Max(severity, 2);
-            findings.Add($"Ekran kartı belleği %{vramPeak:0}'e kadar doldu. Dolunca dokular sistem belleğine taşar ve oyun takılır. Oyunda doku kalitesini bir kademe düşür.");
+            findings.Add(Loc.F("Ekran kartı belleği %{0:0}'e kadar doldu. Dolunca dokular sistem belleğine taşar ve oyun takılır. Oyunda doku kalitesini bir kademe düşür.", vramPeak));
         }
         else if (vramPeak >= 90)
         {
             severity = Math.Max(severity, 1);
-            findings.Add($"Ekran kartı belleği %{vramPeak:0}'e çıktı; sınıra yakın. Takılma olursa doku kalitesini bir kademe düşür.");
+            findings.Add(Loc.F("Ekran kartı belleği %{0:0}'e çıktı; sınıra yakın. Takılma olursa doku kalitesini bir kademe düşür.", vramPeak));
         }
 
         // 4c) Oyun HDD'de mi? (yükleme ve açık dünya akışında takılma yapar; SSD'ye taşımak çözer, FPS'i artırmaz)
         if (storage == DriveKind.Hdd)
         {
             severity = Math.Max(severity, 1);
-            findings.Add("Oyun yavaş bir HDD'de duruyor. Yüklemeleri ve açık dünyada akış takılmalarını yavaşlatır; oyunu SSD'ye taşımak çözer (FPS'i artırmaz).");
+            findings.Add(Loc.T("Oyun yavaş bir HDD'de duruyor. Yüklemeleri ve açık dünyada akış takılmalarını yavaşlatır; oyunu SSD'ye taşımak çözer (FPS'i artırmaz)."));
         }
 
         // 4d) Arka plandaki programlar: oyunla işlemci, disk ve belleği paylaşırlar (takılmanın sık görülen sebebi)
@@ -207,15 +208,15 @@ public sealed class GameSessionRecorder
         // 5) FPS ve takılma
         if (fpsAvg is { } f)
         {
-            var line = $"Ortalama {f:0} FPS" + (lowAvg is { } l ? $", en kötü %1'lik karelerde {l:0} FPS." : ".");
+            var line = $"Ortalama {f:0} FPS" + (lowAvg is { } l ? Loc.F(", en kötü %1'lik karelerde {0:0} FPS.", l) : ".");
             // 1% düşük 60 FPS'in üstündeyse oyun akıcıdır (ortalamadan uzak olsa bile); yalnızca gerçekten düşükse "takılma" denir.
             if (lowAvg is { } low && low < f * 0.6 && low < 60)
             {
                 severity = Math.Max(severity, 1);
-                line += " Takılma var: en kötü karelerin hızı ortalamanın çok altında.";
+                line += Loc.T(" Takılma var: en kötü karelerin hızı ortalamanın çok altında.");
             }
             else if (lowAvg is { } ok && ok >= 60)
-                line += " En kötü karelerde bile akıcı.";
+                line += Loc.T(" En kötü karelerde bile akıcı.");
             findings.Add(line);
         }
 
@@ -224,7 +225,7 @@ public sealed class GameSessionRecorder
         if (fpsAvg is { } fa && displayHz is { } hz && hz > 0 && fa >= hz * 1.15 && heated)
         {
             severity = Math.Max(severity, 1);
-            findings.Add($"Oyun ortalama {fa:0} FPS çalıştı ama ekran {hz} Hz. Ekranın gösteremeyeceği kareleri üretmek boşuna ısıtır. Oyunda FPS sınırını {hz}'e koyarsan ısı düşer, görüntü aynı kalır.");
+            findings.Add(Loc.F("Oyun ortalama {0:0} FPS çalıştı ama ekran {1} Hz. Ekranın gösteremeyeceği kareleri üretmek boşuna ısıtır. Oyunda FPS sınırını {2}'e koyarsan ısı düşer, görüntü aynı kalır.", fa, hz, hz));
         }
 
         // 5c) Isı yüksekse işlemci hızı sınırı önerisi: yalnızca oyunu ekran kartı/kare sınırı belirliyorsa FPS'i az etkiler
@@ -235,10 +236,10 @@ public sealed class GameSessionRecorder
             if (bottleneck is "gpu" or "other" && suggestMhz is { } sm)
             {
                 suggestedCap = sm;
-                findings.Add($"Öneri: bu oyun için işlemci hızını en çok {sm / 1000.0:0.0} GHz'e sınırla (aşağıdaki düğme). Oyunu ekran kartı sınırladığı için FPS neredeyse aynı kalır, ısı belirgin düşer. Sonraki oyunda rapor önceki oturumla karşılaştırır.");
+                findings.Add(Loc.F("Öneri: bu oyun için işlemci hızını en çok {0:0.0} GHz'e sınırla (aşağıdaki düğme). Oyunu ekran kartı sınırladığı için FPS neredeyse aynı kalır, ısı belirgin düşer. Sonraki oyunda rapor önceki oturumla karşılaştırır.", sm / 1000.0));
             }
             else if (bottleneck == "cpu")
-                findings.Add("Oyunu işlemci sınırladığı için işlemci hızını kısmak FPS'i düşürür. Önce soğutmayı düzeltmek (temizlik, macun, altlık) daha doğru.");
+                findings.Add(Loc.T("Oyunu işlemci sınırladığı için işlemci hızını kısmak FPS'i düşürür. Önce soğutmayı düzeltmek (temizlik, macun, altlık) daha doğru."));
         }
 
         // 5d) Aynı oyunun önceki oturumuyla karşılaştırma: bir ayarın işe yarayıp yaramadığı ölçülür
@@ -251,13 +252,13 @@ public sealed class GameSessionRecorder
         // 6) Neyin sınırladığı (karar vermeye yarar)
         findings.Add(bottleneck switch
         {
-            "gpu" => $"Bu oyunu ekran kartı sınırlıyor (ortalama %{gpuAvg:0} çalıştı). İşlemci hızını kısmak FPS'i az etkiler ama ısıyı belirgin düşürür.",
-            "cpu" => $"Ekran kartı ortalama %{gpuAvg:0} çalıştı; oyunu büyük olasılıkla işlemci sınırlıyor. İşlemci hızını kısmak FPS'i düşürür.",
-            "other" => "Ekran kartı ve işlemci tam yüklenmedi; kare sınırı (V-Sync / FPS sınırı) ya da oyunun kendisi sınırlıyor olabilir.",
-            _ => "Ekran kartı kullanımı okunamadı; oyunu neyin sınırladığı belirlenemedi.",
+            "gpu" => Loc.F("Bu oyunu ekran kartı sınırlıyor (ortalama %{0:0} çalıştı). İşlemci hızını kısmak FPS'i az etkiler ama ısıyı belirgin düşürür.", gpuAvg),
+            "cpu" => Loc.F("Ekran kartı ortalama %{0:0} çalıştı; oyunu büyük olasılıkla işlemci sınırlıyor. İşlemci hızını kısmak FPS'i düşürür.", gpuAvg),
+            "other" => Loc.T("Ekran kartı ve işlemci tam yüklenmedi; kare sınırı (V-Sync / FPS sınırı) ya da oyunun kendisi sınırlıyor olabilir."),
+            _ => Loc.T("Ekran kartı kullanımı okunamadı; oyunu neyin sınırladığı belirlenemedi."),
         });
 
-        if (severity == 0) findings.Insert(0, "Bu oyun boyunca belirgin bir sorun görülmedi.");
+        if (severity == 0) findings.Insert(0, Loc.T("Bu oyun boyunca belirgin bir sorun görülmedi."));
 
         return new GameSessionReport
         {
@@ -295,21 +296,21 @@ public sealed class GameSessionRecorder
     {
         var lines = new List<string>();
         string Advice(BackgroundItem i) => i.Kind == "launcher"
-            ? " Bu bir oyun başlatıcısı; oyun açıkken kapatma (oyun kapanabilir). İndirme ya da güncelleme varsa oyun sırasında duraklat."
+            ? Loc.T(" Bu bir oyun başlatıcısı; oyun açıkken kapatma (oyun kapanabilir). İndirme ya da güncelleme varsa oyun sırasında duraklat.")
             : i.Kind == "app"
             ? bottleneck switch
             {
-                "cpu" => " Oyunu işlemci sınırlıyor, bu yüzden FPS'i düşürmüş olabilir; oyundan önce kapat.",
-                "gpu" => " Oyunu ekran kartı sınırladığı için FPS'e etkisi az; yine de ısıyı azaltmak için oyundan önce kapatabilirsin.",
-                _ => " Oyundan önce kapatman iyi olur.",
+                "cpu" => Loc.T(" Oyunu işlemci sınırlıyor, bu yüzden FPS'i düşürmüş olabilir; oyundan önce kapat."),
+                "gpu" => Loc.T(" Oyunu ekran kartı sınırladığı için FPS'e etkisi az; yine de ısıyı azaltmak için oyundan önce kapatabilirsin."),
+                _ => Loc.T(" Oyundan önce kapatman iyi olur."),
             }
             : i.Name.ToLowerInvariant() switch
             {
-                "msmpeng" or "mpdefendercoreservice" => " Windows Defender oyun sırasında tarama yapmış; tarama saatini oyun saatlerinden uzağa almak Windows Güvenliği'nden yapılır (Pulse güvenlik ayarlarına dokunmaz).",
-                "tiworker" or "trustedinstaller" or "wuauclt" or "musnotification" => " Windows Update arka planda çalışıyor; Windows'un 'etkin saatler' ayarına oyun saatini yazarsan oyun sırasında çalışmaz.",
-                "searchindexer" or "searchhost" => " Windows arama dizinleyicisi çalışıyordu; kendiliğinden biter.",
-                "compattelrunner" => " Windows'un veri toplama işi çalışıyordu; kendiliğinden biter.",
-                _ => i.Kind == "system" ? " Windows/sürücü işi; genelde kendiliğinden biter." : " Oyun sırasında arka planda çalışıyordu.",
+                "msmpeng" or "mpdefendercoreservice" => Loc.T(" Windows Defender oyun sırasında tarama yapmış; tarama saatini oyun saatlerinden uzağa almak Windows Güvenliği'nden yapılır (Pulse güvenlik ayarlarına dokunmaz)."),
+                "tiworker" or "trustedinstaller" or "wuauclt" or "musnotification" => Loc.T(" Windows Update arka planda çalışıyor; Windows'un 'etkin saatler' ayarına oyun saatini yazarsan oyun sırasında çalışmaz."),
+                "searchindexer" or "searchhost" => Loc.T(" Windows arama dizinleyicisi çalışıyordu; kendiliğinden biter."),
+                "compattelrunner" => Loc.T(" Windows'un veri toplama işi çalışıyordu; kendiliğinden biter."),
+                _ => i.Kind == "system" ? Loc.T(" Windows/sürücü işi; genelde kendiliğinden biter.") : Loc.T(" Oyun sırasında arka planda çalışıyordu."),
             };
 
         var cpuItems = bg.Items
@@ -317,14 +318,14 @@ public sealed class GameSessionRecorder
             .OrderByDescending(i => i.CpuAvgPercent).Take(3).ToList();
         foreach (var i in cpuItems)
         {
-            lines.Add($"Arka planda {i.Display} oyun boyunca ortalama %{i.CpuAvgPercent:0.#} işlemci kullandı (en çok %{i.CpuPeakPercent:0}).{Advice(i)}");
+            lines.Add(Loc.F("Arka planda {0} oyun boyunca ortalama %{1:0.#} işlemci kullandı (en çok %{2:0}).{3}", i.Display, i.CpuAvgPercent, i.CpuPeakPercent, Advice(i)));
             if (i.Kind == "app" && i.CpuAvgPercent >= 8 && bottleneck == "cpu") severity = Math.Max(severity, 1);
         }
 
         if (lines.Count < 3)
         {
             foreach (var i in bg.Items.Where(i => i.DiskAvgMBps >= 10 && !cpuItems.Contains(i)).OrderByDescending(i => i.DiskAvgMBps).Take(3 - lines.Count))
-                lines.Add($"Arka planda {i.Display} oyun boyunca ortalama {i.DiskAvgMBps:0} MB/sn disk okuma/yazma yaptı. Oyun diskten veri akıtıyorsa takılma yapabilir.{(i.Kind == "app" ? " Oyundan önce kapatırsan disk oyuna kalır." : Advice(i))}");
+                lines.Add(Loc.F("Arka planda {0} oyun boyunca ortalama {1:0} MB/sn disk okuma/yazma yaptı. Oyun diskten veri akıtıyorsa takılma yapabilir.{2}", i.Display, i.DiskAvgMBps, i.Kind == "app" ? Loc.T(" Oyundan önce kapatırsan disk oyuna kalır.") : Advice(i)));
         }
 
         // Bellek: yalnızca bellek gerçekten daralmışken, büyük kapatılabilir programlar
@@ -332,11 +333,11 @@ public sealed class GameSessionRecorder
         {
             var big = bg.Items.Where(i => i.Kind == "app" && i.RamPeakMB >= 1000 && !cpuItems.Contains(i)).OrderByDescending(i => i.RamPeakMB).FirstOrDefault();
             if (big is not null)
-                lines.Add($"Bellek %{ramPeakPercent:0} dolmuşken {big.Display} arka planda yaklaşık {big.RamPeakMB / 1024:0.0} GB bellek tutuyordu. Oyundan önce kapatırsan bellek boşalır.");
+                lines.Add(Loc.F("Bellek %{0:0} dolmuşken {1} arka planda yaklaşık {2:0.0} GB bellek tutuyordu. Oyundan önce kapatırsan bellek boşalır.", ramPeakPercent, big.Display, big.RamPeakMB / 1024));
         }
 
         if (bg.TotalCpuAvgPercent >= 15 && lines.Count > 0)
-            lines.Add($"Arka plandaki programlar toplamda ortalama %{bg.TotalCpuAvgPercent:0} işlemci harcadı.");
+            lines.Add(Loc.F("Arka plandaki programlar toplamda ortalama %{0:0} işlemci harcadı.", bg.TotalCpuAvgPercent));
         return lines;
     }
 
@@ -344,14 +345,14 @@ public sealed class GameSessionRecorder
     public static string? Compare(GameSessionReport prev, double? tempAvg, double? mhzAvg, double? fpsAvg, int? cpuCapMhz)
     {
         var parts = new List<string>();
-        if (prev.CpuTempAvg is { } pt && tempAvg is { } ct) parts.Add($"ortalama ısı {pt:0} → {ct:0} °C");
-        if (prev.CpuMhzLoadedAvg is { } pm && mhzAvg is { } cm) parts.Add($"yük altı hız {pm / 1000:0.0} → {cm / 1000:0.0} GHz");
-        if (prev.AvgFps is { } pf && fpsAvg is { } cf) parts.Add($"ortalama FPS {pf:0} → {cf:0}");
+        if (prev.CpuTempAvg is { } pt && tempAvg is { } ct) parts.Add(Loc.F("ortalama ısı {0:0} → {1:0} °C", pt, ct));
+        if (prev.CpuMhzLoadedAvg is { } pm && mhzAvg is { } cm) parts.Add(Loc.F("yük altı hız {0:0.0} → {1:0.0} GHz", pm / 1000, cm / 1000));
+        if (prev.AvgFps is { } pf && fpsAvg is { } cf) parts.Add(Loc.F("ortalama FPS {0:0} → {1:0}", pf, cf));
         if (parts.Count == 0) return null;
         var capNote = prev.CpuCapMhz != cpuCapMhz
-            ? $" (işlemci sınırı: {(prev.CpuCapMhz is { } a ? a + " MHz" : "yok")} → {(cpuCapMhz is { } b ? b + " MHz" : "yok")})"
+            ? Loc.F(" (işlemci sınırı: {0} → {1})", prev.CpuCapMhz is { } a ? a + " MHz" : Loc.T("yok"), cpuCapMhz is { } b ? b + " MHz" : Loc.T("yok"))
             : "";
-        return $"Önceki oturuma göre ({prev.Start:d MMM}){capNote}: {string.Join(", ", parts)}.";
+        return Loc.F("Önceki oturuma göre ({0:d MMM}){1}: {2}.", prev.Start, capNote, string.Join(", ", parts));
     }
 
     private static double Percentile(List<double> values, double p)

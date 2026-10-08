@@ -1,3 +1,4 @@
+using Pulse.Core.Localization;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -13,7 +14,7 @@ public sealed class KeyCaptureWindow : Window
 
     public KeyCaptureWindow(string actionTitle)
     {
-        Title = "Kısayol ata";
+        Title = Loc.T("Kısayol ata");
         Width = 420; Height = 190;
         WindowStartupLocation = WindowStartupLocation.CenterOwner;
         ResizeMode = ResizeMode.NoResize;
@@ -25,7 +26,7 @@ public sealed class KeyCaptureWindow : Window
             Children =
             {
                 new TextBlock { Text = actionTitle, FontSize = 16, FontWeight = FontWeights.SemiBold },
-                new TextBlock { Text = "Şimdi atamak istediğin tuşa ya da kombinasyona bas (örn. Ctrl+Alt+G, F13, Pause). Esc: iptal.", TextWrapping = TextWrapping.Wrap, Margin = new Thickness(0, 8, 0, 0) },
+                new TextBlock { Text = Loc.T("Şimdi atamak istediğin tuşa ya da kombinasyona bas (örn. Ctrl+Alt+G, F13, Pause). Esc: iptal."), TextWrapping = TextWrapping.Wrap, Margin = new Thickness(0, 8, 0, 0) },
                 _hint,
             },
         };
@@ -51,7 +52,7 @@ public sealed class KeyCaptureWindow : Window
         var binding = new HotkeyBinding(mods, (uint)KeyInterop.VirtualKeyFromKey(key));
         if (!binding.IsValid)
         {
-            _hint.Text = $"“{binding}” olmaz: düz tuşlar her yazışta tetiklenir. Ctrl, Alt ya da Win ile birlikte bas (ya da F13-F24, Pause, Print Screen).";
+            _hint.Text = Loc.F("“{0}” olmaz: düz tuşlar her yazışta tetiklenir. Ctrl, Alt ya da Win ile birlikte bas (ya da F13-F24, Pause, Print Screen).", binding);
             return;
         }
         Result = binding;

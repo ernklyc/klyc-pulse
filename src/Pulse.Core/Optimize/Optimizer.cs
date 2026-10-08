@@ -1,3 +1,4 @@
+using Pulse.Core.Localization;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using Pulse.Core.Apps;
@@ -34,11 +35,11 @@ public sealed class Optimizer
     {
         var steps = new List<OptStep>();
 
-        progress?.Report("Önce ölçüm alınıyor…");
+        progress?.Report(Loc.T("Önce ölçüm alınıyor…"));
         var before = await Task.Run(Snapshot, ct);
 
         // 1) Zararsız temizlik
-        progress?.Report("Zararsız geçici dosyalar temizleniyor…");
+        progress?.Report(Loc.T("Zararsız geçici dosyalar temizleniyor…"));
         long cleaned = 0;
         try
         {
@@ -46,40 +47,40 @@ public sealed class Optimizer
             var results = await _engine.CleanAsync(categories, ct: ct);
             cleaned = results.Sum(r => r.FreedBytes);
             var skipped = results.Count(r => r.Note is not null);
-            steps.Add(new("Geçici dosyalar", true,
-                cleaned > 0 ? $"{Format(cleaned)} temizlendi" : "Temizlenecek bir şey yoktu" + (skipped > 0 ? $" ({skipped} kategori yönetici izni gerektirdiği için atlandı)" : "")));
+            steps.Add(new(Loc.T("Geçici dosyalar"), true,
+                cleaned > 0 ? $"{Format(cleaned)} temizlendi" : Loc.T("Temizlenecek bir şey yoktu") + (skipped > 0 ? Loc.F(" ({0} kategori yönetici izni gerektirdiği için atlandı)", skipped) : "")));
         }
-        catch (Exception ex) { steps.Add(new("Geçici dosyalar", false, ex.Message)); }
+        catch (Exception ex) { steps.Add(new(Loc.T("Geçici dosyalar"), false, ex.Message)); }
 
         // 2) Bellek rahatlatma
-        progress?.Report("Arka plandaki uygulamaların belleği rahatlatılıyor…");
+        progress?.Report(Loc.T("Arka plandaki uygulamaların belleği rahatlatılıyor…"));
         steps.Add(await Task.Run(TrimMemory, ct));
 
         // 3) Mod ayarlarını doğrula (başka bir araç bozmuş olabilir)
-        progress?.Report("Güç ve mod ayarları doğrulanıyor…");
+        progress?.Report(Loc.T("Güç ve mod ayarları doğrulanıyor…"));
         steps.Add(await VerifyModeAsync());
 
         // 4) Windows oyun ayarları
-        progress?.Report("Windows oyun ayarları denetleniyor…");
+        progress?.Report(Loc.T("Windows oyun ayarları denetleniyor…"));
         steps.Add(await Task.Run(() =>
         {
             var items = WindowsGameSettings.Read();
             var bad = items.Where(i => !i.IsGood).ToList();
             return bad.Count == 0
-                ? new OptStep("Windows oyun ayarları", true, "Hepsi uygun: " + string.Join(", ", items.Select(i => i.Name)))
-                : new OptStep("Windows oyun ayarları", false, "Düzeltilebilir: " + string.Join(", ", bad.Select(i => i.Name)));
+                ? new OptStep(Loc.T("Windows oyun ayarları"), true, "Hepsi uygun: " + string.Join(", ", items.Select(i => i.Name)))
+                : new OptStep(Loc.T("Windows oyun ayarları"), false, Loc.T("Düzeltilebilir: ") + string.Join(", ", bad.Select(i => i.Name)));
         }, ct));
 
         // 5) Açılış öğeleri
-        progress?.Report("Açılışta başlayan uygulamalar taranıyor…");
+        progress?.Report(Loc.T("Açılışta başlayan uygulamalar taranıyor…"));
         steps.Add(await Task.Run(() =>
         {
             var enabled = StartupManager.List().Where(s => s.Enabled).ToList();
-            return new OptStep("Açılış öğeleri", true,
-                $"{enabled.Count} uygulama Windows ile başlıyor. Gereksiz olanları Uygulamalar > Başlangıç'tan kapatabilirsin.");
+            return new OptStep(Loc.T("Açılış öğeleri"), true,
+                Loc.F("{0} uygulama Windows ile başlıyor. Gereksiz olanları Uygulamalar > Başlangıç'tan kapatabilirsin.", enabled.Count));
         }, ct));
 
-        progress?.Report("Sonra ölçüm alınıyor…");
+        progress?.Report(Loc.T("Sonra ölçüm alınıyor…"));
         await Task.Delay(400, ct);
         var after = await Task.Run(Snapshot, ct);
         Journal.Write($"Hızlandır: temizlenen {cleaned} bayt, RAM farkı {after.FreeRamBytes - before.FreeRamBytes} bayt.");
@@ -88,11 +89,11 @@ public sealed class Optimizer
 
     private async Task<OptStep> VerifyModeAsync()
     {
-        if (_modes is null || _modes.CurrentKey is not { } key) return new("Mod ayarları", true, "Henüz bir mod seçilmemiş, dokunulmadı.");
+        if (_modes is null || _modes.CurrentKey is not { } key) return new(Loc.T("Mod ayarları"), true, Loc.T("Henüz bir mod seçilmemiş, dokunulmadı."));
         var result = await _modes.ApplyAsync(key);
-        if (result is null) return new("Mod ayarları", true, "Başka bir işlem sürüyordu, atlandı.");
+        if (result is null) return new(Loc.T("Mod ayarları"), true, Loc.T("Başka bir işlem sürüyordu, atlandı."));
         var bad = result.Steps.Count(s => s.Status == StepStatus.Failed);
-        return new("Mod ayarları", bad == 0, bad == 0 ? $"{result.Mode.Title} modu yeniden uygulandı ve doğrulandı." : $"{bad} ayar doğrulanamadı.");
+        return new(Loc.T("Mod ayarları"), bad == 0, bad == 0 ? Loc.F("{0} modu yeniden uygulandı ve doğrulandı.", result.Mode.Title) : Loc.F("{0} ayar doğrulanamadı.", bad));
     }
 
     public static OptSnapshot Snapshot()
@@ -135,9 +136,9 @@ public sealed class Optimizer
         Thread.Sleep(700);
         var gained = AvailableRam() - before;
         return new OptStep("Bellek", true,
-            trimmed == 0 ? "Rahatlatılacak büyük arka plan uygulaması yok."
-            : gained >= 100L * 1024 * 1024 ? $"{trimmed} uygulamanın belleği rahatlatıldı, {Format(gained)} boşaldı (geçici: uygulamalar kullandıkça geri alır, hiçbiri kapanmadı)."
-            : $"{trimmed} uygulama denendi, fark küçük ({Format(Math.Max(gained, 0))}). Windows belleği zaten iyi yönetiyor.");
+            trimmed == 0 ? Loc.T("Rahatlatılacak büyük arka plan uygulaması yok.")
+            : gained >= 100L * 1024 * 1024 ? Loc.F("{0} uygulamanın belleği rahatlatıldı, {1} boşaldı (geçici: uygulamalar kullandıkça geri alır, hiçbiri kapanmadı).", trimmed, Format(gained))
+            : Loc.F("{0} uygulama denendi, fark küçük ({1}). Windows belleği zaten iyi yönetiyor.", trimmed, Format(Math.Max(gained, 0))));
     }
 
     // ---- Yardımcılar -------------------------------------------------------

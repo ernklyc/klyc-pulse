@@ -1,3 +1,4 @@
+using Pulse.Core.Localization;
 using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Controls;
@@ -61,7 +62,7 @@ public sealed class OverlayWindow : Window
         {
             lines.Add($"GPU {Fmt(g.UtilPercent, "0")}%  {g.CoreMhz} MHz  {g.TempC}°C  {(g.PowerW is { } w ? w.ToString("0") : "-")} W");
             if (g.VramTotalBytes is > 0) lines.Add($"GPU bellek {g.VramUsedBytes / 1073741824.0:0.0}/{g.VramTotalBytes / 1073741824.0:0.0} GB");
-            if (g.ThrottleText is { } tt) lines.Add("! " + tt);
+            if (g.ThrottleText is { } tt) lines.Add("! " + Loc.T(tt));
         }
         lines.Add($"RAM {s.RamUsedBytes / 1073741824.0:0.0}/{s.RamTotalBytes / 1073741824.0:0.0} GB");
         if (fpsLine is not null) lines.Insert(0, fpsLine);

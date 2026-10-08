@@ -1,3 +1,4 @@
+using Pulse.Core.Localization;
 using Pulse.Core.Automation;
 using Pulse.Core.Diagnostics;
 using Pulse.Core.Monitoring;
@@ -37,7 +38,7 @@ public sealed class GameReportService : IDisposable
 
         // Pilde oynamak FPS'i yarıya kadar düşürebilir: oyun başlarken bir kez uyar.
         if (PowerSource.IsOnAc() == false)
-            Dispatch(() => NoticeChip.Show("Pilde oynuyorsun. Prize takarsan FPS belirgin artar (pilde işlemci ve ekran kartı güç sınırına girer).", true));
+            Dispatch(() => NoticeChip.Show(Loc.T("Pilde oynuyorsun. Prize takarsan FPS belirgin artar (pilde işlemci ve ekran kartı güç sınırına girer)."), true));
     }
 
     private static void Dispatch(Action a) => System.Windows.Application.Current?.Dispatcher.BeginInvoke(a);
@@ -103,7 +104,7 @@ public sealed class GameReportService : IDisposable
 
             // Oyun sırasında Soğutma önceliğinin yumuşak acil freni devreye girdiyse raporda söyle
             if (brakeCount is > 0 and var brakes)
-                report.Findings.Add($"Oyun sırasında sıcaklık 95 °C'yi aştığı için işlemci hızı {brakes} kez küçük adımlarla kısıldı (donanımın ani kısmasını önlemek için). Bu, FPS'i hafifçe düşürmüş olabilir.");
+                report.Findings.Add(Loc.F("Oyun sırasında sıcaklık 95 °C'yi aştığı için işlemci hızı {0} kez küçük adımlarla kısıldı (donanımın ani kısmasını önlemek için). Bu, FPS'i hafifçe düşürmüş olabilir.", brakes));
 
             if (auto && profile is not null) RunAutoTune(profile, report, previous, cap);
 
@@ -132,14 +133,14 @@ public sealed class GameReportService : IDisposable
         if (cap is { } c && report.CpuMhzPeak is { } peak && peak > c * 1.12)
         {
             s.FreqCapSupported = false;
-            s.FreqCapNote = $"Oyun sırasında hız {peak:0} MHz'e çıktı ama sınır {c} MHz'di: bu bilgisayar sınırı uygulamıyor.";
+            s.FreqCapNote = Loc.F("Oyun sırasında hız {0:0} MHz'e çıktı ama sınır {1} MHz'di: bu bilgisayar sınırı uygulamıyor.", peak, c);
             profile.AutoTuneLocked = true;
-            Note(s.FreqCapNote + " Otomatik ayar durduruldu (Oyunlar sayfasından yeniden denenebilir).");
+            Note(s.FreqCapNote + Loc.T(" Otomatik ayar durduruldu (Oyunlar sayfasından yeniden denenebilir)."));
             return;
         }
         if (s.FreqCapSupported == false)
         {
-            Note("Bu bilgisayar işlemci hız sınırını uygulamıyor (denemede ölçüldü); otomatik ayar yapılmıyor.");
+            Note(Loc.T("Bu bilgisayar işlemci hız sınırını uygulamıyor (denemede ölçüldü); otomatik ayar yapılmıyor."));
             return;
         }
 
@@ -151,10 +152,10 @@ public sealed class GameReportService : IDisposable
         {
             if (PowerSource.IsOnAc() == false)
             {
-                Note("Frekans sınırı denemesi prizde yapılır; prize takılıyken bir sonraki oyundan sonra denenecek.");
+                Note(Loc.T("Frekans sınırı denemesi prizde yapılır; prize takılıyken bir sonraki oyundan sonra denenecek."));
                 return;
             }
-            Note("Bu bilgisayarda işlemci hız sınırının işe yarayıp yaramadığı ölçülüyor (~20 sn, işlemci tam yüklenir). Sonuç gelince ayar uygulanır.");
+            Note(Loc.T("Bu bilgisayarda işlemci hız sınırının işe yarayıp yaramadığı ölçülüyor (~20 sn, işlemci tam yüklenir). Sonuç gelince ayar uygulanır."));
             _ = Task.Run(async () =>
             {
                 var r = await FreqCapService.RunAsync();
@@ -165,7 +166,7 @@ public sealed class GameReportService : IDisposable
                     profile.CpuMaxMhz = d2.CapMhz; profile.AutoTuneLocked = d2.Locked; report.AutoTuneChanged = true;
                     Note(d2.Note);
                 }
-                else Note(r.Supported == true ? d2.Note : r.Note + (r.Supported == false ? " Otomatik ayar yapılmıyor." : " Sonraki oyundan sonra yeniden denenecek."));
+                else Note(r.Supported == true ? d2.Note : r.Note + (r.Supported == false ? Loc.T(" Otomatik ayar yapılmıyor.") : " Sonraki oyundan sonra yeniden denenecek."));
                 Publish(report);
             });
             return;

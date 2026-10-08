@@ -1,3 +1,4 @@
+using Pulse.Core.Localization;
 using System.Diagnostics;
 using Pulse.Core.Diagnostics;
 using Pulse.Core.Platform;
@@ -16,7 +17,7 @@ public sealed class UpdateService : IDisposable
     private int _busy;
 
     public UpdateInfo? Available { get; private set; }
-    public string Status { get; private set; } = "Henüz denetlenmedi.";
+    public string Status { get; private set; } = Loc.T("Henüz denetlenmedi.");
     public event Action? Changed;
 
     public static string CurrentText => Current.ToString(3);
@@ -51,16 +52,16 @@ public sealed class UpdateService : IDisposable
             else if (r.IsNewer && r.Latest is { } l)
             {
                 Available = l;
-                Status = $"Yeni sürüm var: {l.Version.ToString(3)} (şu an {CurrentText}).";
+                Status = Loc.F("Yeni sürüm var: {0} (şu an {1}).", l.Version.ToString(3), CurrentText);
                 Journal.Write($"Güncelleme denetimi: yeni sürüm {l.Tag}.");
                 if (!manual && s.DismissedUpdate != l.Tag)
                     System.Windows.Application.Current?.Dispatcher.BeginInvoke(() =>
-                        NoticeChip.Show($"Yeni sürüm var: KLYC-Pulse {l.Version.ToString(3)}.", false, () => App.OpenPage(typeof(Pages.HomePage))));
+                        NoticeChip.Show(Loc.F("Yeni sürüm var: KLYC-Pulse {0}.", l.Version.ToString(3)), false, () => App.OpenPage(typeof(Pages.HomePage))));
             }
             else
             {
                 Available = null;
-                Status = $"Güncelsin ({CurrentText}).";
+                Status = Loc.F("Güncelsin ({0}).", CurrentText);
             }
             AppServices.Settings.Save();
             Changed?.Invoke();

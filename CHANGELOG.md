@@ -2,6 +2,16 @@
 
 Biçim [Keep a Changelog](https://keepachangelog.com/tr/) esaslıdır; sürümleme [SemVer](https://semver.org/lang/tr/).
 
+## [1.8.0] — 2026-10-09
+
+### Eklenenler
+- **İngilizce arayüz (beta):** Ayarlar > Dil'den seçilir; "Otomatik" ise Windows Türkçe değilse İngilizce açılır. Menüler, başlıklar, açıklamalar, düğmeler, mod kartları, canlı durum, oyun raporu cümleleri, otomatik ayar notları, sağlık bulguları, temizlik kategorileri, uygulama/süreç/sürücü sayfaları, tur, tepsi menüsü ve bildirimler çevrildi (~890 metin). Sürücü adı gibi dışarıdan gelen teknik metinler özgün kalır. Dil değişikliği uygulamayı yeniden açınca geçerlidir. Çeviriler `src/Pulse.Core/Localization/*.tsv` dosyalarındadır; `loc-test` kaynak koddaki her çevrilen metnin ve XAML'deki her sabit metnin İngilizcesi olduğunu ve `{0}` yer tutucularının tuttuğunu denetler (CI'da çalışır).
+- **Destek:** Ayarlar'da "Bir kahve ısmarla" kartı ve GitHub "Sponsor" düğmesi (Buy Me a Coffee). Hiçbir özellik buna bağlı değil.
+
+### Değişenler
+- Dil, hiçbir servis kurulmadan en başta belirlenir (`Loc.ConfigureEarly`): statik metin dizileri ve ilk açılan pencereler doğru dilde oluşur. `KLYC_PULSE_LANG=en|tr` ortam değişkeni dili zorlar (sınama için).
+- Ekran kartı yük sayfası (`GpuLoad`) ve ısı denemesi 1.7.0'dan beri ortak; bu sürümde değişmedi.
+
 ## [1.7.1] — 2026-10-09
 
 ### Eklenenler

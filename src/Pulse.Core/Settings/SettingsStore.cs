@@ -1,3 +1,4 @@
+using Pulse.Core.Localization;
 using System.Text.Json;
 using Pulse.Core.Diagnostics;
 
@@ -19,6 +20,9 @@ public sealed class AppSettings
 
     /// <summary>Kullanıcı bildirim köşesini kendisi seçti mi? Seçmediyse varsayılan (sağ üst) uygulanır.</summary>
     public bool NoticeCornerChosen { get; set; }
+
+    /// <summary>Arayüz dili: "auto" (Windows Türkçeyse Türkçe, değilse İngilizce), "tr" ya da "en".</summary>
+    public string Language { get; set; } = "auto";
 
     /// <summary>Oyun açılınca FPS/ısı göstergesini kendiliğinden aç, oyun kapanınca kapat.</summary>
     public bool AutoOverlay { get; set; } = true;
@@ -90,7 +94,7 @@ public sealed class GameProfile
     public int? Brightness { get; set; }                // null = modun varsayılanı
     public bool Enabled { get; set; } = true;           // false = bu oyunda otomatik geçiş yapma
     public string? ExePath { get; set; }                // oyunun tam yolu (biliniyorsa); ekran kartı tercihi için
-    public bool HighPriority { get; set; } = true;      // oyun açılınca süreç önceliği "Yüksek"
+    public bool HighPriority { get; set; } = true;      // oyun açılınca süreç önceliği Loc.T("Yüksek")
     public int? CpuMaxMhz { get; set; }                 // oyun açıkken işlemcinin en yüksek hızı (MHz); null = sınırsız
     public bool AutoTune { get; set; } = true;          // bu oyun için kendi kendine ayar (raporlara bakıp işlemci sınırını dener/geri alır)
     public bool AutoTuneLocked { get; set; }            // ayar öğrenildi: artık değiştirilmez

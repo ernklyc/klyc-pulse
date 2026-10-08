@@ -1,3 +1,4 @@
+using Pulse.Core.Localization;
 using System.Windows;
 using Pulse.Core.Modes;
 using Wpf.Ui.Appearance;
@@ -41,6 +42,10 @@ public partial class App : Application
             return;
         }
 
+        // Arayüz dili (ayara ya da Windows diline göre); çeviri sözlüğü ve sabit metin çevirici
+        Pulse.Core.Localization.Loc.Configure(Environment.GetEnvironmentVariable("KLYC_PULSE_LANG") ?? AppServices.Settings.Current.Language);   // KLYC_PULSE_LANG: sınama için dili zorlar
+        Localizer.Install();
+
         base.OnStartup(e);
 
         // Beklenmeyen hatalar kapanmaya yol açmasın, günlüğe yazılsın.
@@ -66,7 +71,7 @@ public partial class App : Application
             t.Tick += (_, _) =>
             {
                 t.Stop();
-                NoticeChip.Show("Oyun raporu hazır: dikkat edilecek şeyler var.", true, () => { });
+                NoticeChip.Show(Loc.T("Oyun raporu hazır: dikkat edilecek şeyler var."), true, () => { });
                 var end = new System.Windows.Threading.DispatcherTimer { Interval = TimeSpan.FromSeconds(12) };
                 end.Tick += (_, _) => { end.Stop(); AppServices.Overlay.Set(false); Shutdown(); };
                 end.Start();
@@ -88,7 +93,7 @@ public partial class App : Application
 
         AppServices.Modes.Applied += OnModeApplied;
         AppServices.AutoClean.Completed += freed =>
-            _tray?.ShowBalloonTip(3000, "KLYC-Pulse", freed > 0 ? $"Otomatik temizlik: {freed / 1048576.0:N0} MB gereksiz dosya temizlendi." : "Otomatik temizlik çalıştı, temizlenecek bir şey yoktu.", System.Windows.Forms.ToolTipIcon.Info);
+            _tray?.ShowBalloonTip(3000, "KLYC-Pulse", freed > 0 ? Loc.F("Otomatik temizlik: {0:N0} MB gereksiz dosya temizlendi.", freed / 1048576.0) : Loc.T("Otomatik temizlik çalıştı, temizlenecek bir şey yoktu."), System.Windows.Forms.ToolTipIcon.Info);
 
         AppServices.Hotkeys.Message += text => Dispatcher.Invoke(() => _tray?.ShowBalloonTip(2000, "KLYC-Pulse", text, System.Windows.Forms.ToolTipIcon.Info));
         AppServices.Hotkeys.Enabled = AppServices.Settings.Current.Hotkeys;
@@ -122,8 +127,8 @@ public partial class App : Application
             if (overlayAutoOn) { overlayAutoOn = false; AppServices.Overlay.Set(false); }
         };
         AppServices.GameReport.Ready += r => Dispatcher.Invoke(() =>
-            NoticeChip.Show(r.AutoTuneChanged ? "Oyun raporu hazır. Otomatik ayar bu oyun için işlemci sınırını güncelledi (Oyunlar sayfası)."
-                : r.Severity == 0 ? "Oyun raporu hazır: sorun görülmedi." : "Oyun raporu hazır: dikkat edilecek şeyler var.", r.Severity > 0 && !r.AutoTuneChanged,
+            NoticeChip.Show(r.AutoTuneChanged ? Loc.T("Oyun raporu hazır. Otomatik ayar bu oyun için işlemci sınırını güncelledi (Oyunlar sayfası).")
+                : r.Severity == 0 ? Loc.T("Oyun raporu hazır: sorun görülmedi.") : Loc.T("Oyun raporu hazır: dikkat edilecek şeyler var."), r.Severity > 0 && !r.AutoTuneChanged,
             () => OpenPage(typeof(Pages.GamesPage))));
         AppServices.Companion.Start();
         AppServices.Keeper.Notice += text => Dispatcher.Invoke(() => _tray?.ShowBalloonTip(4000, "KLYC-Pulse", text, System.Windows.Forms.ToolTipIcon.Info));
@@ -178,20 +183,20 @@ public partial class App : Application
     {
         if (_trayMenu is null) return;
         _trayMenu.Items.Clear();
-        _trayMenu.Items.Add("KLYC-Pulse'ı aç", null, (_, _) => ShowWindow());
+        _trayMenu.Items.Add(Loc.T("KLYC-Pulse'ı aç"), null, (_, _) => ShowWindow());
         _trayMenu.Items.Add(new System.Windows.Forms.ToolStripSeparator());
 
         var current = AppServices.Modes.CurrentKey;
         foreach (var mode in Modes.All)
         {
             var key = mode.Key;
-            var item = new System.Windows.Forms.ToolStripMenuItem($"{mode.Title} modu") { Checked = key == current };
+            var item = new System.Windows.Forms.ToolStripMenuItem(Loc.F("{0} modu", Loc.T(mode.Title))) { Checked = key == current };
             item.Click += async (_, _) => await AppServices.Modes.ApplyAsync(key);
             _trayMenu.Items.Add(item);
         }
 
         _trayMenu.Items.Add(new System.Windows.Forms.ToolStripSeparator());
-        _trayMenu.Items.Add("Çıkış", null, (_, _) => ExitApp());
+        _trayMenu.Items.Add(Loc.T("Çıkış"), null, (_, _) => ExitApp());
     }
 
     private void OnModeApplied(ModeResult result)
@@ -200,7 +205,7 @@ public partial class App : Application
         _tray?.ShowBalloonTip(
             2500,
             "KLYC-Pulse",
-            bad == 0 ? $"{result.Mode.Title} modu uygulandı." : $"{result.Mode.Title} modu uygulandı, {bad} ayar doğrulanamadı.",
+            bad == 0 ? Loc.F("{0} modu uygulandı.", Loc.T(result.Mode.Title)) : Loc.F("{0} modu uygulandı, {1} ayar doğrulanamadı.", Loc.T(result.Mode.Title), bad),
             bad == 0 ? System.Windows.Forms.ToolTipIcon.Info : System.Windows.Forms.ToolTipIcon.Warning);
     }
 

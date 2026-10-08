@@ -21,7 +21,7 @@ Every setting it applies is read back to confirm it really took effect.
 
 ---
 
-> **Note:** the app UI is currently **Turkish only**. This README is a full English description of the project; localisation contributions are welcome.
+> **Language:** the app is Turkish by default and has an **English (beta)** interface: Windows in a language other than Turkish starts in English automatically, or choose it in *Settings → Language*. Menus, descriptions, reports and most messages are translated; a few technical details (such as driver names) stay in their original form. Translations live in `src/Pulse.Core/Localization/*.tsv`; corrections are welcome.
 
 ## Contents
 
@@ -64,9 +64,9 @@ Get one file from the **[Releases](https://github.com/ernklyc/klyc-pulse/release
 
 | File | Size | When |
 |---|---|---|
-| `KLYC-Pulse-Setup-v1.7.1.exe` | ~80 MB | **Recommended.** Double-click to install: Start menu and desktop shortcut, removable from "Apps". Nothing else to install, no admin rights needed to install |
-| `KLYC-Pulse-v1.7.1-win-x64.zip` | ~11 MB (zip) | If the [.NET 8 Desktop Runtime](https://dotnet.microsoft.com/download/dotnet/8.0) is installed |
-| `KLYC-Pulse-v1.7.1-win-x64-self-contained.zip` | ~68 MB (zip) | If you don't want to install anything (runtime included) |
+| `KLYC-Pulse-Setup-v1.8.0.exe` | ~80 MB | **Recommended.** Double-click to install: Start menu and desktop shortcut, removable from "Apps". Nothing else to install, no admin rights needed to install |
+| `KLYC-Pulse-v1.8.0-win-x64.zip` | ~11 MB (zip) | If the [.NET 8 Desktop Runtime](https://dotnet.microsoft.com/download/dotnet/8.0) is installed |
+| `KLYC-Pulse-v1.8.0-win-x64-self-contained.zip` | ~68 MB (zip) | If you don't want to install anything (runtime included) |
 
 **With the installer:** run it, then open "KLYC-Pulse" from the Start menu (the app itself asks for administrator rights). Uninstalling keeps your settings and history (`%LOCALAPPDATA%\Pulse`), so a reinstall picks up where you left off; delete that folder by hand if you want them gone.
 
@@ -79,7 +79,7 @@ Get one file from the **[Releases](https://github.com/ernklyc/klyc-pulse/release
 > **Windows SmartScreen / antivirus warning:** the app is not code-signed yet, so an "Unknown publisher" warning may appear. Compare the SHA-256 hash with `SHA256SUMS.txt` on the release page, or build from source yourself.
 
 ```powershell
-Get-FileHash .\KLYC-Pulse-v1.7.1-win-x64.zip -Algorithm SHA256
+Get-FileHash .\KLYC-Pulse-v1.8.0-win-x64.zip -Algorithm SHA256
 ```
 
 ## First use

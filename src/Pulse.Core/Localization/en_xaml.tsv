@@ -1,0 +1,202 @@
+# Türkçe<TAB>English (XAML sabit metinleri). Satır sonu için \n yazılır.
+KLYC-Pulse	KLYC-Pulse
+Ana ekran	Home
+Oyunlar	Games
+Temizlik	Cleanup
+Süreçler	Processes
+Uygulamalar	Apps
+Sağlık	Health
+İzleme	Monitor
+Sürücüler	Drivers
+Araçlar	Tools
+Dizüstü	Laptop
+Ayarlar	Settings
+UYGULAMALAR	APPS
+Hangi uygulama ne yapıyor?	What is each app doing?
+Programlarını güncelle, gereksizleri kaldır, bilgisayar açılınca hangilerinin başlayacağına sen karar ver.	Update your programs, remove the unneeded ones, and decide which start with the computer.
+Yenile	Refresh
+Tümünü güncelle	Update all
+Güncelle	Update
+Uygulama ara…	Search apps…
+Kaldır	Remove
+Kapattıkların bilgisayar açılınca başlamaz. Hiçbir şey silinmez, istediğin an yeniden açarsın.	Apps you turn off won't start with the computer. Nothing is deleted; you can turn them back on any time.
+TEMİZLİK	CLEANUP
+Gereksizi bul, güvenle temizle.	Find the junk, clean it safely.
+Yalnızca zaten yeniden oluşan dosyalar silinir. Biraz riskli olanlar silinmeden önce 7 gün ayrı bir yerde bekler, pişman olursan geri alırsın.	Only files that are recreated anyway are deleted. Slightly riskier ones wait 7 days in a separate place before deletion, so you can undo it if you change your mind.
+Tara	Scan
+Seçilenleri temizle	Clean selected
+KATEGORİLER	CATEGORIES
+Hepsini geri getir	Restore all
+Kalıntıları bul	Find leftovers
+ESKİ KALINTILAR	OLD LEFTOVERS
+Seçilenleri Geri Dönüşüm Kutusu'na gönder	Send selected to the Recycle Bin
+Kopyaları bul	Find duplicates
+KOPYA DOSYALAR	DUPLICATE FILES
+Fazlalıkları seç	Select extras
+GERİ YÜKLEME NOKTALARI	RESTORE POINTS
+Windows'ta aç	Open in Windows
+Bilgisayarı eski haline döndürmek için “Windows'ta aç”a bas. Windows'un kendi penceresi açılır, geri dönüşü orada sen başlatırsın.	To roll the computer back, press “Open in Windows”. Windows' own window opens and you start the rollback there.
+Disk analizi	Disk analysis
+DİSKİ NE DOLDURUYOR	WHAT IS FILLING THE DISK
+SÜRÜCÜLER	DRIVERS
+Güncel mi, eski mi?	Up to date or old?
+BIOS ve sürücülerin sürümleri. Taramak hiçbir şey indirmez, kurmak her zaman senin kararın.	BIOS and driver versions. Scanning downloads nothing; installing is always your decision.
+NVIDIA App	NVIDIA App
+BIOS VE EKRAN KARTI	BIOS AND GRAPHICS CARD
+YENİ SÜRÜCÜ VAR MI?	IS THERE A NEW DRIVER?
+Windows Update'i aç	Open Windows Update
+Windows Update'te ara	Search in Windows Update
+KURULU SÜRÜCÜLER	INSTALLED DRIVERS
+OYUNLAR	GAMES
+Her oyuna kendi ayarı.	A setting for each game.
+Hangi oyun açılınca hangi mod uygulansın, sen seç. Oyunu kapatınca eski moduna döner.	Choose which mode applies when each game starts. When you close the game it goes back to the previous mode.
+Oyun açılınca modu kendiliğinden değiştir	Switch the mode automatically when a game starts
+Kapalıyken hiçbir şey değişmez. Oyunlar ilk açıldığında aşağıdaki listeye kendiliğinden eklenir.	When off, nothing changes. Games are added to the list below automatically the first time they run.
+Oyun ekle…	Add game…
+Oyunlara göre kendini ayarla	Tune itself per game
+Her oyunu oynadıkça Pulse raporu inceler: işlemci çok ısınıyor ve oyunu ekran kartı sınırlıyorsa işlemci hızını bir kademe düşürmeyi dener, sonraki oyunda FPS ve ısıyı ölçer. FPS belirgin düşerse geri alır ve o oyun için kilitler. Sen hiçbir şey yapmadan öğrenir.	After each game, Pulse reviews the report: if the CPU gets very hot and the graphics card is what limits the game, it tries lowering the CPU speed one step, then measures FPS and temperature in the next game. If FPS drops noticeably it reverts and locks that game. It learns without you doing anything.
+Şimdi dene	Try now
+SON OYUN RAPORU	LAST GAME REPORT
+Henüz rapor yok. Bir oyunu en az 2 dakika oynayıp kapatınca burada kasma/ısı/bellek durumu sade dille görünür.	No report yet. After you play a game for at least 2 minutes and close it, stutter, heat and memory status appear here in plain language.
+WINDOWS'UN OYUN AYARLARI	WINDOWS GAME SETTINGS
+Düzelt	Fix
+OYUN PROFİLLERİ	GAME PROFILES
+Henüz oyun görmedim. Bir oyun açınca burada kendiliğinden belirir. İstersen “Oyun ekle…” ile oyunun .exe dosyasını seçip elle de ekleyebilirsin.	I haven't seen any game yet. When you open one it appears here automatically. You can also add a game by choosing its .exe file with “Add game…”.
+NVIDIA'da çalıştır	Run on NVIDIA
+OTOMATİK AYAR	AUTO-TUNE
+AÇIK	ON
+MOD	MODE
+EKRAN HIZI (HZ)	REFRESH RATE (HZ)
+İŞLEMCİ HIZI	CPU SPEED
+SAĞLIK	HEALTH
+Bilgisayarının sağlık raporu.	Your computer's health report.
+Pil, ısı, fan ve disk nasıl? Sorun varsa sade bir dille söyler.	How are the battery, heat, fan and disk? It tells you in plain language if something is wrong.
+GENEL DURUM	OVERALL STATUS
+CANLI ÖLÇÜMLER	LIVE READINGS
+İŞLEMCİ	CPU
+EKRAN KARTI	GRAPHICS CARD
+FAN	FAN
+PİL	BATTERY
+BULGULAR	FINDINGS
+Uygula	Apply
+● AKTİF	● ACTIVE
+ANA EKRAN	HOME
+Şimdi ne yapacaksın?	What will you do now?
+Bir mod seç. Pulse bilgisayarı ona göre ayarlar ve ayarın gerçekten tuttuğunu kontrol eder.	Pick a mode. Pulse sets the computer up for it and checks that the setting really held.
+Sürüm notları ve indir	Release notes and download
+Daha sonra	Later
+Anladım	Got it
+KLYC-Pulse'a hoş geldin	Welcome to KLYC-Pulse
+Oyun oynayacaksan Oyun, günlük iş için Günlük, sessiz ve serin çalışsın istersen Sessiz modunu seç. Pulse hızı, fanı, ekranı ve gücü senin yerine ayarlar. Diğer her şey soldaki menüde. Sormadan hiçbir şeyi silmez.	Pick Game to play, Daily for everyday work, or Quiet if you want it quiet and cool. Pulse adjusts speed, fan, screen and power for you. Everything else is in the menu on the left. It never deletes anything without asking.
+CANLI DURUM	LIVE STATUS
+BELLEK	MEMORY
+Hızlandır	Speed up
+Tek tuşla hızlandır	One-click speed up
+Gereksiz geçici dosyaları siler, belleği boşaltır ve ayarları kontrol eder. Sonunda ne kazandığını gösterir.	Deletes unneeded temporary files, frees memory and checks the settings. Shows what you gained at the end.
+Parlaklığı da ayarla	Adjust brightness too
+MODLAR	MODES
+DİZÜSTÜ	LAPTOP
+Pil, klavye, ekran kartı ve kısayollar.	Battery, keyboard, graphics card and shortcuts.
+Donanıma özel işler burada: pil sınırı, klavye ışığı, ekran kartı hızlandırma ve kısayollar.	Hardware-specific things are here: battery limit, keyboard light, graphics card boost and shortcuts.
+Bu bilgisayarda üretici donanım sürücüsü (ASUS) bulunamadı; pil sınırı ve klavye ışığı kullanılamaz. Diğer özellikler çalışır.	The manufacturer's hardware driver (ASUS) was not found on this computer; battery limit and keyboard light are unavailable. Other features work.
+PİL ŞARJ SINIRI	BATTERY CHARGE LIMIT
+Pil en fazla şu kadar dolsun	Charge the battery to at most
+Bilgisayarı hep prizde kullanıyorsan %60-80 seçmek pilin ömrünü uzatır. Seçimin kaydedilir, her açılışta yeniden uygulanır.	If you keep the laptop plugged in all the time, choosing 60-80% extends battery life. Your choice is saved and re-applied at every start.
+KLAVYE IŞIĞI	KEYBOARD LIGHT
+Işık parlaklığı	Light brightness
+Seçtiğin parlaklık ayarlanır ve gerçekten değiştiği kontrol edilir.	The brightness you choose is applied and checked that it really changed.
+EKRAN KARTINI HIZLANDIR	BOOST THE GRAPHICS CARD
+Otomatik bul (≈2 dk)	Find automatically (≈2 min)
+Ekran kartını biraz daha hızlı çalıştır	Run the graphics card a bit faster
+Sadece Oyun modunda uygulanır. Kalıcı değildir: başka moda geçince ya da bilgisayarı yeniden başlatınca eski hızına döner. Sayılar “çekirdek / bellek” hız artışıdır (MHz).	Applies only in Game mode. Not permanent: it returns to the old speed when you switch to another mode or restart. The numbers are the “core / memory” speed increase (MHz).
+KLAVYE RENGİ	KEYBOARD COLOR
+Renk	Color
+HIZ (Nefes, Renk döngüsü ve Gökkuşağı için)	SPEED (for Breathing, Color cycle and Rainbow)
+KISAYOLLAR	SHORTCUTS
+Klavye kısayollarıyla kullan	Use with keyboard shortcuts
+Bu bilgisayarda Fn tuşlarını ASUS yalnızca kendi programına veriyor, Pulse göremiyor (denedik). Onun yerine istediğin başka bir tuşu ata: Ctrl+Alt+bir harf, F13-F24, Pause, Print Screen gibi.	On this computer ASUS gives the Fn keys only to its own program, so Pulse cannot see them (we tried). Assign another key instead: Ctrl+Alt+a letter, F13-F24, Pause, Print Screen, and so on.
+Değiştir	Change
+Sil	Delete
+G-HELPER'I KAPAT	TURN OFF G-HELPER
+Pulse tek başına yönetsin	Let Pulse manage on its own
+G-Helper'ı kapatır, bilgisayar açılınca başlamasını engeller ve Armoury Crate'in gereksiz arka plan programlarını durdurur. Hiçbir şey silinmez, “Geri al” ile her şey eski haline döner.	Closes G-Helper, stops it from starting with the computer and stops Armoury Crate's unnecessary background programs. Nothing is deleted; “Undo” restores everything.
+Kontrol et	Check
+Geri al	Undo
+G-Helper'ı kapat	Close G-Helper
+Bilerek dokunulmayanlar: ASUSOptimization ve ASUSSwitch. Bunlar fan ve donanım tuşlarına bakıyor; kapatırsak Fn tuşları bozulabilir.	Deliberately left alone: ASUSOptimization and ASUSSwitch. They handle the fan and hardware keys; turning them off could break the Fn keys.
+İZLEME	MONITOR
+Şu an ne oluyor?	What's happening now?
+İşlemci, ekran kartı, bellek ve fan şu an nasıl? Bir şey yavaşlıyorsa nedenini söyler.	How are the CPU, graphics card, memory and fan right now? If something is slowing down, it tells you why.
+DURUM	STATUS
+EKRAN KARTI BELLEĞİ	GRAPHICS MEMORY
+OYUN SIRASINDA EKRANDA GÖSTER	SHOW ON SCREEN DURING GAMES
+Ekranın köşesinde sıcaklık ve kare hızını göster	Show temperature and frame rate in a corner of the screen
+Ctrl+Alt+O ile de açılıp kapanır. Oyunun içine karışmaz, Valorant'ın Vanguard'ı gibi korumalarla sorun çıkarmaz. Oyun “kenarlıksız” ya da “pencereli” modda olmalı; “tam ekran”da görünmeyebilir.	Also toggled with Ctrl+Alt+O. It doesn't touch the game, so it doesn't trigger anti-cheats like Valorant's Vanguard. The game must be in “borderless” or “windowed” mode; it may not show in “fullscreen”.
+KÖŞE	CORNER
+SÜREÇLER	PROCESSES
+Kim ne kadar yiyor?	Who is using how much?
+Her programın ne kadar işlemci ve bellek yediği. İstediğini kapatabilir, önemini (öncelik) ayarlayabilir ya da “Eko” ile kısabilirsin. Windows'un kendi programları korumalıdır, onları kapatamazsın.	How much CPU and memory each program uses. You can close any of them, set its priority, or throttle it with “Eco”. Windows' own programs are protected and can't be closed.
+Program ara…	Search programs…
+Korumalıları göster	Show protected
+KORUMALI	PROTECTED
+Eko: programı kısar. Bilgisayar daha az ısınır, fan daha az ses çıkarır.	Eco: throttles the program. The computer heats up less and the fan is quieter.
+Eko	Eco
+Kapat	Close
+AYARLAR	SETTINGS
+Pulse nasıl davransın?	How should Pulse behave?
+Değişiklikler anında kaydedilir.	Changes are saved instantly.
+OTOMATİK MOD	AUTOMATIC MODE
+Oyun açılınca Oyun moduna geç	Switch to Game mode when a game starts
+Oyunu kapatınca eski moduna döner. Sen elle bir mod seçtiysen ona karışmaz.	When you close the game it returns to the previous mode. If you picked a mode by hand, it leaves it alone.
+Fişi çekince Sessiz moda geç	Switch to Quiet mode when unplugged
+Pilde daha az ısınır, fan daha az ses çıkarır, pil daha uzun gider.	On battery it runs cooler, the fan is quieter and the battery lasts longer.
+ISI BEKÇİSİ	THERMAL GUARD
+Çok ısınırsa kendiliğinden serinlet	Cool down automatically if it gets too hot
+Bilgisayar tehlikeli derecede sıcak kalırsa (işlemci 97 °C, ekran kartı 90 °C üstünde, 10 saniye) önce haber verir, sonra Sessiz moda geçer. 1 dakika serin kalınca eski moduna döner. Kısa süreli ısınmalar (oyun yüklenirken) alarm vermez.	If the computer stays dangerously hot (CPU above 97 °C or graphics card above 90 °C for 10 seconds) it first warns you, then switches to Quiet mode. After 1 minute of staying cool it returns to the previous mode. Brief spikes (while a game loads) don't trigger it.
+SOĞUTMA ÖNCELİĞİ	COOLING PRIORITY
+Önce soğut, sonra yavaşlat	Cool first, then slow down
+Sıcaklık uzun süre yüksek kalırsa (88 °C üstü) önce fan desteği açılır (fan devri artar). Fan yetmezse (93 °C üstü) işlemci hızı küçük adımlarla düşürülür; serinleyince eski haline döner. Oyun modunda işlemciyi kısmaz, yalnız fanı destekler. Fan desteği şu an yalnızca ASUS dizüstülerde var. İşlemci sıcaklığı için Pulse yönetici olarak çalışmalı.	If the temperature stays high for a while (above 88 °C), fan boost turns on first (fan speed goes up). If the fan isn't enough (above 93 °C), the CPU speed is lowered in small steps and restored when it cools. In Game mode it never throttles the CPU, it only boosts the fan. Fan boost is currently only on ASUS laptops. Pulse must run as administrator to read the CPU temperature.
+SICAKLIK SINIRI	TEMPERATURE LIMIT
+Bilgisayarı şu sıcaklığın altında tutmaya çalış	Try to keep the computer below this temperature
+OTOMATİK TEMİZLİK	AUTOMATIC CLEANUP
+Haftada bir gereksiz dosyaları kendiliğinden sil	Delete junk files automatically once a week
+Yalnızca 2 günden eski geçici dosyalar ve eski hata raporları. Belgelerine, oyunlarına, indirdiklerine ve geri dönüşüm kutusuna dokunmaz.	Only temporary files older than 2 days and old error reports. It doesn't touch your documents, games, downloads or the Recycle Bin.
+BAŞKA PROGRAMLARLA ÇAKIŞMA	CONFLICT WITH OTHER PROGRAMS
+Başka bir program ayarı bozarsa düzelt	Fix it if another program breaks a setting
+G-Helper, Armoury Crate gibi programlar güç ayarını değiştirirse Pulse bunu dakikada bir kontrol eder ve seçtiğin modun ayarını geri yazar. Bu sayede başka bir programı açık unutsan bile Oyun modun bozulmaz.	If programs like G-Helper or Armoury Crate change the power settings, Pulse checks every minute and writes your chosen mode's settings back. That way your Game mode isn't broken even if you leave another program open.
+Mod seçerken G-Helper ve Armoury Crate açıksa kapat	Close G-Helper and Armoury Crate when choosing a mode, if they are open
+İkisi de kendi ayarını uygulayıp senin seçtiğin modu bozabilir. Birini kullanmıyorsan bunu açık tut.	Both can apply their own settings and break the mode you picked. If you don't use one of them, keep this on.
+Şimdi kapat	Close now
+UYGULAMA	APP
+Bilgisayar açılınca Pulse de açılsın	Start Pulse with Windows
+Pencere açmadan, sağ alttaki simge olarak başlar. İzin de sormaz.	Starts as a tray icon at the bottom right without opening a window. It doesn't ask for permission either.
+Pencereyi kapatınca Pulse arka planda çalışmaya devam etsin	Keep Pulse running in the background when the window is closed
+Kapalıysa pencereyi kapatmak Pulse'ı tamamen kapatır.	When off, closing the window quits Pulse completely.
+GÖRÜNÜM VE BİLDİRİMLER	APPEARANCE AND NOTIFICATIONS
+Oyun açılınca FPS ve ısı göstergesini kendiliğinden aç	Show the FPS and heat indicator automatically when a game starts
+Oyun kapanınca kendiliğinden kapanır. Görünmüyorsa oyunun görüntü ayarında “Tam ekran” yerine “Kenarlıksız pencere” seç.	It turns off by itself when the game closes. If you can't see it, choose “Borderless window” instead of “Fullscreen” in the game's display settings.
+Bildirimler ekranın hangi köşesinde çıksın	Which corner of the screen should notifications appear in
+Oyun içindeki uyarılar tıklamayı geçirir, oyuna karışmaz. Oyun bittikten sonra çıkan bildirimlere (rapor, yeni sürüm) tıklayınca ilgili sayfa açılır.	Warnings during a game let clicks pass through and don't interfere with the game. Clicking notifications that appear after the game (report, new version) opens the relevant page.
+Turu göster	Show the tour
+Ayar klasörünü aç	Open settings folder
+Ayarların güncellemede silinmez; her kayıtta otomatik yedeği alınır.	Your settings are not deleted on update; an automatic backup is made at every save.
+GÜNCELLEMELER	UPDATES
+Yeni sürüm var mı diye kendiliğinden bak	Automatically check for a new version
+Günde en fazla bir kez GitHub'a bağlanıp en son sürüm numarasını sorar. Hiçbir şey indirmez ya da kurmaz, kişisel bilgi göndermez. Kapatırsan hiç bağlanmaz.	At most once a day it connects to GitHub and asks for the latest version number. It downloads or installs nothing and sends no personal information. If you turn it off it never connects.
+Şimdi denetle	Check now
+Sürüm sayfasını aç	Open release page
+DESTEK	SUPPORT
+Bir kahve ısmarla ☕	Buy me a coffee ☕
+KLYC-Pulse ücretsiz ve açık kaynak	KLYC-Pulse is free and open source
+İşine yaradıysa bir kahve ısmarlayarak geliştirmeye destek olabilirsin. Zorunlu değil; hiçbir özellik buna bağlı değil.	If it was useful, you can support development by buying me a coffee. It's optional; no feature depends on it.
+Donanım ayarlarını değiştirir; kendi sorumluluğunda kullan. Sorun olursa Kendini sınama kısayoluyla sonuç dosyası alabilirsin.	It changes hardware settings; use it at your own risk. If something goes wrong you can get a result file with the Self-test shortcut.
+ARAÇLAR	TOOLS
+Hepsi tek yerden, birlikte.	All in one place, together.
+Her etiket bir özelliğin nasıl yapıldığını söyler: VAR = Pulse kendisi yapıyor. ORTAK = Pulse diğer programı arka planda kullanarak yapıyor. Normalde hiçbirini açmana gerek yok, Pulse tek başına yeter. Diğer programları kapatırsan silinmez, geri açılır.	Each label says how a feature is done: YES = Pulse does it itself. SHARED = Pulse does it by using the other program in the background. Normally you don't need to open any of them, Pulse is enough on its own. If you close the other programs nothing is deleted; they can be reopened.
+Oyun modunu seçince ne olur?	What happens when you pick Game mode?
+Pulse tek başına her şeyi yapar: ASUS Turbo profili, işlemci ek hızı, ekran hızı, parlaklık ve (istersen) ekran kartı hızlandırma. Her adımın tutup tutmadığını da kontrol eder.	Pulse does everything by itself: ASUS Turbo profile, CPU boost, refresh rate, brightness and (if you want) graphics card boost. It also checks that every step held.
+Aşağıdaki programlardan hiçbirini kendiliğinden açmaz. G-Helper, Afterburner ya da ThrottleStop yalnızca sen “birlikte aç” anahtarını açarsan ve bir mod için profil seçersen devreye girer. Bu bilgisayarda hiçbirine ihtiyacın yok: onların yapabildiği her şeyi Pulse zaten yapıyor, yapılamayanlar da (işlemci voltajı, fan hızı) o programlarla da yapılamıyor.	It never opens any of the programs below on its own. G-Helper, Afterburner or ThrottleStop only come into play if you turn on the “open together” switch and choose a profile for a mode. You don't need any of them on this computer: Pulse already does everything they can, and what can't be done (CPU voltage, fan speed) can't be done with those programs either.
+Bir program Pulse'ın ayarını bozarsa Pulse bunu dakikada bir kontrol eder ve geri düzeltir (Ayarlar > Başka programlarla çakışma).	If a program breaks Pulse's setting, Pulse checks every minute and fixes it back (Settings > Conflict with other programs).
+Geri	Back
+İleri	Next
+Turu atla	Skip the tour
