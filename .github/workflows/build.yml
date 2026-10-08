@@ -1,0 +1,27 @@
+name: build
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+      - name: Derle
+        run: dotnet build Pulse.sln -c Release
+      - name: Mantık testleri (donanıma dokunmaz)
+        shell: pwsh
+        run: |
+          $tests = 'guard-test','governor-test','hotkey-test','winget-parse-test','autoclean-test','cleanup-test','uninstall-parse-test'
+          $failed = @()
+          foreach ($t in $tests) {
+            dotnet run --project src/Pulse.Cli -c Release --no-build -- $t
+            if ($LASTEXITCODE -ne 0) { $failed += $t }
+          }
+          if ($failed) { Write-Error "Kalan testler: $($failed -join ', ')"; exit 1 }
