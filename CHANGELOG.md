@@ -2,6 +2,12 @@
 
 Biçim [Keep a Changelog](https://keepachangelog.com/tr/) esaslıdır; sürümleme [SemVer](https://semver.org/lang/tr/).
 
+## [1.5.0] — 2026-10-09
+
+### Eklenenler
+- **Soğutma önceliği ("önce soğut, sonra yavaşlat"):** Sıcaklık uzun süre yüksek kalırsa (88 °C üstü, 15 sn) önce **fan desteği** açılır (ASUS Turbo profili; bu bilgisayarda aynı yükte fan devri %14 arttı: 4900 → 5600). Fan yetmezse (93 °C üstü, 40 sn) işlemci hızı kademeli düşürülür; serinleyince aynı yoldan geri döner. Oyun modunda işlemciyi kısmaz (yalnız fan). Ayarlar'dan kapatılır. Isı bekçisi (97 °C) son çare olarak çalışmaya devam eder.
+- Windows "sistem soğutma ilkesi" (varsa): Oyun/Günlük modunda Etkin (önce fan), Sessiz/Boşta modunda Pasif.
+
 ## [1.4.0] — 2026-10-09
 
 ### Eklenenler

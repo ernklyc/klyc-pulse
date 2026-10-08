@@ -64,6 +64,21 @@ public sealed class ModeController : IDisposable
         }
     }
 
+    /// <summary>Fan desteğini açar/kapatır (mod uygulanıyorsa atlanır). Sonucu döner; atlandıysa null.</summary>
+    public async Task<StepResult?> SetFanBoostAsync(bool on)
+    {
+        if (CurrentKey is not { } key || DefinitionFor(key) is not { } def) return null;
+        if (!await _gate.WaitAsync(0)) return null;
+        try
+        {
+            var r = await Task.Run(() => _engine.SetFanBoost(def, on));
+            Journal.Write($"Fan desteği {(on ? "açıldı" : "kapatıldı")}: {r.Detail}");
+            return r;
+        }
+        catch (Exception ex) { Journal.Write("Fan desteği hatası: " + ex.Message); return null; }
+        finally { _gate.Release(); }
+    }
+
     private ModeOptions Options() => new() { ChangeBrightness = _settings.Current.ChangeBrightness, GpuOcCore = _settings.Current.GpuOcCore ?? 0, GpuOcMem = _settings.Current.GpuOcMem ?? 0 };
 
     /// <summary>Açılışta: ekran kartı ayarları yeniden başlatmada sıfırlandığı için seçili modun GPU adımlarını yeniden uygular.</summary>

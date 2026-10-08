@@ -16,6 +16,8 @@ public static class Powercfg
     public const string MaxFrequency = "75b0ae3f-bce0-45a7-8c89-c9611c25e100";
     /// <summary>Aynı ayar, "verimlilik sınıfı 1" (hibrit Intel 12. nesil+ işlemcilerde performans çekirdekleri). Hibrit olmayanlarda etkisizdir.</summary>
     public const string MaxFrequencyClass1 = "75b0ae3f-bce0-45a7-8c89-c9611c25e101";
+    /// <summary>Sistem soğutma ilkesi: 1 = Etkin (önce fan), 0 = Pasif (önce işlemci yavaşlar). Modern bekleme destekli bazı dizüstülerde yoktur.</summary>
+    public const string SystemCoolingPolicy = "94d3a615-a899-4ac5-ae2b-e4d8f634367f";
     public const string SubVideo = "7516b95f-f776-4464-8c53-06167f40cc99";
     public const string VideoIdle = "3c0bc021-c8a8-4e07-a973-6b14cbcb2b7e";
     public const string SubSleep = "238c9fa8-0aad-41ed-83f4-97be242c8f20";

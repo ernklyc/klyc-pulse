@@ -15,7 +15,8 @@ public sealed record ModeDefinition(
     int Brightness,     // %
     bool IdlePower,     // ekran 1 dk'da kapanır, uyku kapalı
     int? GpuCapMhz = null,    // ekran kartı çekirdek saat sınırı; null = sınırsız
-    int? CpuMaxMhz = null);   // işlemci en yüksek frekansı (MHz); null = sınırsız. Oyun profilinden gelir.
+    int? CpuMaxMhz = null,    // işlemci en yüksek frekansı (MHz); null = sınırsız. Oyun profilinden gelir.
+    bool ActiveCooling = true);   // Windows "sistem soğutma ilkesi": true = önce fanı hızlandır, sonra işlemciyi yavaşlat (Sessiz/Boşta: sessizlik için false)
 
 public static class Modes
 {
@@ -31,8 +32,8 @@ public static class Modes
     [
         new(Game,  "Oyun",   "Tam güç. Oyuna girmeden önce seç.",     AsusPerformanceMode.Turbo,    2, 100, 20, MaxHz, 80, false),
         new(Daily, "Günlük", "Dengeli. İnternet, ofis ve yazılım için.", AsusPerformanceMode.Balanced, 2, 100, 33, MaxHz, 60, false),
-        new(Quiet, "Sessiz", "Serin ve sessiz. Hafif işler için.",    AsusPerformanceMode.Silent,   0, 100, 60,  60, 40, false, 1350),
-        new(Idle,  "Boşta",  "İndirme, yedekleme, uzakta bırakma.",   AsusPerformanceMode.Silent,   0,  70, 80,  60, 15, true, 900),
+        new(Quiet, "Sessiz", "Serin ve sessiz. Hafif işler için.",    AsusPerformanceMode.Silent,   0, 100, 60,  60, 40, false, 1350, null, false),
+        new(Idle,  "Boşta",  "İndirme, yedekleme, uzakta bırakma.",   AsusPerformanceMode.Silent,   0,  70, 80,  60, 15, true, 900, null, false),
     ];
 
     public static ModeDefinition? Get(string key) =>

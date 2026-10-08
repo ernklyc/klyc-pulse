@@ -11,6 +11,9 @@ public sealed class AppSettings
     /// <summary>Oyunlara göre kendini ayarla: oyun raporlarına bakıp işlemci hız sınırını dener, ölçer, zararlıysa geri alır.</summary>
     public bool AutoTuneGames { get; set; } = true;
 
+    /// <summary>Soğutma önceliği: sıcaklık uzun süre yüksekse önce fan desteği, yetmezse (Oyun modu dışında) işlemciyi kademeli yavaşlat.</summary>
+    public bool CoolingFirst { get; set; } = true;
+
     /// <summary>Bildirimlerin köşesi: 0 sol üst, 1 sağ üst, 2 sol alt, 3 sağ alt.</summary>
     public int NoticeCorner { get; set; } = 3;
 

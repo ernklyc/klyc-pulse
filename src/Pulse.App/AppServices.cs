@@ -20,6 +20,7 @@ public static class AppServices
     public static HeatTargetService Heat { get; } = new();
     public static GameReportService GameReport { get; } = new();
     public static UpdateService Update { get; } = new();
+    public static CoolingService Cooling { get; } = new();
 
     /// <summary>Bu bilgisayarın işlemci hız sınırı kademeleri (null = sınırsız). Yük altı tepe hız öğrenildikçe güncellenir.</summary>
     public static int?[] CpuLadderFor(double[] factors)
@@ -43,6 +44,7 @@ public static class AppServices
         _keeper?.Dispose();
         // Güvenlik: Pulse kapanırken ekran kartı hızlandırması fabrika hızına döner (kalıcı kalmasın).
         try { if (Pulse.Core.Hardware.GpuOverclock.Read() is { } oc && (oc.CoreMhz != 0 || oc.MemMhz != 0)) Pulse.Core.Hardware.GpuOverclock.Reset(); } catch { }
+        Cooling.Dispose();
         Update.Dispose();
         GameReport.Dispose();
         Heat.Dispose();

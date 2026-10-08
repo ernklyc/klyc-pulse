@@ -53,6 +53,22 @@
                 </Grid>
             </Border>
 
+            <TextBlock Style="{StaticResource PulseLabel}" Text="SOĞUTMA ÖNCELİĞİ" Margin="0,18,0,8" />
+            <Border Style="{StaticResource PulseCard}" Padding="16,12">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <StackPanel Margin="0,0,20,0">
+                        <TextBlock Style="{StaticResource SettingTitle}" Text="Önce soğut, sonra yavaşlat" />
+                        <TextBlock Style="{StaticResource PulseMuted}" TextWrapping="Wrap"
+                                   Text="Sıcaklık uzun süre yüksek kalırsa (88 °C üstü) önce fan desteği açılır (fan devri artar). Fan yetmezse (93 °C üstü) işlemci hızı küçük adımlarla düşürülür; serinleyince eski haline döner. Oyun modunda işlemciyi kısmaz, yalnız fanı destekler. Fan desteği şu an yalnızca ASUS dizüstülerde var. İşlemci sıcaklığı için Pulse yönetici olarak çalışmalı." />
+                    </StackPanel>
+                    <ui:ToggleSwitch Grid.Column="1" VerticalAlignment="Center" IsChecked="{Binding CoolingFirst}" />
+                </Grid>
+            </Border>
+
             <TextBlock Style="{StaticResource PulseLabel}" Text="SICAKLIK SINIRI" Margin="0,18,0,8" />
             <Border Style="{StaticResource PulseCard}" Padding="16,12">
                 <StackPanel>

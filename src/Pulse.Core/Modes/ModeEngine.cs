@@ -127,6 +127,9 @@ public sealed class ModeEngine : IDisposable
                 Powercfg.SetDc(scheme, Powercfg.SubProcessor, Powercfg.EnergyPerformancePref, mode.Epp);
                 // Her mod "frekans sınırı yok"tan (ya da oyun profilinin seçtiği sınırdan) başlar; sıcaklık sınırı gerekirse üstüne koyar (eski sınır kalıntısı kalmasın).
                 Powercfg.SetFrequencyCap(scheme, mode.CpuMaxMhz ?? 0);
+                // Sistem soğutma ilkesi (varsa): Oyun/Günlük = önce fan, Sessiz/Boşta = önce yavaşlama (sessizlik). Ayar yoksa komut zararsızca yok sayılır.
+                Powercfg.SetAc(scheme, Powercfg.SubProcessor, Powercfg.SystemCoolingPolicy, mode.ActiveCooling ? 1 : 0);
+                Powercfg.SetDc(scheme, Powercfg.SubProcessor, Powercfg.SystemCoolingPolicy, mode.ActiveCooling ? 1 : 0);
             }
             Powercfg.SetActive(active);
             Thread.Sleep(attempt == 0 ? 900 : 1500);
@@ -142,6 +145,25 @@ public sealed class ModeEngine : IDisposable
         yield return Verify("Hız / güç dengesi", mode.Epp, Powercfg.GetAc(active, Powercfg.SubProcessor, Powercfg.EnergyPerformancePref), v => v.ToString());
         yield return Verify("Pilde de aynı (ek hız)", mode.Boost, Powercfg.GetDc(active, Powercfg.SubProcessor, Powercfg.BoostMode), v => v == 0 ? "kapalı" : "açık");
         yield return Verify("İşlemci en yüksek hızı", mode.CpuMaxMhz ?? 0, Powercfg.GetAc(active, Powercfg.SubProcessor, Powercfg.MaxFrequency), v => v == 0 ? "sınırsız" : $"{v} MHz");
+    }
+
+    /// <summary>
+    /// Fan desteği: ASUS Turbo profili fanı tam hıza çıkarır (fan eğrisi bu modelde yazılamaz, profil değiştirilebilir). Kapatınca modun kendi profili geri yazılır.
+    /// Fan devrinin gerçekten artıp artmadığı ölçülür. ASUS sürücüsü yoksa Skipped.
+    /// </summary>
+    public StepResult SetFanBoost(ModeDefinition current, bool on)
+    {
+        const string name = "Fan desteği";
+        if (_acpi is null) return new(name, StepStatus.Skipped, "ASUS fan profili bu bilgisayarda yok.");
+        var before = _acpi.GetCpuFanRpm();
+        var ok = _acpi.SetPerformanceMode(on ? AsusPerformanceMode.Turbo : current.Asus);
+        if (!ok) return new(name, StepStatus.Failed, "Fan profili bilgisayar tarafından reddedildi.");
+        Thread.Sleep(2500);
+        var after = _acpi.GetCpuFanRpm();
+        var rpm = before is not null && after is not null ? $" (CPU fanı {before} → {after} RPM)" : "";
+        if (on && before is { } b && after is { } a && a < b * 1.1)
+            return new(name, StepStatus.Warning, $"Turbo profili kabul edildi ama fan devri artmadı{rpm}; fan zaten tam hızda olabilir.");
+        return new(name, StepStatus.Applied, (on ? "Fan tam hıza alındı" : $"{current.Asus} profiline dönüldü") + rpm + ".");
     }
 
     /// <summary>İstenen hızı çözer: MaxHz ise ekranın desteklediği en yüksek; liste boşsa MaxHz (belirlenemedi) döner.</summary>

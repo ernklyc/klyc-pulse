@@ -40,6 +40,9 @@ public partial class SettingsViewModel : ObservableObject, IDisposable
     public bool IsAdmin { get; }
     public string VersionText { get; } = $"KLYC-Pulse {System.Reflection.Assembly.GetExecutingAssembly().GetName().Version?.ToString(3)} · MIT lisansı";
 
+    [ObservableProperty] private bool _coolingFirst = AppServices.Settings.Current.CoolingFirst;
+    partial void OnCoolingFirstChanged(bool value) { Save(s => s.CoolingFirst = value); AppServices.Cooling.Configure(value); }
+
     // ---- Görünüm: bildirim köşesi, oyunda gösterge, tur ----
     public ObservableCollection<ChoiceVm> NoticeCorners { get; } = BuildCorners();
     private static ObservableCollection<ChoiceVm> BuildCorners()

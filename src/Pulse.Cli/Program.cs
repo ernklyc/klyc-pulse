@@ -761,6 +761,123 @@ if (cmd == "settings-test")
     Console.WriteLine(fails == 0 ? "AYAR YEDEĞİ TESTİ GEÇTİ" : $"{fails} TEST KALDI");
     return fails == 0 ? 0 : 1;
 }
+if (cmd == "fanab-test")
+{
+    // Aynı yük altında Dengeli ve Turbo profilinin fan devrini karşılaştırır (gerçek donanım, ~3 dk, işlemciyi yükler).
+    using var acpi = Pulse.Core.Hardware.AsusAcpi.TryOpen();
+    if (acpi is null) { Console.WriteLine("ASUS sürücüsü yok; atlandı."); return 0; }
+    using var hub = new Pulse.Core.Monitoring.SensorHub();
+    using var eng = new Pulse.Core.Modes.ModeEngine();
+    var def = Pulse.Core.Modes.Modes.Get(eng.CurrentModeKey ?? "gunluk")!;
+    (double rpm, double mhz) Phase(Pulse.Core.Hardware.AsusPerformanceMode mode, string label)
+    {
+        acpi.SetPerformanceMode(mode);
+        Thread.Sleep(3000);
+        using var cts = new CancellationTokenSource();
+        var workers = Enumerable.Range(0, Environment.ProcessorCount).Select(_ => Task.Run(() => { double x = 1; while (!cts.IsCancellationRequested) x = Math.Sqrt(x + 1.0001) * 1.0000001; return x; })).ToArray();
+        var rpms = new List<double>(); var mhzs = new List<double>();
+        for (var i = 0; i < 12; i++)
+        {
+            Thread.Sleep(5000);
+            var r = acpi.GetCpuFanRpm(); var s = hub.Read(cpuTemp: false);
+            if (r is { } rv) rpms.Add(rv); if (s.CpuMhz is { } m) mhzs.Add(m);
+            if (i % 3 == 2) Console.WriteLine($"    {label} {(i + 1) * 5} sn: fan {r} RPM, işlemci {s.CpuMhz:0} MHz");
+        }
+        cts.Cancel(); Task.WaitAll(workers);
+        return (rpms.TakeLast(4).Average(), mhzs.TakeLast(4).Average());
+    }
+    Console.WriteLine("  Dengeli profil, 60 sn tam yük:");
+    var bal = Phase(Pulse.Core.Hardware.AsusPerformanceMode.Balanced, "Dengeli");
+    Console.WriteLine("  Dinlenme 50 sn...");
+    Thread.Sleep(50000);
+    Console.WriteLine("  Turbo profil, 60 sn tam yük:");
+    var tur = Phase(Pulse.Core.Hardware.AsusPerformanceMode.Turbo, "Turbo  ");
+    acpi.SetPerformanceMode(def.Asus);
+    Console.WriteLine($"  SONUÇ (son 20 sn ortalaması): Dengeli fan {bal.rpm:0} RPM / {bal.mhz:0} MHz  —  Turbo fan {tur.rpm:0} RPM / {tur.mhz:0} MHz  (fark {(tur.rpm - bal.rpm) / bal.rpm * 100:+0;-0}% fan)");
+    Console.WriteLine($"  Mod profili geri yazıldı: {def.Asus}");
+    return 0;
+}
+if (cmd == "cooling-test")
+{
+    // "Önce soğut, sonra yavaşlat": sahte sıcaklık akışıyla (donanıma dokunmaz).
+    var fails = 0;
+    void Check(bool ok, string what) { Console.WriteLine($"  [{(ok ? "GEÇTİ" : "KALDI")}] {what}"); if (!ok) fails++; }
+    var t0 = new DateTime(2026, 1, 1, 12, 0, 0);
+    // Her saniye aynı sıcaklığı verir; ilk eylemi ve saniyesini döner.
+    (Pulse.Core.Monitoring.CoolingAction Action, int Sec) Run(Pulse.Core.Monitoring.CoolingGovernor g, double temp, int fromSec, int toSec, bool allowThrottle = true)
+    {
+        for (var s = fromSec; s <= toSec; s++)
+        {
+            var a = g.Feed(temp, t0.AddSeconds(s), allowThrottle);
+            if (a != Pulse.Core.Monitoring.CoolingAction.None) return (a, s);
+        }
+        return (Pulse.Core.Monitoring.CoolingAction.None, -1);
+    }
+    var A = Pulse.Core.Monitoring.CoolingAction.None;
+
+    var g1 = new Pulse.Core.Monitoring.CoolingGovernor();
+    Check(Run(g1, 94, 0, 10).Action == A, "94 °C ama 10 sn: henüz bir şey yapılmaz (geçici sıçrama)");
+    var r1 = Run(g1, 94, 11, 40);
+    Check(r1.Action == Pulse.Core.Monitoring.CoolingAction.FanOn && r1.Sec == 15 && g1.Stage == 1, $"94 °C 15 sn sürünce önce FAN desteği açılır, yavaşlatma değil (sn {r1.Sec})");
+
+    // fan desteği açık, 90 °C'de kalıyor: ne yavaşlatır ne fanı kapatır
+    Check(Run(g1, 90, 41, 400).Action == A && g1.Stage == 1, "Fan açıkken 90 °C'de uzun süre kalırsa (93 altı) yavaşlatmaya geçilmez");
+    var r2 = Run(g1, 94, 401, 500);
+    Check(r2.Action == Pulse.Core.Monitoring.CoolingAction.ThrottleOn && r2.Sec == 401 + 40 && g1.Stage == 2, $"Fan yetmeyip 93+ 40 sn sürünce yavaşlatma başlar (sn {r2.Sec - 401})");
+
+    var r3 = Run(g1, 80, 501, 600);
+    Check(r3.Action == Pulse.Core.Monitoring.CoolingAction.ThrottleOff && g1.Stage == 1, "85 altına 40 sn inince yavaşlatma bırakılır, fan kalır");
+    Check(Run(g1, 80, 601, 700).Action == A && g1.Stage == 1, "78-85 arasında fan açık kalır (gidip gelme yok)");
+    var r4 = Run(g1, 70, 701, 900);
+    Check(r4.Action == Pulse.Core.Monitoring.CoolingAction.FanOff && r4.Sec == 701 + 90 && g1.Stage == 0, $"78 altına 90 sn inince fan desteği kapanır (sn {r4.Sec - 701})");
+
+    // titreşim: 89/80 sürekli değişirse hiç tetiklenmez
+    var g2 = new Pulse.Core.Monitoring.CoolingGovernor();
+    var flap = A;
+    for (var s = 0; s < 300; s++) { var a = g2.Feed(s % 10 < 5 ? 89 : 80, t0.AddSeconds(s)); if (a != A) flap = a; }
+    Check(flap == A && g2.Stage == 0, "89/80 arası gidip gelen sıcaklık hiçbir şeyi tetiklemez");
+
+    // oyun modu: yavaşlatma yok
+    var g3 = new Pulse.Core.Monitoring.CoolingGovernor();
+    Run(g3, 95, 0, 30, allowThrottle: false);
+    var game = Run(g3, 98, 31, 500, allowThrottle: false);
+    Check(g3.Stage == 1 && game.Action == A, "Oyun modunda en sıcakta bile yavaşlatmaya geçilmez (yalnız fan)");
+    // yavaşlatmadayken oyuna girildi: hemen bırakılır
+    var g4 = new Pulse.Core.Monitoring.CoolingGovernor();
+    Run(g4, 95, 0, 30); Run(g4, 95, 31, 100);
+    Check(g4.Stage == 2, "Test kurulumu: yavaşlatma kademesinde");
+    Check(g4.Feed(95, t0.AddSeconds(101), allowThrottle: false) == Pulse.Core.Monitoring.CoolingAction.ThrottleOff && g4.Stage == 1, "Yavaşlatma sürerken oyuna girilirse hemen bırakılır");
+
+    // sensör yok / kısa kesinti
+    var g5 = new Pulse.Core.Monitoring.CoolingGovernor();
+    for (var s = 0; s < 14; s++) g5.Feed(95, t0.AddSeconds(s));
+    g5.Feed(null, t0.AddSeconds(14));
+    Check(g5.Feed(95, t0.AddSeconds(15)) == A && g5.Stage == 0, "Sensör kesintisi sayacı sıfırlar (yanlış tetik yok)");
+    g5.Reset();
+    Check(g5.Stage == 0, "Reset kademeyi sıfırlar");
+
+    Console.WriteLine(fails == 0 ? "SOĞUTMA ÖNCELİĞİ TESTİ GEÇTİ" : $"{fails} TEST KALDI");
+    return fails == 0 ? 0 : 1;
+}
+
+if (cmd == "fanboost-test")
+{
+    // Fan desteği gerçek donanımda (ASUS): Turbo profili fan devrini artırıyor mu? Sonunda modun kendi profiline döner.
+    var fails = 0;
+    void Check(bool ok, string what) { Console.WriteLine($"  [{(ok ? "GEÇTİ" : "KALDI")}] {what}"); if (!ok) fails++; }
+    using var eng = new Pulse.Core.Modes.ModeEngine();
+    if (!eng.HasAsusDriver) { Console.WriteLine("  ASUS sürücüsü yok: bu test bu bilgisayarda atlandı."); return 0; }
+    var def = Pulse.Core.Modes.Modes.Get(eng.CurrentModeKey ?? "gunluk")!;
+    Console.WriteLine($"  Şu anki mod: {def.Title} ({def.Asus} profili)");
+    var on = eng.SetFanBoost(def, true);
+    Console.WriteLine($"  Aç : {on.Status}: {on.Detail}");
+    Check(on.Status is Pulse.Core.Modes.StepStatus.Applied or Pulse.Core.Modes.StepStatus.Warning, "Fan desteği açıldı (profil kabul edildi)");
+    var off = eng.SetFanBoost(def, false);
+    Console.WriteLine($"  Kapa: {off.Status}: {off.Detail}");
+    Check(off.Status == Pulse.Core.Modes.StepStatus.Applied, "Fan desteği kapandı, modun kendi profiline dönüldü");
+    Console.WriteLine(fails == 0 ? "FAN DESTEĞİ TESTİ GEÇTİ" : $"{fails} TEST KALDI");
+    return fails == 0 ? 0 : 1;
+}
 if (cmd == "update-test")
 {
     // Güncelleme denetimi: ağa çıkmadan, sahte HTTP cevaplarıyla.
