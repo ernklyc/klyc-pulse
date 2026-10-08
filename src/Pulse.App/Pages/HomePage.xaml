@@ -1,0 +1,237 @@
+<Page x:Class="Pulse.App.Pages.HomePage"
+      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+      xmlns:c="clr-namespace:Pulse.App.Controls"
+      Background="Transparent" FontFamily="{StaticResource BodyFont}"
+      ScrollViewer.CanContentScroll="False" ScrollViewer.VerticalScrollBarVisibility="Disabled">
+    <Page.Resources>
+        <!-- Mod kartı: DataContext = ModeVm. Üzerine gelince mürekkep çerçeve, sağda belirgin düğme -->
+        <DataTemplate x:Key="ModeCard">
+            <Border x:Name="Frame" Margin="0,0,10,10" Padding="12,10,12,10" CornerRadius="6" BorderThickness="1"
+                    Background="{StaticResource PaperBrush}" BorderBrush="{StaticResource LineBrush}">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <Border Width="34" Height="34" CornerRadius="5" Background="{StaticResource Paper2Brush}" VerticalAlignment="Top">
+                        <TextBlock Text="{Binding Glyph}" FontFamily="{StaticResource IconFont}" FontSize="16"
+                                   Foreground="{StaticResource InkBrush}" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                    </Border>
+                    <StackPanel Grid.Column="1" Margin="11,-2,8,0">
+                        <TextBlock Text="{Binding Title}" FontFamily="{StaticResource DisplayFont}" FontSize="21" Foreground="{StaticResource InkBrush}" />
+                        <TextBlock Text="{Binding Subtitle}" FontFamily="{StaticResource BodyFont}" FontSize="12" Foreground="{StaticResource MutedBrush}"
+                                   TextWrapping="Wrap" Margin="0,0,0,7" />
+                        <ItemsControl ItemsSource="{Binding Chips}">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate><WrapPanel /></ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Border Style="{StaticResource PulseBadge}" Margin="0,0,5,4">
+                                        <TextBlock Text="{Binding}" FontFamily="{StaticResource BodyFont}" FontSize="11" FontWeight="Medium"
+                                                   Foreground="{StaticResource AccentGrayBrush}" />
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </StackPanel>
+                    <StackPanel Grid.Column="2" VerticalAlignment="Top" HorizontalAlignment="Right">
+                        <Button x:Name="ApplyButton" Content="Uygula" Style="{StaticResource PulsePrimaryButton}"
+                                Command="{Binding DataContext.SelectModeCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
+                                CommandParameter="{Binding}" />
+                        <TextBlock x:Name="ActiveText" Text="● AKTİF" FontFamily="{StaticResource BodyFont}" FontSize="11" FontWeight="SemiBold"
+                                   Foreground="{StaticResource GoodBrush}" HorizontalAlignment="Center" Margin="0,8,0,0" Visibility="Collapsed" />
+                    </StackPanel>
+                </Grid>
+            </Border>
+            <DataTemplate.Triggers>
+                <DataTrigger Binding="{Binding IsActive}" Value="True">
+                    <Setter TargetName="Frame" Property="BorderBrush" Value="{StaticResource InkBrush}" />
+                    <Setter TargetName="Frame" Property="BorderThickness" Value="1.5" />
+                    <Setter TargetName="ApplyButton" Property="Content" Value="Yeniden uygula" />
+                    <Setter TargetName="ApplyButton" Property="Style" Value="{StaticResource PulseGhostButton}" />
+                    <Setter TargetName="ActiveText" Property="Visibility" Value="Visible" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding IsBusy}" Value="True">
+                    <Setter TargetName="ApplyButton" Property="Content" Value="Uygulanıyor…" />
+                    <Setter TargetName="ApplyButton" Property="IsEnabled" Value="False" />
+                </DataTrigger>
+                <Trigger SourceName="Frame" Property="IsMouseOver" Value="True">
+                    <Setter TargetName="Frame" Property="Background" Value="{StaticResource SurfaceBrush}" />
+                </Trigger>
+            </DataTemplate.Triggers>
+        </DataTemplate>
+    </Page.Resources>
+
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <StackPanel Margin="26,18,26,22" MaxWidth="1000" HorizontalAlignment="Stretch">
+
+            <TextBlock Style="{StaticResource PulseLabel}" Text="ANA EKRAN" />
+            <TextBlock Style="{StaticResource PulseDisplay}" Margin="0,2,0,0" Text="Şimdi ne yapacaksın?" />
+            <TextBlock Style="{StaticResource PulseLead}" Margin="0,2,0,0"
+                       Text="Bir mod seç. Pulse bilgisayarı ona göre ayarlar ve ayarın gerçekten tuttuğunu kontrol eder." />
+
+            <Border Style="{StaticResource PulseHairline}" Margin="0,14,0,12" />
+
+            <Border Style="{StaticResource PulseCard}" Margin="0,0,0,12" Padding="16,12"
+                    Visibility="{Binding ShowWelcome, Converter={StaticResource BoolToVis}}">
+                <DockPanel>
+                    <Button DockPanel.Dock="Right" Content="Anladım" Style="{StaticResource PulsePrimaryButton}"
+                            Command="{Binding DismissWelcomeCommand}" VerticalAlignment="Center" Margin="16,0,0,0" />
+                    <StackPanel>
+                        <TextBlock Text="KLYC-Pulse'a hoş geldin" FontFamily="{StaticResource DisplayFont}" FontSize="20" Foreground="{StaticResource InkBrush}" />
+                        <TextBlock Style="{StaticResource PulseMuted}" Margin="0,3,0,0" TextWrapping="Wrap"
+                                   Text="Oyun oynayacaksan Oyun, günlük iş için Günlük, sessiz ve serin çalışsın istersen Sessiz modunu seç. Pulse hızı, fanı, ekranı ve gücü senin yerine ayarlar. Diğer her şey soldaki menüde. Sormadan hiçbir şeyi silmez." />
+                    </StackPanel>
+                </DockPanel>
+            </Border>
+            <!-- Canlı durum: sıcaklıklar ve kısıtlama -->
+            <Border Style="{StaticResource PulseCard}" Margin="0,0,0,12" Padding="0" DataContext="{Binding Live}"
+                    Visibility="{Binding DataContext.Live, RelativeSource={RelativeSource AncestorType=Page}, Converter={StaticResource NullToCollapsed}}">
+                <StackPanel>
+                    <Grid Margin="16,10,16,6">
+                        <Grid.ColumnDefinitions><ColumnDefinition Width="Auto" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
+                        <TextBlock Style="{StaticResource PulseLabel}" Text="CANLI DURUM" VerticalAlignment="Center" Margin="0,0,14,0" />
+                        <TextBlock Grid.Column="1" Text="{Binding Verdict}" Foreground="{Binding VerdictBrush}" FontFamily="{StaticResource DisplayFont}" FontSize="19" TextTrimming="CharacterEllipsis" />
+                    </Grid>
+                    <Border Style="{StaticResource PulseHairline}" />
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" /><ColumnDefinition Width="1" />
+                            <ColumnDefinition Width="*" /><ColumnDefinition Width="1" />
+                            <ColumnDefinition Width="*" /><ColumnDefinition Width="1" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Grid.Column="0" Margin="14,8">
+                            <TextBlock Style="{StaticResource PulseLabel}" Text="İŞLEMCİ" />
+                            <TextBlock Style="{StaticResource PulseStat}" Text="{Binding CpuTempText}" />
+                            <TextBlock Style="{StaticResource PulseMuted}" Text="{Binding CpuLoadNote}" TextTrimming="CharacterEllipsis" />
+                            <c:Sparkline Height="24" Margin="0,4,0,0" Values="{Binding CpuHistory}" Stroke="{StaticResource InkBrush}" Minimum="0" Maximum="100" />
+                        </StackPanel>
+                        <Border Grid.Column="1" Background="{StaticResource LineBrush}" />
+                        <StackPanel Grid.Column="2" Margin="14,8">
+                            <TextBlock Style="{StaticResource PulseLabel}" Text="EKRAN KARTI" />
+                            <TextBlock Style="{StaticResource PulseStat}" Text="{Binding GpuTempText}" />
+                            <TextBlock Style="{StaticResource PulseMuted}" Text="{Binding GpuLoadNote}" TextTrimming="CharacterEllipsis" />
+                            <c:Sparkline Height="24" Margin="0,4,0,0" Values="{Binding GpuHistory}" Stroke="{StaticResource InkBrush}" Minimum="0" Maximum="100" />
+                        </StackPanel>
+                        <Border Grid.Column="3" Background="{StaticResource LineBrush}" />
+                        <StackPanel Grid.Column="4" Margin="14,8">
+                            <TextBlock Style="{StaticResource PulseLabel}" Text="BELLEK" />
+                            <TextBlock Style="{StaticResource PulseStat}" Text="{Binding RamText}" />
+                            <TextBlock Style="{StaticResource PulseMuted}" Text="{Binding RamNote}" TextTrimming="CharacterEllipsis" />
+                            <c:Sparkline Height="24" Margin="0,4,0,0" Values="{Binding RamHistory}" Stroke="{StaticResource AccentGrayBrush}" Minimum="0" Maximum="100" />
+                        </StackPanel>
+                        <Border Grid.Column="5" Background="{StaticResource LineBrush}" />
+                        <StackPanel Grid.Column="6" Margin="14,8">
+                            <TextBlock Style="{StaticResource PulseLabel}" Text="FAN" />
+                            <TextBlock Style="{StaticResource PulseStat}" Text="{Binding FanText}" />
+                            <TextBlock Style="{StaticResource PulseMuted}" Text="{Binding FanNote}" TextTrimming="CharacterEllipsis" />
+                        </StackPanel>
+                    </Grid>
+                </StackPanel>
+            </Border>
+
+            <!-- Hızlandır -->
+            <Border Style="{StaticResource PulseCard}" Margin="0,0,0,12" Padding="16,12">
+                <DockPanel>
+                    <Button DockPanel.Dock="Right" Content="Hızlandır" Style="{StaticResource PulsePrimaryButton}" VerticalAlignment="Center" Margin="16,0,0,0"
+                            Command="{Binding OptimizeCommand}" IsEnabled="{Binding IsOptimizing, Converter={StaticResource InvertBool}}" />
+                    <StackPanel>
+                        <TextBlock Text="Tek tuşla hızlandır" FontFamily="{StaticResource DisplayFont}" FontSize="20" Foreground="{StaticResource InkBrush}" />
+                        <TextBlock Style="{StaticResource PulseMuted}" TextWrapping="Wrap" Margin="0,2,0,0"
+                                   Text="Gereksiz geçici dosyaları siler, belleği boşaltır ve ayarları kontrol eder. Sonunda ne kazandığını gösterir." />
+                    </StackPanel>
+                </DockPanel>
+            </Border>
+            <Border Style="{StaticResource PulseCard}" Margin="0,0,0,12" Padding="16,12"
+                    Visibility="{Binding Op.IsActive, Converter={StaticResource BoolToVis}}">
+                <c:BusyBar IsActive="{Binding Op.IsActive}" Fraction="{Binding Op.Fraction}" Text="{Binding Op.Text}" Counter="{Binding Op.Counter}" />
+            </Border>
+            <Border Style="{StaticResource PulseCard}" Margin="0,0,0,12" Padding="14,10"
+                    Visibility="{Binding HasOpt, Converter={StaticResource BoolToVis}}">
+                <StackPanel>
+                    <DockPanel>
+                        <TextBlock DockPanel.Dock="Right" Text="{Binding OptSummary}" Style="{StaticResource PulseMuted}" VerticalAlignment="Center" />
+                        <TextBlock Text="{Binding OptTitle}" FontFamily="{StaticResource DisplayFont}" FontSize="18" Foreground="{StaticResource InkBrush}" />
+                    </DockPanel>
+                    <Border Style="{StaticResource PulseHairline}" Margin="0,8,0,6" />
+                    <ItemsControl ItemsSource="{Binding OptStats}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Grid Margin="0,3">
+                                    <Grid.ColumnDefinitions><ColumnDefinition Width="190" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
+                                    <TextBlock Text="{Binding Name}" Style="{StaticResource PulseBody}" FontWeight="Medium" />
+                                    <TextBlock Grid.Column="1" Text="{Binding Detail}" Style="{StaticResource PulseBody}" />
+                                </Grid>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                    <Border Style="{StaticResource PulseHairline}" Margin="0,6,0,6" />
+                    <ItemsControl ItemsSource="{Binding OptRows}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Grid Margin="0,3">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="64" /><ColumnDefinition Width="150" /><ColumnDefinition Width="*" />
+                                    </Grid.ColumnDefinitions>
+                                    <Border Style="{StaticResource PulseBadge}" HorizontalAlignment="Left" VerticalAlignment="Top">
+                                        <TextBlock Text="{Binding Label}" Foreground="{Binding Brush}" FontSize="10.5" FontWeight="SemiBold" />
+                                    </Border>
+                                    <TextBlock Grid.Column="1" Text="{Binding Name}" Style="{StaticResource PulseBody}" FontWeight="Medium" />
+                                    <TextBlock Grid.Column="2" Text="{Binding Detail}" Style="{StaticResource PulseMuted}" TextWrapping="Wrap" />
+                                </Grid>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </StackPanel>
+            </Border>
+
+            <DockPanel Margin="0,0,0,8">
+                <ui:ToggleSwitch DockPanel.Dock="Right" IsChecked="{Binding ChangeBrightness}" Content="Parlaklığı da ayarla"
+                                 FontSize="12" />
+                <TextBlock Style="{StaticResource PulseLabel}" Text="MODLAR" VerticalAlignment="Center" />
+            </DockPanel>
+            <ItemsControl ItemsSource="{Binding Modes}" ItemTemplate="{StaticResource ModeCard}" Margin="0,0,-10,0">
+                <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <UniformGrid Columns="2" />
+                    </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+            </ItemsControl>
+
+
+            <!-- Son işlem ve doğrulama -->
+            <Border Style="{StaticResource PulseCard}" Margin="0,2,0,12" Padding="14,10"
+                    Visibility="{Binding HasResult, Converter={StaticResource BoolToVis}}">
+                <StackPanel>
+                    <DockPanel>
+                        <TextBlock DockPanel.Dock="Right" Text="{Binding ResultSummary}" Style="{StaticResource PulseMuted}" VerticalAlignment="Center" />
+                        <TextBlock Text="{Binding ResultTitle}" FontFamily="{StaticResource DisplayFont}" FontSize="18" Foreground="{StaticResource InkBrush}" />
+                    </DockPanel>
+                    <Border Style="{StaticResource PulseHairline}" Margin="0,8,0,6" />
+                    <ItemsControl ItemsSource="{Binding Steps}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Grid Margin="0,3">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="22" />
+                                        <ColumnDefinition Width="190" />
+                                        <ColumnDefinition Width="*" />
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Text="{Binding Glyph}" FontFamily="{StaticResource IconFont}" FontSize="12" Foreground="{Binding Brush}" VerticalAlignment="Center" />
+                                    <TextBlock Grid.Column="1" Text="{Binding Name}" Style="{StaticResource PulseBody}" FontWeight="Medium" />
+                                    <TextBlock Grid.Column="2" Text="{Binding Detail}" Style="{StaticResource PulseMuted}" />
+                                </Grid>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </StackPanel>
+            </Border>
+
+        </StackPanel>
+    </ScrollViewer>
+</Page>

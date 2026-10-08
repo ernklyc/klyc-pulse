@@ -1,0 +1,250 @@
+<Page x:Class="Pulse.App.Pages.LaptopPage"
+      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+      xmlns:c="clr-namespace:Pulse.App.Controls"
+      Background="Transparent" FontFamily="{StaticResource BodyFont}"
+      ScrollViewer.CanContentScroll="False" ScrollViewer.VerticalScrollBarVisibility="Disabled">
+    <Page.Resources>
+        <Style x:Key="SettingTitle" TargetType="TextBlock" BasedOn="{StaticResource PulseBody}">
+            <Setter Property="FontWeight" Value="Medium" />
+        </Style>
+        <!-- Seçenek düğmeleri: seçili olan koyu, diğerleri çerçeveli -->
+        <DataTemplate x:Key="ChoiceTemplate">
+            <Grid Margin="0,0,6,0">
+                <Button Content="{Binding Title}" Style="{StaticResource PulseSegment}" MinWidth="64"
+                        Command="{Binding DataContext.SetBatteryCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}" CommandParameter="{Binding}" />
+                <Button Content="{Binding Title}" Style="{StaticResource PulseSegmentActive}" MinWidth="64"
+                        Visibility="{Binding IsActive, Converter={StaticResource BoolToVis}}"
+                        Command="{Binding DataContext.SetBatteryCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}" CommandParameter="{Binding}" />
+            </Grid>
+        </DataTemplate>
+        <DataTemplate x:Key="KeyboardTemplate">
+            <Grid Margin="0,0,6,0">
+                <Button Content="{Binding Title}" Style="{StaticResource PulseSegment}" MinWidth="76"
+                        Command="{Binding DataContext.SetKeyboardCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}" CommandParameter="{Binding}" />
+                <Button Content="{Binding Title}" Style="{StaticResource PulseSegmentActive}" MinWidth="76"
+                        Visibility="{Binding IsActive, Converter={StaticResource BoolToVis}}"
+                        Command="{Binding DataContext.SetKeyboardCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}" CommandParameter="{Binding}" />
+            </Grid>
+        </DataTemplate>
+    </Page.Resources>
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <StackPanel Margin="26,18,26,22" MaxWidth="1000" HorizontalAlignment="Stretch">
+            <TextBlock Style="{StaticResource PulseLabel}" Text="DİZÜSTÜ" />
+            <TextBlock Style="{StaticResource PulseDisplay}" Margin="0,2,0,0" Text="Pil, klavye, ekran kartı ve kısayollar." />
+            <TextBlock Style="{StaticResource PulseLead}" Margin="0,2,0,0"
+                       Text="Donanıma özel işler burada: pil sınırı, klavye ışığı, ekran kartı hızlandırma ve kısayollar." />
+            <Border Style="{StaticResource PulseHairline}" Margin="0,14,0,12" />
+
+            <Border Style="{StaticResource PulseCard}" Padding="16,12" Margin="0,0,0,12"
+                    Visibility="{Binding HasNoDriver, Converter={StaticResource BoolToVis}}">
+                <TextBlock Style="{StaticResource PulseMuted}" TextWrapping="Wrap"
+                           Text="Bu bilgisayarda üretici donanım sürücüsü (ASUS) bulunamadı; pil sınırı ve klavye ışığı kullanılamaz. Diğer özellikler çalışır." />
+            </Border>
+
+            <Border Style="{StaticResource PulseCard}" Padding="16,12" Margin="0,0,0,12"
+                    Visibility="{Binding Op.IsActive, Converter={StaticResource BoolToVis}}">
+                <c:BusyBar IsActive="{Binding Op.IsActive}" Fraction="{Binding Op.Fraction}" Text="{Binding Op.Text}" Counter="{Binding Op.Counter}" />
+            </Border>
+
+            <!-- Pil -->
+            <TextBlock Style="{StaticResource PulseLabel}" Text="PİL ŞARJ SINIRI" Margin="0,0,0,8" />
+            <Border Style="{StaticResource PulseCard}" Padding="16,12">
+                <StackPanel>
+                    <TextBlock Style="{StaticResource SettingTitle}" Text="Pil en fazla şu kadar dolsun" />
+                    <TextBlock Style="{StaticResource PulseMuted}" TextWrapping="Wrap"
+                               Text="Bilgisayarı hep prizde kullanıyorsan %60-80 seçmek pilin ömrünü uzatır. Seçimin kaydedilir, her açılışta yeniden uygulanır." />
+                    <ItemsControl ItemsSource="{Binding BatteryChoices}" ItemTemplate="{StaticResource ChoiceTemplate}" Margin="0,10,0,0">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate><StackPanel Orientation="Horizontal" /></ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                    </ItemsControl>
+                    <TextBlock Style="{StaticResource PulseMuted}" Text="{Binding BatteryStatus}" TextWrapping="Wrap" Margin="0,8,0,0" />
+                </StackPanel>
+            </Border>
+
+            <!-- Klavye ışığı -->
+            <TextBlock Style="{StaticResource PulseLabel}" Text="KLAVYE IŞIĞI" Margin="0,18,0,8" />
+            <Border Style="{StaticResource PulseCard}" Padding="16,12">
+                <StackPanel>
+                    <TextBlock Style="{StaticResource SettingTitle}" Text="Işık parlaklığı" />
+                    <TextBlock Style="{StaticResource PulseMuted}" Text="Seçtiğin parlaklık ayarlanır ve gerçekten değiştiği kontrol edilir." />
+                    <ItemsControl ItemsSource="{Binding KeyboardChoices}" ItemTemplate="{StaticResource KeyboardTemplate}" Margin="0,10,0,0">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate><StackPanel Orientation="Horizontal" /></ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                    </ItemsControl>
+                    <TextBlock Style="{StaticResource PulseMuted}" Text="{Binding KeyboardStatus}" Margin="0,8,0,0" />
+                </StackPanel>
+            </Border>
+
+            <!-- Ekran kartı hızlandırma -->
+            <TextBlock Style="{StaticResource PulseLabel}" Text="EKRAN KARTINI HIZLANDIR" Margin="0,18,0,8" Visibility="{Binding HasGpuOc, Converter={StaticResource BoolToVis}}" />
+            <Border Style="{StaticResource PulseCard}" Padding="16,12" Visibility="{Binding HasGpuOc, Converter={StaticResource BoolToVis}}">
+                <StackPanel>
+                    <DockPanel>
+                        <Button DockPanel.Dock="Right" Content="Otomatik bul (≈2 dk)" Style="{StaticResource PulsePrimaryButton}" Command="{Binding AutoTuneGpuCommand}"
+                                IsEnabled="{Binding GpuOcBusy, Converter={StaticResource InvertBool}}" VerticalAlignment="Center" />
+                        <StackPanel Margin="0,0,16,0">
+                            <TextBlock Style="{StaticResource SettingTitle}" Text="Ekran kartını biraz daha hızlı çalıştır" />
+                            <TextBlock Style="{StaticResource PulseMuted}" TextWrapping="Wrap" Text="Sadece Oyun modunda uygulanır. Kalıcı değildir: başka moda geçince ya da bilgisayarı yeniden başlatınca eski hızına döner. Sayılar “çekirdek / bellek” hız artışıdır (MHz)." />
+                        </StackPanel>
+                    </DockPanel>
+                    <ItemsControl ItemsSource="{Binding GpuOcChoices}" Margin="0,10,0,0">
+                        <ItemsControl.ItemsPanel><ItemsPanelTemplate><WrapPanel /></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Grid Margin="0,0,6,4">
+                                    <Button Content="{Binding Title}" Style="{StaticResource PulseSegment}" MinWidth="110"
+                                            Command="{Binding DataContext.SetGpuOcCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}" CommandParameter="{Binding}" />
+                                    <Button Content="{Binding Title}" Style="{StaticResource PulseSegmentActive}" MinWidth="110" Visibility="{Binding IsActive, Converter={StaticResource BoolToVis}}"
+                                            Command="{Binding DataContext.SetGpuOcCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}" CommandParameter="{Binding}" />
+                                </Grid>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                    <TextBlock Style="{StaticResource PulseMuted}" Text="{Binding GpuOcStatus}" TextWrapping="Wrap" Margin="0,8,0,0" />
+                </StackPanel>
+            </Border>
+
+            <!-- Klavye rengi -->            <TextBlock Style="{StaticResource PulseLabel}" Text="KLAVYE RENGİ" Margin="0,18,0,8" Visibility="{Binding HasRgb, Converter={StaticResource BoolToVis}}" />
+            <Border Style="{StaticResource PulseCard}" Padding="16,12" Visibility="{Binding HasRgb, Converter={StaticResource BoolToVis}}">
+                <StackPanel>
+                    <TextBlock Style="{StaticResource SettingTitle}" Text="Renk" />
+                    <ItemsControl ItemsSource="{Binding RgbColors}" Margin="0,8,0,0">
+                        <ItemsControl.ItemsPanel><ItemsPanelTemplate><WrapPanel /></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Button Style="{StaticResource PulseGhostButton}" Margin="0,0,6,6" Padding="10,0" Height="32"
+                                        Command="{Binding DataContext.SetRgbColorCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}" CommandParameter="{Binding}">
+                                    <StackPanel Orientation="Horizontal">
+                                        <Ellipse Width="14" Height="14" Fill="{Binding Brush}" Stroke="{StaticResource InkBrush}" StrokeThickness="1" Margin="0,0,7,0" />
+                                        <TextBlock Text="{Binding Name}" FontWeight="Medium" />
+                                        <TextBlock Text=" ✓" Visibility="{Binding IsActive, Converter={StaticResource BoolToVis}}" Foreground="{StaticResource GoodBrush}" FontWeight="Bold" />
+                                    </StackPanel>
+                                </Button>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                    <TextBlock Style="{StaticResource PulseLabel}" Text="MOD" Margin="0,8,0,6" />
+                    <ItemsControl ItemsSource="{Binding RgbModes}">
+                        <ItemsControl.ItemsPanel><ItemsPanelTemplate><StackPanel Orientation="Horizontal" /></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Grid Margin="0,0,6,0">
+                                    <Button Content="{Binding Title}" Style="{StaticResource PulseSegment}" MinWidth="80"
+                                            Command="{Binding DataContext.SetRgbModeCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}" CommandParameter="{Binding}" />
+                                    <Button Content="{Binding Title}" Style="{StaticResource PulseSegmentActive}" MinWidth="80" Visibility="{Binding IsActive, Converter={StaticResource BoolToVis}}"
+                                            Command="{Binding DataContext.SetRgbModeCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}" CommandParameter="{Binding}" />
+                                </Grid>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                    <TextBlock Style="{StaticResource PulseLabel}" Text="HIZ (Nefes, Renk döngüsü ve Gökkuşağı için)" Margin="0,10,0,6" />
+                    <ItemsControl ItemsSource="{Binding RgbSpeeds}">
+                        <ItemsControl.ItemsPanel><ItemsPanelTemplate><StackPanel Orientation="Horizontal" /></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Grid Margin="0,0,6,0">
+                                    <Button Content="{Binding Title}" Style="{StaticResource PulseSegment}" MinWidth="72"
+                                            Command="{Binding DataContext.SetRgbSpeedCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}" CommandParameter="{Binding}" />
+                                    <Button Content="{Binding Title}" Style="{StaticResource PulseSegmentActive}" MinWidth="72" Visibility="{Binding IsActive, Converter={StaticResource BoolToVis}}"
+                                            Command="{Binding DataContext.SetRgbSpeedCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}" CommandParameter="{Binding}" />
+                                </Grid>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                    <TextBlock Style="{StaticResource PulseMuted}" Text="{Binding RgbStatus}" TextWrapping="Wrap" Margin="0,10,0,0" />
+                </StackPanel>
+            </Border>
+
+            <!-- Kısayollar -->            <TextBlock Style="{StaticResource PulseLabel}" Text="KISAYOLLAR" Margin="0,18,0,8" />
+            <Border Style="{StaticResource PulseCard}" Padding="0">
+                <StackPanel>
+                    <Grid Margin="16,12">
+                        <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+                        <StackPanel Margin="0,0,20,0">
+                            <TextBlock Style="{StaticResource SettingTitle}" Text="Klavye kısayollarıyla kullan" />
+                            <TextBlock Style="{StaticResource PulseMuted}" TextWrapping="Wrap" Text="{Binding HotkeyStatus}" />
+                            <TextBlock Style="{StaticResource PulseMuted}" TextWrapping="Wrap" Margin="0,2,0,0"
+                                       Text="Bu bilgisayarda Fn tuşlarını ASUS yalnızca kendi programına veriyor, Pulse göremiyor (denedik). Onun yerine istediğin başka bir tuşu ata: Ctrl+Alt+bir harf, F13-F24, Pause, Print Screen gibi." />
+                        </StackPanel>
+                        <ui:ToggleSwitch Grid.Column="1" IsChecked="{Binding Hotkeys}" VerticalAlignment="Center" />
+                    </Grid>
+                    <Border Style="{StaticResource PulseHairline}" />
+                    <ItemsControl ItemsSource="{Binding HotkeyRows}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <StackPanel>
+                                    <Grid Margin="16,7">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" /><ColumnDefinition Width="150" /><ColumnDefinition Width="Auto" /><ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Text="{Binding Title}" Style="{StaticResource PulseBody}" VerticalAlignment="Center" TextWrapping="Wrap" />
+                                        <Border Grid.Column="1" Style="{StaticResource PulseBadge}" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="10,0,0,0">
+                                            <TextBlock Text="{Binding Text}" FontFamily="Consolas" FontSize="12" FontWeight="SemiBold" />
+                                        </Border>
+                                        <Button Grid.Column="2" Content="Değiştir" Style="{StaticResource PulseGhostButton}" Height="26" Margin="8,0,0,0"
+                                                Command="{Binding DataContext.ChangeHotkeyCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}" CommandParameter="{Binding}" />
+                                        <Button Grid.Column="3" Content="Sil" Style="{StaticResource PulseGhostButton}" Height="26" Margin="6,0,0,0"
+                                                Visibility="{Binding Assigned, Converter={StaticResource BoolToVis}}"
+                                                Command="{Binding DataContext.ClearHotkeyCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}" CommandParameter="{Binding}" />
+                                    </Grid>
+                                    <Border Style="{StaticResource PulseHairline}" />
+                                </StackPanel>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </StackPanel>
+            </Border>
+            <!-- G-Helper'ı kapat -->
+            <TextBlock Style="{StaticResource PulseLabel}" Text="G-HELPER'I KAPAT" Margin="0,18,0,8" />
+            <Border Style="{StaticResource PulseCard}" Padding="0">
+                <StackPanel>
+                    <Grid Margin="16,12">
+                        <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+                        <StackPanel Margin="0,0,16,0">
+                            <TextBlock Style="{StaticResource SettingTitle}" Text="Pulse tek başına yönetsin" />
+                            <TextBlock Style="{StaticResource PulseMuted}" TextWrapping="Wrap"
+                                       Text="G-Helper'ı kapatır, bilgisayar açılınca başlamasını engeller ve Armoury Crate'in gereksiz arka plan programlarını durdurur. Hiçbir şey silinmez, “Geri al” ile her şey eski haline döner." />
+                            <TextBlock Style="{StaticResource PulseMuted}" TextWrapping="Wrap" Margin="0,4,0,0" Text="{Binding ExitStatus}" FontWeight="Medium" />
+                        </StackPanel>
+                        <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Top">
+                            <Button Content="Kontrol et" Style="{StaticResource PulseGhostButton}" Command="{Binding RefreshExitCommand}" Margin="0,0,8,0" />
+                            <Button Content="Geri al" Style="{StaticResource PulseGhostButton}" Command="{Binding RevertGHelperCommand}" Margin="0,0,8,0"
+                                    IsEnabled="{Binding HasBackup}" />
+                            <Button Content="G-Helper'ı kapat" Style="{StaticResource PulsePrimaryButton}" Command="{Binding LeaveGHelperCommand}"
+                                    IsEnabled="{Binding ExitBusy, Converter={StaticResource InvertBool}}" />
+                        </StackPanel>
+                    </Grid>
+                    <Border Style="{StaticResource PulseHairline}" />
+                    <ItemsControl ItemsSource="{Binding ExitRows}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <StackPanel>
+                                    <Grid Margin="16,8">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="64" />
+                                            <ColumnDefinition Width="*" />
+                                        </Grid.ColumnDefinitions>
+                                        <Border Style="{StaticResource PulseBadge}" VerticalAlignment="Top" HorizontalAlignment="Left" Margin="0,1,0,0">
+                                            <TextBlock Text="{Binding Label}" Foreground="{Binding Brush}" FontSize="10.5" FontWeight="SemiBold" />
+                                        </Border>
+                                        <StackPanel Grid.Column="1">
+                                            <TextBlock Text="{Binding Name}" Style="{StaticResource PulseBody}" FontWeight="Medium" />
+                                            <TextBlock Text="{Binding Detail}" Style="{StaticResource PulseMuted}" />
+                                        </StackPanel>
+                                    </Grid>
+                                    <Border Style="{StaticResource PulseHairline}" />
+                                </StackPanel>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                    <TextBlock Style="{StaticResource PulseMuted}" TextWrapping="Wrap" Margin="16,10,16,12"
+                               Text="Bilerek dokunulmayanlar: ASUSOptimization ve ASUSSwitch. Bunlar fan ve donanım tuşlarına bakıyor; kapatırsak Fn tuşları bozulabilir." />
+                </StackPanel>
+            </Border>
+        </StackPanel>
+    </ScrollViewer>
+</Page>

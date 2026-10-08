@@ -1,0 +1,184 @@
+<Page x:Class="Pulse.App.Pages.AppsPage"
+      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+      xmlns:c="clr-namespace:Pulse.App.Controls"
+      Background="Transparent" FontFamily="{StaticResource BodyFont}"
+      ScrollViewer.CanContentScroll="False" ScrollViewer.VerticalScrollBarVisibility="Disabled">
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <StackPanel Margin="26,18,26,22" MaxWidth="1000" HorizontalAlignment="Stretch">
+            <TextBlock Style="{StaticResource PulseLabel}" Text="UYGULAMALAR" />
+            <TextBlock Style="{StaticResource PulseDisplay}" Margin="0,2,0,0" Text="Hangi uygulama ne yapıyor?" />
+            <TextBlock Style="{StaticResource PulseLead}" Margin="0,2,0,0"
+                       Text="Programlarını güncelle, gereksizleri kaldır, bilgisayar açılınca hangilerinin başlayacağına sen karar ver." />
+            <Border Style="{StaticResource PulseHairline}" Margin="0,14,0,12" />
+
+            <!-- Sekmeler -->
+            <ItemsControl ItemsSource="{Binding Tabs}" Margin="0,0,0,12">
+                <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate><StackPanel Orientation="Horizontal" /></ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <Grid>
+                            <Button Content="{Binding Title}" Style="{StaticResource PulseSegment}"
+                                    Command="{Binding DataContext.SelectTabCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}" CommandParameter="{Binding}" />
+                            <Button Content="{Binding Title}" Style="{StaticResource PulseSegmentActive}"
+                                    Visibility="{Binding IsActive, Converter={StaticResource BoolToVis}}"
+                                    Command="{Binding DataContext.SelectTabCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}" CommandParameter="{Binding}" />
+                        </Grid>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+
+            <TextBlock Text="{Binding Status}" Style="{StaticResource PulseMuted}" Margin="0,0,0,8" />
+            <Border Style="{StaticResource PulseCard}" Padding="16,12" Margin="0,0,0,10"
+                    Visibility="{Binding Op.IsActive, Converter={StaticResource BoolToVis}}">
+                <c:BusyBar IsActive="{Binding Op.IsActive}" Fraction="{Binding Op.Fraction}" Text="{Binding Op.Text}" Counter="{Binding Op.Counter}" />
+            </Border>
+
+            <!-- 0: Güncellemeler -->
+            <StackPanel Visibility="{Binding Tab, Converter={StaticResource EqualsToVis}, ConverterParameter=0}">
+                <Border Style="{StaticResource PulseCard}" Padding="14,10">
+                    <DockPanel>
+                        <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+                            <Button Content="Yenile" Style="{StaticResource PulseGhostButton}" Command="{Binding RefreshUpdatesCommand}" Margin="0,0,8,0" Width="80" />
+                            <Button Content="Tümünü güncelle" Style="{StaticResource PulsePrimaryButton}" Command="{Binding UpdateAllCommand}" />
+                        </StackPanel>
+                        <TextBlock Text="{Binding UpdatesNote}" Style="{StaticResource PulseBody}" FontWeight="Medium" VerticalAlignment="Center" />
+                    </DockPanel>
+                </Border>
+                <Border Style="{StaticResource PulseCard}" Padding="0" Margin="0,8,0,0">
+                    <ItemsControl ItemsSource="{Binding Updates}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <StackPanel>
+                                    <Grid Margin="14,9">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition Width="110" />
+                                        </Grid.ColumnDefinitions>
+                                        <StackPanel>
+                                            <TextBlock Text="{Binding Name}" Style="{StaticResource PulseBody}" FontWeight="Medium" />
+                                            <TextBlock Text="{Binding Id}" Style="{StaticResource PulseMuted}" />
+                                        </StackPanel>
+                                        <StackPanel Grid.Column="1" Margin="0,0,16,0" VerticalAlignment="Center">
+                                            <TextBlock Text="{Binding Versions}" Style="{StaticResource PulseMuted}" HorizontalAlignment="Right" />
+                                            <TextBlock Text="{Binding State}" Style="{StaticResource PulseMuted}" HorizontalAlignment="Right" />
+                                        </StackPanel>
+                                        <Button Grid.Column="2" Content="Güncelle" Style="{StaticResource PulseGhostButton}" HorizontalAlignment="Right"
+                                                IsEnabled="{Binding IsBusy, Converter={StaticResource InvertBool}}"
+                                                Command="{Binding DataContext.UpdateOneCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}" CommandParameter="{Binding}" />
+                                    </Grid>
+                                    <Border Style="{StaticResource PulseHairline}" />
+                                </StackPanel>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </Border>
+            </StackPanel>
+
+            <!-- 1: Kurulu uygulamalar -->
+            <StackPanel Visibility="{Binding Tab, Converter={StaticResource EqualsToVis}, ConverterParameter=1}">
+                <DockPanel Margin="0,0,0,8">
+                    <TextBlock DockPanel.Dock="Right" Text="{Binding AppsNote}" Style="{StaticResource PulseMuted}" VerticalAlignment="Center" />
+                    <ui:TextBox PlaceholderText="Uygulama ara…" Text="{Binding Search, UpdateSourceTrigger=PropertyChanged}" Width="260" HorizontalAlignment="Left" />
+                </DockPanel>
+                <Border Style="{StaticResource PulseCard}" Padding="0">
+                    <ItemsControl ItemsSource="{Binding Apps}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <StackPanel>
+                                    <Grid Margin="14,8">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="80" />
+                                            <ColumnDefinition Width="90" />
+                                            <ColumnDefinition Width="90" />
+                                        </Grid.ColumnDefinitions>
+                                        <StackPanel>
+                                            <StackPanel Orientation="Horizontal">
+                                                <TextBlock Text="{Binding Name}" Style="{StaticResource PulseBody}" FontWeight="Medium" TextTrimming="CharacterEllipsis" />
+                                                <Border Style="{StaticResource PulseBadge}" Margin="8,0,0,0" VerticalAlignment="Center"
+                                                        Visibility="{Binding HintLabel, Converter={StaticResource StringToVis}}">
+                                                    <TextBlock Text="{Binding HintLabel}" FontSize="10.5" Foreground="{StaticResource WarnBrush}" FontWeight="Medium" />
+                                                </Border>
+                                            </StackPanel>
+                                            <TextBlock Text="{Binding Publisher}" Style="{StaticResource PulseMuted}" />
+                                            <TextBlock Text="{Binding Hint}" Style="{StaticResource PulseMuted}" Foreground="{StaticResource WarnBrush}"
+                                                       Visibility="{Binding Hint, Converter={StaticResource StringToVis}}" />
+                                        </StackPanel>
+                                        <TextBlock Grid.Column="1" Text="{Binding SizeText}" Style="{StaticResource PulseBody}" VerticalAlignment="Center" TextAlignment="Right" />
+                                        <TextBlock Grid.Column="2" Text="{Binding DateText}" Style="{StaticResource PulseMuted}" VerticalAlignment="Center" TextAlignment="Right" />
+                                        <Button Grid.Column="3" Content="Kaldır" Style="{StaticResource PulseGhostButton}" HorizontalAlignment="Right" Height="26" MinWidth="64"
+                                                IsEnabled="{Binding CanUninstall}"
+                                                Command="{Binding DataContext.UninstallCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}" CommandParameter="{Binding}" />
+                                    </Grid>
+                                    <Border Style="{StaticResource PulseHairline}" />
+                                </StackPanel>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </Border>
+            </StackPanel>
+
+            <!-- 2: Başlangıç -->
+            <StackPanel Visibility="{Binding Tab, Converter={StaticResource EqualsToVis}, ConverterParameter=2}">
+                <TextBlock Style="{StaticResource PulseMuted}" Margin="0,0,0,8"
+                           Text="Kapattıkların bilgisayar açılınca başlamaz. Hiçbir şey silinmez, istediğin an yeniden açarsın." />
+                <Border Style="{StaticResource PulseCard}" Padding="0">
+                    <ItemsControl ItemsSource="{Binding Startups}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <StackPanel>
+                                    <Grid Margin="14,9">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+                                        <StackPanel>
+                                            <TextBlock Text="{Binding Name}" Style="{StaticResource PulseBody}" FontWeight="Medium" />
+                                            <TextBlock Text="{Binding Detail}" Style="{StaticResource PulseMuted}" />
+                                        </StackPanel>
+                                        <ui:ToggleSwitch Grid.Column="1" IsChecked="{Binding IsEnabled}" VerticalAlignment="Center" />
+                                    </Grid>
+                                    <Border Style="{StaticResource PulseHairline}" />
+                                </StackPanel>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </Border>
+            </StackPanel>
+
+            <!-- 3: Arka plan -->
+            <StackPanel Visibility="{Binding Tab, Converter={StaticResource EqualsToVis}, ConverterParameter=3}">
+                <TextBlock Style="{StaticResource PulseMuted}" Margin="0,0,0,8" TextWrapping="Wrap" Text="{Binding BackgroundNote}" />
+                <Border Style="{StaticResource PulseCard}" Padding="0">
+                    <ItemsControl ItemsSource="{Binding BackgroundItems}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <StackPanel>
+                                    <Grid Margin="14,9">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="110" /><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+                                        <Border Style="{StaticResource PulseBadge}" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="0,1,0,0">
+                                            <TextBlock Text="{Binding Label}" Foreground="{Binding Brush}" FontSize="10.5" FontWeight="SemiBold" />
+                                        </Border>
+                                        <StackPanel Grid.Column="1" Margin="0,0,12,0">
+                                            <TextBlock Text="{Binding Name}" Style="{StaticResource PulseBody}" FontWeight="Medium" TextTrimming="CharacterEllipsis" />
+                                            <TextBlock Text="{Binding Detail}" Style="{StaticResource PulseMuted}" TextWrapping="Wrap" />
+                                        </StackPanel>
+                                        <ui:ToggleSwitch Grid.Column="2" IsChecked="{Binding IsEnabled}" IsEnabled="{Binding CanToggle}" VerticalAlignment="Center" />
+                                    </Grid>
+                                    <Border Style="{StaticResource PulseHairline}" />
+                                </StackPanel>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </Border>
+            </StackPanel>
+        </StackPanel>
+    </ScrollViewer>
+</Page>

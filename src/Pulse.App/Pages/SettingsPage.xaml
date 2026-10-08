@@ -1,0 +1,146 @@
+<Page x:Class="Pulse.App.Pages.SettingsPage"
+      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+      Background="Transparent" FontFamily="{StaticResource BodyFont}"
+      ScrollViewer.CanContentScroll="False" ScrollViewer.VerticalScrollBarVisibility="Disabled">
+    <Page.Resources>
+        <!-- Ayar satırı: başlık + açıklama solda, anahtar sağda -->
+        <Style x:Key="SettingTitle" TargetType="TextBlock" BasedOn="{StaticResource PulseBody}">
+            <Setter Property="FontWeight" Value="Medium" />
+        </Style>
+    </Page.Resources>
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <StackPanel Margin="26,18,26,22" MaxWidth="1000" HorizontalAlignment="Stretch">
+            <TextBlock Style="{StaticResource PulseLabel}" Text="AYARLAR" />
+            <TextBlock Style="{StaticResource PulseDisplay}" Margin="0,2,0,0" Text="Pulse nasıl davransın?" />
+            <TextBlock Style="{StaticResource PulseLead}" Margin="0,2,0,0" Text="Değişiklikler anında kaydedilir." />
+            <Border Style="{StaticResource PulseHairline}" Margin="0,14,0,12" />
+
+            <TextBlock Style="{StaticResource PulseLabel}" Text="OTOMATİK MOD" Margin="0,0,0,8" />
+            <Border Style="{StaticResource PulseCard}" Padding="0">
+                <StackPanel>
+                    <Grid Margin="14,11">
+                        <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+                        <StackPanel>
+                            <TextBlock Style="{StaticResource SettingTitle}" Text="Oyun açılınca Oyun moduna geç" />
+                            <TextBlock Style="{StaticResource PulseMuted}" Text="Oyunu kapatınca eski moduna döner. Sen elle bir mod seçtiysen ona karışmaz." />
+                            <TextBlock Style="{StaticResource PulseMuted}" Text="{Binding GameText}" Margin="0,2,0,0" />
+                        </StackPanel>
+                        <ui:ToggleSwitch Grid.Column="1" IsChecked="{Binding AutoGameMode}" VerticalAlignment="Center" />
+                    </Grid>
+                    <Border Style="{StaticResource PulseHairline}" />
+                    <Grid Margin="14,11">
+                        <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+                        <StackPanel>
+                            <TextBlock Style="{StaticResource SettingTitle}" Text="Fişi çekince Sessiz moda geç" />
+                            <TextBlock Style="{StaticResource PulseMuted}" Text="Pilde daha az ısınır, fan daha az ses çıkarır, pil daha uzun gider." />
+                        </StackPanel>
+                        <ui:ToggleSwitch Grid.Column="1" IsChecked="{Binding AutoQuietOnBattery}" VerticalAlignment="Center" />
+                    </Grid>
+                </StackPanel>
+            </Border>
+
+            <TextBlock Style="{StaticResource PulseLabel}" Text="ISI BEKÇİSİ" Margin="0,18,0,8" />
+            <Border Style="{StaticResource PulseCard}" Padding="0">
+                <Grid Margin="14,11">
+                    <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+                    <StackPanel Margin="0,0,20,0">
+                        <TextBlock Style="{StaticResource SettingTitle}" Text="Çok ısınırsa kendiliğinden serinlet" />
+                        <TextBlock Style="{StaticResource PulseMuted}" TextWrapping="Wrap" Text="Bilgisayar tehlikeli derecede sıcak kalırsa (işlemci 97 °C, ekran kartı 90 °C üstünde, 10 saniye) önce haber verir, sonra Sessiz moda geçer. 1 dakika serin kalınca eski moduna döner. Kısa süreli ısınmalar (oyun yüklenirken) alarm vermez." />
+                    </StackPanel>
+                    <ui:ToggleSwitch Grid.Column="1" IsChecked="{Binding ThermalGuard}" VerticalAlignment="Center" />
+                </Grid>
+            </Border>
+
+            <TextBlock Style="{StaticResource PulseLabel}" Text="SICAKLIK SINIRI" Margin="0,18,0,8" />
+            <Border Style="{StaticResource PulseCard}" Padding="16,12">
+                <StackPanel>
+                    <TextBlock Style="{StaticResource SettingTitle}" Text="Bilgisayarı şu sıcaklığın altında tutmaya çalış" />
+                    <ItemsControl ItemsSource="{Binding HeatChoices}" Margin="0,8,0,0">
+                        <ItemsControl.ItemsPanel><ItemsPanelTemplate><StackPanel Orientation="Horizontal" /></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Grid Margin="0,0,6,0">
+                                    <Button Content="{Binding Title}" Style="{StaticResource PulseSegment}" MinWidth="72"
+                                            Command="{Binding DataContext.SetHeatCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}" CommandParameter="{Binding}" />
+                                    <Button Content="{Binding Title}" Style="{StaticResource PulseSegmentActive}" MinWidth="72" Visibility="{Binding IsActive, Converter={StaticResource BoolToVis}}"
+                                            Command="{Binding DataContext.SetHeatCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}" CommandParameter="{Binding}" />
+                                </Grid>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                    <TextBlock Style="{StaticResource PulseMuted}" TextWrapping="Wrap" Text="{Binding HeatText}" Margin="0,8,0,0" />
+                </StackPanel>
+            </Border>
+
+            <TextBlock Style="{StaticResource PulseLabel}" Text="OTOMATİK TEMİZLİK" Margin="0,18,0,8" />
+            <Border Style="{StaticResource PulseCard}" Padding="0">
+                <Grid Margin="14,11">
+                    <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+                    <StackPanel Margin="0,0,20,0">
+                        <TextBlock Style="{StaticResource SettingTitle}" Text="Haftada bir gereksiz dosyaları kendiliğinden sil" />
+                        <TextBlock Style="{StaticResource PulseMuted}" Text="Yalnızca 2 günden eski geçici dosyalar ve eski hata raporları. Belgelerine, oyunlarına, indirdiklerine ve geri dönüşüm kutusuna dokunmaz." />
+                        <TextBlock Style="{StaticResource PulseMuted}" Text="{Binding AutoCleanText}" Margin="0,2,0,0" />
+                    </StackPanel>
+                    <ui:ToggleSwitch Grid.Column="1" IsChecked="{Binding AutoClean}" VerticalAlignment="Center" />
+                </Grid>
+            </Border>
+            <TextBlock Style="{StaticResource PulseLabel}" Text="BAŞKA PROGRAMLARLA ÇAKIŞMA" Margin="0,18,0,8" />
+            <Border Style="{StaticResource PulseCard}" Padding="0" Margin="0,0,0,8">
+                <Grid Margin="14,11">
+                    <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+                    <StackPanel Margin="0,0,20,0">
+                        <TextBlock Style="{StaticResource SettingTitle}" Text="Başka bir program ayarı bozarsa düzelt" />
+                        <TextBlock Style="{StaticResource PulseMuted}" TextWrapping="Wrap" Text="G-Helper, Armoury Crate gibi programlar güç ayarını değiştirirse Pulse bunu dakikada bir kontrol eder ve seçtiğin modun ayarını geri yazar. Bu sayede başka bir programı açık unutsan bile Oyun modun bozulmaz." />
+                    </StackPanel>
+                    <ui:ToggleSwitch Grid.Column="1" IsChecked="{Binding KeepMode}" VerticalAlignment="Center" />
+                </Grid>
+            </Border>
+            <Border Style="{StaticResource PulseCard}" Padding="0">
+                <StackPanel>
+                    <Grid Margin="14,11">
+                        <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+                        <StackPanel>
+                            <TextBlock Style="{StaticResource SettingTitle}" Text="Mod seçerken G-Helper ve Armoury Crate açıksa kapat" />
+                            <TextBlock Style="{StaticResource PulseMuted}" Text="İkisi de kendi ayarını uygulayıp senin seçtiğin modu bozabilir. Birini kullanmıyorsan bunu açık tut." />
+                            <TextBlock Style="{StaticResource PulseMuted}" Text="{Binding ConflictsText}" Margin="0,2,0,0" />
+                        </StackPanel>
+                        <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                            <Button Content="Şimdi kapat" Style="{StaticResource PulseGhostButton}" Command="{Binding CloseConflictsCommand}" Margin="0,0,12,0" />
+                            <ui:ToggleSwitch IsChecked="{Binding CloseConflictingApps}" />
+                        </StackPanel>
+                    </Grid>
+                </StackPanel>
+            </Border>
+
+            <TextBlock Style="{StaticResource PulseLabel}" Text="UYGULAMA" Margin="0,18,0,8" />
+            <Border Style="{StaticResource PulseCard}" Padding="0">
+                <StackPanel>
+                    <Grid Margin="14,11">
+                        <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+                        <StackPanel>
+                            <TextBlock Style="{StaticResource SettingTitle}" Text="Bilgisayar açılınca Pulse de açılsın" />
+                            <TextBlock Style="{StaticResource PulseMuted}" Text="Pencere açmadan, sağ alttaki simge olarak başlar. İzin de sormaz." />
+                            <TextBlock Style="{StaticResource PulseMuted}" Text="{Binding StartupMessage}" Margin="0,2,0,0" />
+                        </StackPanel>
+                        <ui:ToggleSwitch Grid.Column="1" IsChecked="{Binding StartWithWindows}" VerticalAlignment="Center" />
+                    </Grid>
+                    <Border Style="{StaticResource PulseHairline}" />
+                    <Grid Margin="14,11">
+                        <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+                        <StackPanel>
+                            <TextBlock Style="{StaticResource SettingTitle}" Text="Pencereyi kapatınca Pulse arka planda çalışmaya devam etsin" />
+                            <TextBlock Style="{StaticResource PulseMuted}" Text="Kapalıysa pencereyi kapatmak Pulse'ı tamamen kapatır." />
+                        </StackPanel>
+                        <ui:ToggleSwitch Grid.Column="1" IsChecked="{Binding MinimizeToTray}" VerticalAlignment="Center" />
+                    </Grid>
+                </StackPanel>
+            </Border>
+            <Border Style="{StaticResource PulseHairline}" Margin="0,22,0,10" />
+            <TextBlock Style="{StaticResource PulseMuted}" Text="{Binding VersionText}" />
+            <TextBlock Style="{StaticResource PulseMuted}" Margin="0,2,0,0" TextWrapping="Wrap"
+                       Text="Donanım ayarlarını değiştirir; kendi sorumluluğunda kullan. Sorun olursa Kendini sınama kısayoluyla sonuç dosyası alabilirsin." />
+        </StackPanel>
+    </ScrollViewer>
+</Page>

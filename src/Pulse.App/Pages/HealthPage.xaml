@@ -1,0 +1,98 @@
+<Page x:Class="Pulse.App.Pages.HealthPage"
+      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+      xmlns:c="clr-namespace:Pulse.App.Controls"
+      Background="Transparent" FontFamily="{StaticResource BodyFont}"
+      ScrollViewer.CanContentScroll="False" ScrollViewer.VerticalScrollBarVisibility="Disabled">
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <StackPanel Margin="26,18,26,22" MaxWidth="1000" HorizontalAlignment="Stretch">
+            <TextBlock Style="{StaticResource PulseLabel}" Text="SAĞLIK" />
+            <TextBlock Style="{StaticResource PulseDisplay}" Margin="0,2,0,0" Text="Bilgisayarının sağlık raporu." />
+            <TextBlock Style="{StaticResource PulseLead}" Margin="0,2,0,0" Text="Pil, ısı, fan ve disk nasıl? Sorun varsa sade bir dille söyler." />
+            <Border Style="{StaticResource PulseHairline}" Margin="0,14,0,12" />
+
+            <!-- Genel durum -->
+            <Border Style="{StaticResource PulseCard}" Padding="16,12">
+                <DockPanel>
+                    <Button DockPanel.Dock="Right" Content="Yenile" Style="{StaticResource PulseGhostButton}" Command="{Binding RefreshCommand}" VerticalAlignment="Center" />
+                    <StackPanel>
+                        <TextBlock Style="{StaticResource PulseLabel}" Text="GENEL DURUM" />
+                        <TextBlock Text="{Binding SummaryText}" Foreground="{Binding SummaryBrush}"
+                                   FontFamily="{StaticResource DisplayFont}" FontSize="30" />
+                    </StackPanel>
+                </DockPanel>
+            </Border>
+
+            <!-- Canlı ölçümler -->
+            <TextBlock Style="{StaticResource PulseLabel}" Text="CANLI ÖLÇÜMLER" Margin="0,16,0,8" />
+            <Border Style="{StaticResource PulseCard}" Padding="0">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" /><ColumnDefinition Width="1" />
+                        <ColumnDefinition Width="*" /><ColumnDefinition Width="1" />
+                        <ColumnDefinition Width="*" /><ColumnDefinition Width="1" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+
+                    <StackPanel Grid.Column="0" Margin="14,10">
+                        <TextBlock Style="{StaticResource PulseLabel}" Text="İŞLEMCİ" />
+                        <TextBlock Style="{StaticResource PulseStat}" Text="{Binding CpuText}" />
+                        <TextBlock Style="{StaticResource PulseMuted}" Text="{Binding CpuNote}" />
+                        <c:Sparkline Height="34" Margin="0,8,0,0" Values="{Binding CpuHistory}" Stroke="{StaticResource InkBrush}" Minimum="30" Maximum="100" />
+                    </StackPanel>
+                    <Border Grid.Column="1" Background="{StaticResource LineBrush}" />
+
+                    <StackPanel Grid.Column="2" Margin="14,10">
+                        <TextBlock Style="{StaticResource PulseLabel}" Text="EKRAN KARTI" />
+                        <TextBlock Style="{StaticResource PulseStat}" Text="{Binding GpuText}" />
+                        <TextBlock Style="{StaticResource PulseMuted}" Text="{Binding GpuNote}" />
+                        <c:Sparkline Height="34" Margin="0,8,0,0" Values="{Binding GpuHistory}" Stroke="{StaticResource InkBrush}" Minimum="25" Maximum="95" />
+                    </StackPanel>
+                    <Border Grid.Column="3" Background="{StaticResource LineBrush}" />
+
+                    <StackPanel Grid.Column="4" Margin="14,10">
+                        <TextBlock Style="{StaticResource PulseLabel}" Text="FAN" />
+                        <TextBlock Style="{StaticResource PulseStat}" Text="{Binding FanText}" />
+                        <TextBlock Style="{StaticResource PulseMuted}" Text="{Binding FanNote}" />
+                        <c:Sparkline Height="34" Margin="0,8,0,0" Values="{Binding FanHistory}" Stroke="{StaticResource AccentGrayBrush}" Minimum="0" Maximum="6000" />
+                    </StackPanel>
+                    <Border Grid.Column="5" Background="{StaticResource LineBrush}" />
+
+                    <StackPanel Grid.Column="6" Margin="14,10">
+                        <TextBlock Style="{StaticResource PulseLabel}" Text="PİL" />
+                        <TextBlock Style="{StaticResource PulseStat}" Text="{Binding BatteryText}" Foreground="{Binding BatteryBrush}" />
+                        <TextBlock Style="{StaticResource PulseMuted}" Text="{Binding BatteryNote}" />
+                    </StackPanel>
+                </Grid>
+            </Border>
+
+            <!-- Bulgular -->
+            <TextBlock Style="{StaticResource PulseLabel}" Text="BULGULAR" Margin="0,16,0,8" />
+            <Border Style="{StaticResource PulseCard}" Padding="0">
+                <ItemsControl ItemsSource="{Binding Findings}">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <StackPanel>
+                                <Grid Margin="14,10">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="64" />
+                                        <ColumnDefinition Width="*" />
+                                    </Grid.ColumnDefinitions>
+                                    <Border Style="{StaticResource PulseBadge}" VerticalAlignment="Top" HorizontalAlignment="Left" Margin="0,1,0,0">
+                                        <TextBlock Text="{Binding Label}" Foreground="{Binding Brush}" FontSize="10.5" FontWeight="SemiBold" />
+                                    </Border>
+                                    <StackPanel Grid.Column="1">
+                                        <TextBlock Text="{Binding Title}" Style="{StaticResource PulseBody}" FontWeight="Medium" />
+                                        <TextBlock Text="{Binding Detail}" Style="{StaticResource PulseMuted}" />
+                                    </StackPanel>
+                                </Grid>
+                                <Border Style="{StaticResource PulseHairline}" />
+                            </StackPanel>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </Border>
+        </StackPanel>
+    </ScrollViewer>
+</Page>

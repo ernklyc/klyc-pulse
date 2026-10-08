@@ -1,0 +1,48 @@
+<ui:FluentWindow x:Class="Pulse.App.MainWindow"
+                 xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                 xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                 xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+                 xmlns:pages="clr-namespace:Pulse.App.Pages"
+                 Title="KLYC-Pulse"
+                 Width="1060" Height="720" MinWidth="900" MinHeight="600"
+                 WindowStartupLocation="CenterScreen"
+                 WindowBackdropType="None"
+                 WindowCornerPreference="Round"
+                 ExtendsContentIntoTitleBar="True"
+                 Background="#FFFFFFFF" FontFamily="{StaticResource BodyFont}">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <ui:TitleBar x:Name="TitleBar" Grid.Row="0" Title="KLYC-Pulse" ShowMaximize="True">
+            <ui:TitleBar.Icon>
+                <ui:ImageIcon Source="pack://application:,,,/logo.png" Width="18" Height="18" />
+            </ui:TitleBar.Icon>
+        </ui:TitleBar>
+
+        <ui:NavigationView x:Name="RootNavigation" Grid.Row="1"
+                           IsBackButtonVisible="Collapsed"
+                           IsPaneToggleVisible="False"
+                           PaneDisplayMode="Left"
+                           OpenPaneLength="196"
+                           FrameMargin="0">
+            <ui:NavigationView.MenuItems>
+                <ui:NavigationViewItem Content="Ana ekran" Icon="{ui:SymbolIcon Home24}" TargetPageType="{x:Type pages:HomePage}" />
+                <ui:NavigationViewItem Content="Oyunlar" Icon="{ui:SymbolIcon XboxController24}" TargetPageType="{x:Type pages:GamesPage}" />
+                <ui:NavigationViewItem Content="Temizlik" Icon="{ui:SymbolIcon Broom24}" TargetPageType="{x:Type pages:CleanupPage}" />
+                <ui:NavigationViewItem Content="Süreçler" Icon="{ui:SymbolIcon TaskListSquareLtr24}" TargetPageType="{x:Type pages:ProcessesPage}" />
+                <ui:NavigationViewItem Content="Uygulamalar" Icon="{ui:SymbolIcon AppsList24}" TargetPageType="{x:Type pages:AppsPage}" />
+                <ui:NavigationViewItem Content="Sağlık" Icon="{ui:SymbolIcon HeartPulse24}" TargetPageType="{x:Type pages:HealthPage}" />
+                <ui:NavigationViewItem Content="İzleme" Icon="{ui:SymbolIcon DataTrending24}" TargetPageType="{x:Type pages:MonitorPage}" />
+                <ui:NavigationViewItem Content="Sürücüler" Icon="{ui:SymbolIcon DeveloperBoard24}" TargetPageType="{x:Type pages:DriversPage}" />
+                <ui:NavigationViewItem Content="Araçlar" Icon="{ui:SymbolIcon Wrench24}" TargetPageType="{x:Type pages:ToolsPage}" />
+                <ui:NavigationViewItem Content="Dizüstü" Icon="{ui:SymbolIcon Laptop24}" TargetPageType="{x:Type pages:LaptopPage}" />
+            </ui:NavigationView.MenuItems>
+            <ui:NavigationView.FooterMenuItems>
+                <ui:NavigationViewItem Content="Ayarlar" Icon="{ui:SymbolIcon Settings24}" TargetPageType="{x:Type pages:SettingsPage}" />
+            </ui:NavigationView.FooterMenuItems>
+        </ui:NavigationView>
+    </Grid>
+</ui:FluentWindow>

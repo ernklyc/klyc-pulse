@@ -1,0 +1,120 @@
+<Page x:Class="Pulse.App.Pages.GamesPage"
+      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+      xmlns:vm="clr-namespace:Pulse.App.ViewModels"
+      Background="Transparent" FontFamily="{StaticResource BodyFont}"
+      ScrollViewer.CanContentScroll="False" ScrollViewer.VerticalScrollBarVisibility="Disabled">
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <StackPanel Margin="26,18,26,22" MaxWidth="1000" HorizontalAlignment="Stretch">
+            <TextBlock Style="{StaticResource PulseLabel}" Text="OYUNLAR" />
+            <TextBlock Style="{StaticResource PulseDisplay}" Margin="0,2,0,0" Text="Her oyuna kendi ayarı." />
+            <TextBlock Style="{StaticResource PulseLead}" Margin="0,2,0,0"
+                       Text="Hangi oyun açılınca hangi mod uygulansın, sen seç. Oyunu kapatınca eski moduna döner." />
+            <Border Style="{StaticResource PulseHairline}" Margin="0,14,0,12" />
+
+            <!-- Otomatik geçiş -->
+            <Border Style="{StaticResource PulseCard}" Padding="16,12">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <StackPanel Margin="0,0,20,0">
+                        <TextBlock Style="{StaticResource PulseBody}" FontWeight="Medium" Text="Oyun açılınca modu kendiliğinden değiştir" />
+                        <TextBlock Style="{StaticResource PulseMuted}" Text="Kapalıyken hiçbir şey değişmez. Oyunlar ilk açıldığında aşağıdaki listeye kendiliğinden eklenir." />
+                        <TextBlock Style="{StaticResource PulseMuted}" Text="{Binding GameText}" Margin="0,2,0,0" />
+                    </StackPanel>
+                    <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                        <Button Content="Oyun ekle…" Style="{StaticResource PulseGhostButton}" Command="{Binding AddGameCommand}" Margin="0,0,12,0" />
+                        <ui:ToggleSwitch IsChecked="{Binding AutoGameMode}" />
+                    </StackPanel>
+                </Grid>
+            </Border>
+
+            <TextBlock Style="{StaticResource PulseLabel}" Text="WINDOWS'UN OYUN AYARLARI" Margin="0,16,0,8" />
+            <Border Style="{StaticResource PulseCard}" Padding="0">
+                <StackPanel>
+                    <ItemsControl ItemsSource="{Binding GameSettings}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <StackPanel>
+                                    <Grid Margin="16,9">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="120" /><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+                                        <Border Style="{StaticResource PulseBadge}" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="0,1,0,0">
+                                            <TextBlock Text="{Binding Label}" Foreground="{Binding Brush}" FontSize="10.5" FontWeight="SemiBold" />
+                                        </Border>
+                                        <StackPanel Grid.Column="1" Margin="0,0,12,0">
+                                            <TextBlock Text="{Binding Name}" Style="{StaticResource PulseBody}" FontWeight="Medium" />
+                                            <TextBlock Text="{Binding Why}" Style="{StaticResource PulseMuted}" TextWrapping="Wrap" />
+                                            <TextBlock Text="{Binding State}" Style="{StaticResource PulseMuted}" />
+                                        </StackPanel>
+                                        <Button Grid.Column="2" Content="Düzelt" Style="{StaticResource PulseGhostButton}" VerticalAlignment="Center"
+                                                Visibility="{Binding CanFix, Converter={StaticResource BoolToVis}}"
+                                                Command="{Binding DataContext.FixSettingCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}" CommandParameter="{Binding}" />
+                                    </Grid>
+                                    <Border Style="{StaticResource PulseHairline}" />
+                                </StackPanel>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                    <TextBlock Style="{StaticResource PulseMuted}" Text="{Binding SettingsNote}" Margin="16,8,16,10" TextWrapping="Wrap" />
+                </StackPanel>
+            </Border>
+
+            <TextBlock Style="{StaticResource PulseLabel}" Text="OYUN PROFİLLERİ" Margin="0,16,0,8" />
+
+            <Border Style="{StaticResource PulseCard}" Padding="16,14"
+                    Visibility="{Binding IsEmpty, Converter={StaticResource BoolToVis}}">
+                <TextBlock Style="{StaticResource PulseMuted}" TextWrapping="Wrap"
+                           Text="Henüz oyun görmedim. Bir oyun açınca burada kendiliğinden belirir. İstersen “Oyun ekle…” ile oyunun .exe dosyasını seçip elle de ekleyebilirsin." />
+            </Border>
+
+            <ItemsControl ItemsSource="{Binding Games}">
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <Border Style="{StaticResource PulseCard}" Padding="14,12" Margin="0,0,0,8">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="170" />
+                                    <ColumnDefinition Width="170" />
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <StackPanel VerticalAlignment="Center">
+                                    <TextBlock Text="{Binding Name}" FontFamily="{StaticResource DisplayFont}" FontSize="22" Foreground="{StaticResource InkBrush}" />
+                                    <TextBlock Text="{Binding ExeText}" Style="{StaticResource PulseMuted}" />
+                                    <StackPanel Orientation="Horizontal" Margin="0,2,0,0">
+                                        <TextBlock Text="{Binding GpuText}" Style="{StaticResource PulseMuted}" VerticalAlignment="Center" />
+                                        <Button Content="NVIDIA'da çalıştır" Style="{StaticResource PulseGhostButton}" Height="24" Margin="10,0,0,0"
+                                                Visibility="{Binding GpuNeedsFix, Converter={StaticResource BoolToVis}}"
+                                                Command="{Binding DataContext.FixGpuCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}" CommandParameter="{Binding}" />
+                                    </StackPanel>
+                                </StackPanel>
+                                <StackPanel Grid.Column="1" Margin="0,0,10,0">
+                                    <TextBlock Style="{StaticResource PulseLabel}" Text="MOD" Margin="0,0,0,3" />
+                                    <ComboBox ItemsSource="{x:Static vm:GameProfileVm.Modes}" DisplayMemberPath="Title" SelectedValuePath="Key"
+                                              SelectedValue="{Binding ModeKey, Mode=TwoWay}" />
+                                </StackPanel>
+                                <StackPanel Grid.Column="2" Margin="0,0,14,0">
+                                    <TextBlock Style="{StaticResource PulseLabel}" Text="EKRAN HIZI (HZ)" Margin="0,0,0,3" />
+                                    <ComboBox ItemsSource="{x:Static vm:GameProfileVm.RefreshOptions}" SelectedIndex="{Binding RefreshIndex, Mode=TwoWay}" />
+                                </StackPanel>
+                                <StackPanel Grid.Column="3" Margin="0,0,14,0" VerticalAlignment="Bottom">
+                                    <TextBlock Style="{StaticResource PulseLabel}" Text="AÇIK" Margin="0,0,0,3" />
+                                    <ui:ToggleSwitch IsChecked="{Binding Enabled}" />
+                                </StackPanel>
+                                <Button Grid.Column="4" Content="Kaldır" Style="{StaticResource PulseGhostButton}" VerticalAlignment="Bottom"
+                                        Command="{Binding DataContext.RemoveGameCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
+                                        CommandParameter="{Binding}" />
+                            </Grid>
+                        </Border>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </StackPanel>
+    </ScrollViewer>
+</Page>

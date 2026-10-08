@@ -1,0 +1,18 @@
+<UserControl x:Class="Pulse.App.Controls.BusyBar"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             Visibility="Collapsed">
+    <StackPanel>
+        <Grid x:Name="Track" Height="4" ClipToBounds="True" Background="{StaticResource LineBrush}" SizeChanged="OnTrackSizeChanged">
+            <Border x:Name="Fill" Background="{StaticResource InkBrush}" HorizontalAlignment="Left" Width="0" CornerRadius="2">
+                <Border.RenderTransform>
+                    <TranslateTransform x:Name="Slide" />
+                </Border.RenderTransform>
+            </Border>
+        </Grid>
+        <DockPanel Margin="0,6,0,0" LastChildFill="True">
+            <TextBlock x:Name="Right" DockPanel.Dock="Right" Style="{StaticResource PulseMuted}" Margin="12,0,0,0" />
+            <TextBlock x:Name="Label" Style="{StaticResource PulseBody}" FontWeight="Medium" TextTrimming="CharacterEllipsis" />
+        </DockPanel>
+    </StackPanel>
+</UserControl>

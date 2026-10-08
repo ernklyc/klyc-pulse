@@ -1,0 +1,122 @@
+<Page x:Class="Pulse.App.Pages.MonitorPage"
+      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+      xmlns:c="clr-namespace:Pulse.App.Controls"
+      Background="Transparent" FontFamily="{StaticResource BodyFont}"
+      ScrollViewer.CanContentScroll="False" ScrollViewer.VerticalScrollBarVisibility="Disabled">
+    <Page.Resources>
+        <Style x:Key="SettingTitle" TargetType="TextBlock" BasedOn="{StaticResource PulseBody}">
+            <Setter Property="FontWeight" Value="Medium" />
+        </Style>
+        <DataTemplate x:Key="CornerTemplate">
+            <Grid Margin="0,0,6,0">
+                <Button Content="{Binding Title}" Style="{StaticResource PulseSegment}" MinWidth="78"
+                        Command="{Binding DataContext.SetCornerCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}" CommandParameter="{Binding}" />
+                <Button Content="{Binding Title}" Style="{StaticResource PulseSegmentActive}" MinWidth="78"
+                        Visibility="{Binding IsActive, Converter={StaticResource BoolToVis}}"
+                        Command="{Binding DataContext.SetCornerCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}" CommandParameter="{Binding}" />
+            </Grid>
+        </DataTemplate>
+    </Page.Resources>
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <StackPanel Margin="26,18,26,22" MaxWidth="1000" HorizontalAlignment="Stretch">
+            <TextBlock Style="{StaticResource PulseLabel}" Text="İZLEME" />
+            <TextBlock Style="{StaticResource PulseDisplay}" Margin="0,2,0,0" Text="Şu an ne oluyor?" />
+            <TextBlock Style="{StaticResource PulseLead}" Margin="0,2,0,0"
+                       Text="İşlemci, ekran kartı, bellek ve fan şu an nasıl? Bir şey yavaşlıyorsa nedenini söyler." />
+            <Border Style="{StaticResource PulseHairline}" Margin="0,14,0,12" />
+
+            <!-- Genel yorum -->
+            <Border Style="{StaticResource PulseCard}" Padding="16,12">
+                <StackPanel>
+                    <TextBlock Style="{StaticResource PulseLabel}" Text="DURUM" />
+                    <TextBlock Text="{Binding Verdict}" Foreground="{Binding VerdictBrush}"
+                               FontFamily="{StaticResource DisplayFont}" FontSize="26" TextWrapping="Wrap" />
+                </StackPanel>
+            </Border>
+
+            <TextBlock Style="{StaticResource PulseLabel}" Text="CANLI ÖLÇÜMLER" Margin="0,16,0,8" />
+            <Border Style="{StaticResource PulseCard}" Padding="0">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" /><ColumnDefinition Width="1" />
+                        <ColumnDefinition Width="*" /><ColumnDefinition Width="1" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+
+                    <StackPanel Grid.Column="0" Margin="14,10">
+                        <TextBlock Style="{StaticResource PulseLabel}" Text="İŞLEMCİ" />
+                        <TextBlock Style="{StaticResource PulseStat}" Text="{Binding CpuText}" />
+                        <TextBlock Style="{StaticResource PulseMuted}" Text="{Binding CpuNote}" TextWrapping="Wrap" />
+                        <TextBlock Style="{StaticResource PulseMuted}" Text="{Binding CpuFlag}" Foreground="{StaticResource WarnBrush}" TextWrapping="Wrap"
+                                   Visibility="{Binding CpuFlag, Converter={StaticResource StringToVis}}" />
+                        <c:Sparkline Height="38" Margin="0,8,0,0" Values="{Binding CpuHistory}" Stroke="{StaticResource InkBrush}" Minimum="0" Maximum="100" />
+                    </StackPanel>
+                    <Border Grid.Column="1" Background="{StaticResource LineBrush}" />
+
+                    <StackPanel Grid.Column="2" Margin="14,10">
+                        <TextBlock Style="{StaticResource PulseLabel}" Text="EKRAN KARTI" />
+                        <TextBlock Style="{StaticResource PulseStat}" Text="{Binding GpuText}" />
+                        <TextBlock Style="{StaticResource PulseMuted}" Text="{Binding GpuNote}" TextWrapping="Wrap" />
+                        <TextBlock Style="{StaticResource PulseMuted}" Text="{Binding GpuFlag}" Foreground="{StaticResource WarnBrush}" TextWrapping="Wrap"
+                                   Visibility="{Binding GpuFlag, Converter={StaticResource StringToVis}}" />
+                        <c:Sparkline Height="38" Margin="0,8,0,0" Values="{Binding GpuHistory}" Stroke="{StaticResource InkBrush}" Minimum="0" Maximum="100" />
+                    </StackPanel>
+                    <Border Grid.Column="3" Background="{StaticResource LineBrush}" />
+
+                    <StackPanel Grid.Column="4" Margin="14,10">
+                        <TextBlock Style="{StaticResource PulseLabel}" Text="BELLEK" />
+                        <TextBlock Style="{StaticResource PulseStat}" Text="{Binding RamText}" />
+                        <TextBlock Style="{StaticResource PulseMuted}" Text="{Binding RamNote}" TextWrapping="Wrap" />
+                        <c:Sparkline Height="38" Margin="0,8,0,0" Values="{Binding RamHistory}" Stroke="{StaticResource AccentGrayBrush}" Minimum="0" Maximum="100" />
+                    </StackPanel>
+                </Grid>
+            </Border>
+
+            <Border Style="{StaticResource PulseCard}" Padding="0" Margin="0,8,0,0">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" /><ColumnDefinition Width="1" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <StackPanel Grid.Column="0" Margin="14,10">
+                        <TextBlock Style="{StaticResource PulseLabel}" Text="EKRAN KARTI BELLEĞİ" />
+                        <TextBlock Style="{StaticResource PulseStat}" Text="{Binding VramText}" />
+                        <TextBlock Style="{StaticResource PulseMuted}" Text="{Binding VramNote}" />
+                    </StackPanel>
+                    <Border Grid.Column="1" Background="{StaticResource LineBrush}" />
+                    <StackPanel Grid.Column="2" Margin="14,10">
+                        <TextBlock Style="{StaticResource PulseLabel}" Text="FAN" />
+                        <TextBlock Style="{StaticResource PulseStat}" Text="{Binding FanText}" />
+                        <TextBlock Style="{StaticResource PulseMuted}" Text="{Binding FanNote}" />
+                    </StackPanel>
+                </Grid>
+            </Border>
+
+            <!-- Oyun üstü gösterge -->
+            <TextBlock Style="{StaticResource PulseLabel}" Text="OYUN SIRASINDA EKRANDA GÖSTER" Margin="0,18,0,8" />
+            <Border Style="{StaticResource PulseCard}" Padding="16,12">
+                <StackPanel>
+                    <Grid>
+                        <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+                        <StackPanel Margin="0,0,20,0">
+                            <TextBlock Style="{StaticResource SettingTitle}" Text="Ekranın köşesinde sıcaklık ve kare hızını göster" />
+                            <TextBlock Style="{StaticResource PulseMuted}" TextWrapping="Wrap"
+                                       Text="Ctrl+Alt+O ile de açılıp kapanır. Oyunun içine karışmaz, Valorant'ın Vanguard'ı gibi korumalarla sorun çıkarmaz. Oyun “kenarlıksız” ya da “pencereli” modda olmalı; “tam ekran”da görünmeyebilir." />
+                        </StackPanel>
+                        <ui:ToggleSwitch Grid.Column="1" IsChecked="{Binding OverlayOn, Mode=OneWay}" VerticalAlignment="Center"
+                                         Command="{Binding ToggleOverlayCommand}" />
+                    </Grid>
+                    <TextBlock Style="{StaticResource PulseMuted}" Text="{Binding FpsText}" TextWrapping="Wrap" Margin="0,10,0,0" FontWeight="Medium" />
+                    <TextBlock Style="{StaticResource PulseLabel}" Text="KÖŞE" Margin="0,12,0,6" />
+                    <ItemsControl ItemsSource="{Binding Corners}" ItemTemplate="{StaticResource CornerTemplate}">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate><StackPanel Orientation="Horizontal" /></ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                    </ItemsControl>
+                </StackPanel>
+            </Border>
+        </StackPanel>
+    </ScrollViewer>
+</Page>
