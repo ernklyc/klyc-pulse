@@ -814,6 +814,19 @@ if (cmd == "heatbench-test")
     Check(Pulse.Core.Hardware.HeatBenchmark.Summarize([]) == "Ölçüm yapılamadı.", "Boş sonuç hata vermez");
     Check(Pulse.Core.Hardware.HeatBenchmark.Summarize([new(null, 4000, null, null), new(3500, 3500, null, null)]).Contains("sıcaklık okunamadı"), "Sıcaklık okunamıyorsa bunu söyler");
 
+    // Ekran kartı da çalışırken: ayrı anlatılır, işlemci ne kadar daha sıcak olduğu söylenir
+    var combo = new List<Pulse.Core.Hardware.HeatBenchmarkPhase>
+    {
+        new(null, 3900, 82, 84), new(null, 3500, 90, 92, true, 71, 1600), new(3300, 3300, 85, 87, true, 69, 1650), new(3000, 3000, 80, 82, true, 68, 1680),
+    };
+    var ctext = Pulse.Core.Hardware.HeatBenchmark.Summarize(combo);
+    Console.WriteLine("  " + ctext);
+    Check(ctext.Contains("Yalnız işlemci yükü:") && ctext.Contains("İşlemci + ekran kartı (oyundaki gibi):"), "Özet: yalnız işlemci ve ekran kartı aşamaları ayrı anlatılır");
+    Check(ctext.Contains("3300 MHz sınırı: ısı 5 °C düştü") && ctext.Contains("3000 MHz sınırı: ısı 10 °C düştü"), "Ekran kartı aşamalarında sınır, kendi sınırsız aşamasına göre kıyaslanır");
+    Check(ctext.Contains("8 °C daha sıcak (82 → 90 °C)"), "Ekran kartı çalışınca işlemcinin ne kadar daha sıcak olduğu söylenir");
+    Check(ctext.Contains("Ekran kartı 71 °C, 1600 MHz çalıştı"), "Ekran kartının ısısı ve hızı yazılır");
+    Check(!Pulse.Core.Hardware.HeatBenchmark.Summarize(fake).Contains("ekran kartı"), "Ekran kartı aşaması yoksa özet eskisi gibi kalır");
+
     var scheme = Pulse.Core.Platform.Powercfg.ActiveScheme()!;
     int? Q(string k) => Pulse.Core.Platform.Powercfg.GetAc(scheme, Pulse.Core.Platform.Powercfg.SubProcessor, k);
     var before = new[] { Q(Pulse.Core.Platform.Powercfg.BoostMode), Q(Pulse.Core.Platform.Powercfg.MaxProcessorState), Q(Pulse.Core.Platform.Powercfg.MaxFrequency) };
@@ -824,6 +837,28 @@ if (cmd == "heatbench-test")
     var after = new[] { Q(Pulse.Core.Platform.Powercfg.BoostMode), Q(Pulse.Core.Platform.Powercfg.MaxProcessorState), Q(Pulse.Core.Platform.Powercfg.MaxFrequency) };
     Check(before.SequenceEqual(after), "Deneme sonunda güç ayarları eski haline döndü");
     Console.WriteLine(fails == 0 ? "ISI DENEMESİ TESTİ GEÇTİ" : $"{fails} TEST KALDI");
+    return fails == 0 ? 0 : 1;
+}
+if (cmd == "heatbench-gpu")
+{
+    // Gerçek bilgisayarda: ekran kartı yüklü kısa ısı denemesi (Edge penceresi ~30 sn açılır) ve sonunda her şeyin temizlendiğini doğrular.
+    var fails = 0;
+    void Check(bool ok, string what) { Console.WriteLine($"  [{(ok ? "GEÇTİ" : "KALDI")}] {what}"); if (!ok) fails++; }
+    var scheme = Pulse.Core.Platform.Powercfg.ActiveScheme()!;
+    int? Q(string k) => Pulse.Core.Platform.Powercfg.GetAc(scheme, Pulse.Core.Platform.Powercfg.SubProcessor, k);
+    var before = new[] { Q(Pulse.Core.Platform.Powercfg.BoostMode), Q(Pulse.Core.Platform.Powercfg.MaxProcessorState), Q(Pulse.Core.Platform.Powercfg.MaxFrequency) };
+    var phases = Pulse.Core.Hardware.HeatBenchmark.RunPlan([(null, false), (null, true)], restSec: 3, loadSec: 30, new Progress<string>(m => Console.WriteLine("  .. " + m)));
+    foreach (var p in phases) Console.WriteLine($"  Aşama: ekran kartı={p.WithGpu} işlemci {p.MedianMhz:0} MHz, ısı {p.AvgTempC?.ToString() ?? "okunamadı"}; ekran kartı {p.GpuAvgTempC?.ToString() ?? "-"} °C {p.GpuMedianMhz?.ToString() ?? "-"} MHz");
+    Console.WriteLine("  " + Pulse.Core.Hardware.HeatBenchmark.Summarize(phases));
+    Check(phases.Count == 2 && !phases[0].WithGpu && phases[1].WithGpu, "İki aşama ölçüldü: yalnız işlemci, işlemci + ekran kartı");
+    Check(phases.Count == 2 && phases[1].GpuAvgTempC is > 0 && phases[1].GpuMedianMhz is > 0, "Ekran kartının ısısı ve hızı okundu");
+    Check(phases.Count == 2 && phases[0].GpuAvgTempC is null, "Yalnız işlemci aşamasında ekran kartı değeri yok");
+    System.Threading.Thread.Sleep(2500);
+    Check(!System.Diagnostics.Process.GetProcessesByName("msedge").Any(p => { try { return p.MainWindowTitle.StartsWith("F:") || p.MainWindowTitle.StartsWith("LOST"); } catch { return false; } }), "Yük penceresi kapandı");
+    Check(!Directory.Exists(Path.Combine(Path.GetTempPath(), "pulse-gputune")), "Geçici yük klasörü silindi");
+    var after = new[] { Q(Pulse.Core.Platform.Powercfg.BoostMode), Q(Pulse.Core.Platform.Powercfg.MaxProcessorState), Q(Pulse.Core.Platform.Powercfg.MaxFrequency) };
+    Check(before.SequenceEqual(after), "Güç ayarları eski haline döndü");
+    Console.WriteLine(fails == 0 ? "EKRAN KARTLI ISI DENEMESİ TESTİ GEÇTİ" : $"{fails} TEST KALDI");
     return fails == 0 ? 0 : 1;
 }
 if (cmd == "cooling-test")
@@ -1848,6 +1883,8 @@ if (cmd == "asus-test")
     return fails == 0 ? 0 : 1;
 }
 
+// Tanınmayan komut yanlışlıkla bir mod uygulamasın: yalnızca "apply <mod>" ve "all" mod uygular.
+if (cmd != "apply" && cmd != "all") { Console.WriteLine($"Bilinmeyen komut: {cmd}"); return 2; }
 using var engine = new ModeEngine();
 var keys = cmd == "all" ? new[] { "oyun", "sessiz", "bosta", "gunluk" } : new[] { args.ElementAtOrDefault(1) ?? "gunluk" };
 var failed = 0;

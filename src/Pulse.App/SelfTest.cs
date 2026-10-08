@@ -222,15 +222,18 @@ public static class SelfTest
 
         if (includeHeat)
         {
-            await Step("Hız sınırı ısıyı düşürüyor mu? (gerçek yük, ~6 dk, işlemci tam yüklenir)", async () =>
+            await Step("Hız sınırı ısıyı düşürüyor mu? (gerçek yük, ~9 dk, işlemci ve ekran kartı tam yüklenir)", async () =>
             {
                 var ladder = AppServices.GameLadder();
+                // Önce yalnız işlemci (sürekli hızı öğrenmek için), sonra oyundaki gibi işlemci + ekran kartı birlikte: sınırsız ve iki kademe
                 var caps = new List<int?> { null };
                 caps.AddRange(ladder.Skip(2).Take(2));                                   // ikinci ve üçüncü kademe (örn. ~3500 ve ~3200 MHz)
+                var plan = new List<(int? Cap, bool Gpu)> { (null, false) };
+                plan.AddRange(caps.Select(c => (c, true)));
                 using var keeper = AppServices.Keeper.Pause();
                 using var heat = AppServices.Heat.Pause();
                 using var cool = AppServices.Cooling.Pause();
-                var phases = await Task.Run(() => HeatBenchmark.Run(caps, restSec: 40, loadSec: 80, new Progress<string>(m => win.Running("Isı denemesi: " + m))));
+                var phases = await Task.Run(() => HeatBenchmark.RunPlan(plan, restSec: 40, loadSec: 80, new Progress<string>(m => win.Running("Isı denemesi: " + m))));
                 var summary = HeatBenchmark.Summarize(phases);
                 // Sınırsız aşamadaki hız = bu bilgisayarın sürekli yük altı hızı: kademeler buna göre kurulur
                 if (phases.Count > 0 && phases[0].MedianMhz > 0)
@@ -240,8 +243,8 @@ public static class SelfTest
                     summary += $" Sürekli hız {phases[0].MedianMhz:0} MHz olarak kaydedildi (kademeler buna göre kuruluyor).";
                 }
                 var hasTemps = phases.All(p => p.AvgTempC is not null);
-                return (phases.Count == caps.Count && hasTemps, summary + (hasTemps ? "" : " (Sıcaklık okunamadı: Pulse yönetici olarak çalışmıyor ya da bu bilgisayar sıcaklık sunmuyor.)"));
-            }, 600);
+                return (phases.Count == plan.Count && hasTemps, summary + (hasTemps ? "" : " (Sıcaklık okunamadı: Pulse yönetici olarak çalışmıyor ya da bu bilgisayar sıcaklık sunmuyor.)"));
+            }, 900);
         }
 
         // Test sırasında günlüğe düşen hatalar

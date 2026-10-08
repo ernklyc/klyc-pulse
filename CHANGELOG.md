@@ -2,11 +2,16 @@
 
 Biçim [Keep a Changelog](https://keepachangelog.com/tr/) esaslıdır; sürümleme [SemVer](https://semver.org/lang/tr/).
 
-## [Yayınlanmadı]
+## [1.7.0] — 2026-10-09
 
 ### Eklenenler
 - **Arka plan yükü ölçümü (kasma sebebi bulucu):** Oyun sırasında 5 sn'de bir çalışan programların işlemci, disk ve bellek kullanımı ölçülür (oyunun kendisi, yan süreçleri ve Pulse hariç; aynı adlı süreçler toplanır, örn. Chrome'un onlarca süreci tek satır). Oyun bitince raporda sade bulgu çıkar: *"Arka planda Google Chrome oyun boyunca ortalama %10 işlemci kullandı… oyundan önce kapat"*. Öneri oyunu neyin sınırladığına göre değişir (ekran kartı sınırlıyorsa "FPS'e etkisi az" der). Oyun başlatıcıları (Steam, Epic…) için "kapat" denmez (oyun kapanabilir), indirmeyi duraklatmak önerilir. Windows'un kendi işleri (Defender, Update, arama) için ne olduğu söylenir; güvenlik ayarlarına dokunulmaz. Hiçbir program otomatik kapatılmaz. Bellek yalnızca %80 üstündeyken büyük programlar için söylenir.
-- `pulse-cli bgload [sn]` (gerçek ölçüm) ve `bgload-test` (sahte süreçlerle sınama) komutları.
+- **Isı denemesi artık ekran kartını da çalıştırır (oyundaki gibi):** Önce yalnız işlemci (sürekli hızı öğrenmek için), sonra işlemci + ekran kartı birlikte; her ikisinde sınırsız ve iki kademe ölçülür (~9 dk). Özet ikisini ayrı anlatır ve ekran kartı da çalışınca işlemcinin ne kadar daha sıcak olduğunu söyler. İlk gerçek ölçümde ekran kartı çalışırken işlemci sürekli hızı 3909 → 3680 MHz'e düştü (ortak güç/ısı bütçesi), yani yalnız işlemci yüküyle ölçülen hız oyunda geçerli olmayabilir.
+- Ekran kartı yükü (Edge'de WebGL sayfası) ortak bir parçaya ayrıldı (`GpuLoad`): ekran kartı hız denemesi ve ısı denemesi aynı kodu kullanır; kapanınca pencere, geçici klasör ve geçici grafik tercihi geri alınır.
+- `pulse-cli bgload [sn]` (gerçek ölçüm), `bgload-test` (sahte süreçlerle sınama) ve `heatbench-gpu` (gerçek ekran kartlı kısa ısı denemesi) komutları.
+
+### Düzeltilenler
+- `pulse-cli`: tanınmayan komut artık yanlışlıkla bir mod uygulamaz (hata verip çıkar); yalnızca `apply <mod>` ve `all` mod uygular.
 
 ## [1.6.1] — 2026-10-09
 
