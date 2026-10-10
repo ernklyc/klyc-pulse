@@ -50,3 +50,16 @@ KLYC-Pulse varsayım yapmaz, bu bilgisayarda ölçer:
 - Fan eğrisi: üretici fan eğrisi cihazlarını yazılıma açmayan modellerde yoktur; yerine "sıcaklık sınırı" sunulur.
 - Oyun üstü gösterge: "özel tam ekran" modda görünmeyebilir; kenarlıksız/pencereli modda çalışır.
 - FPS: Vulkan/OpenGL oyunlarında ölçülemez.
+
+## Masaüstü ve dizüstü
+
+Pulse bilgisayarın türünü Windows'un kasa türünden (SMBIOS "ChassisTypes") okur; belirsizse Windows'un `PCSystemType` değerine ve pil varlığına bakar. Sınıflar: dizüstü, tablet, masaüstü, hepsi bir arada, mini bilgisayar.
+
+- **Masaüstü / hepsi bir arada / mini bilgisayar:** pil kutusu ve "Pil algılanmıyor" uyarısı çıkmaz (masaüstüne bağlı UPS pil sayılmaz), "Fişi çekince Sessiz moda geç" ayarı ile pil şarj sınırı ve dizüstü klavye ışığı gizlenir, "Dizüstü" menüsü "Donanım" olur.
+- **Parlaklık:** yalnızca dahili panelli bilgisayarlarda (dizüstü, tablet, hepsi bir arada) ayarlanır; masaüstüne bağlı harici monitörün parlaklığı Windows'tan ayarlanamaz, bu adım atlanır.
+- **Isı, FPS, mod, temizlik, açık uygulamaları kapatma** her iki türde aynı çalışır.
+- Sınama için `KLYC_PULSE_DEVICE=desktop|laptop` ortam değişkeni türü zorlar. `pulse-cli device-test` sınıflandırmayı sahte kasa türleriyle sınar.
+
+## Açık uygulamaları kapat
+
+Ana ekrandaki düğme ve tepsi menüsüyle açılır. Sistem/güvenlik süreçleri, donanım ve sürücü yardımcıları (ASUS, NVIDIA, Intel, Realtek, Logitech...), ekrandaki uygulama, çalışan oyun ve oyun başlatıcıları listeye girmez. Pencereli uygulamalar nazikçe kapatılır (kaydedilmemiş iş için uygulama sorar, zorla kapatılmaz); pencerisiz arka plan programları kapat komutuna cevap vermezse sonlandırılır. Sonuç yeniden okunarak doğrulanır, boşalan bellek ölçülür. `pulse-cli openapps` hiçbir şey kapatmadan adayları yazar; `openapps-test` gerçek sahte uygulamalarla kapatmayı sınar.

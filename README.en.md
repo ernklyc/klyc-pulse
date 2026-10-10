@@ -54,6 +54,8 @@ Design principle: **apply → read back → verify.** Values that cannot be read
   <img src="docs/img/oyunlar.png" alt="Games" width="380" />
 </p>
 
+**Close open apps:** one button on Home lists memory-hungry open apps; harmless ones are pre-selected, apps that may hold unsaved work are flagged. It closes politely, verifies they really closed and measures the freed memory. It never touches system, driver, security programs, a running game or the app you are using. Works on **desktops and laptops** (type is detected automatically; battery/keyboard features are hidden on desktops).
+
 **Protective features:** *thermal guard* (switches to Quiet mode if dangerous temperatures persist), *heat target* (a software substitute for fan curves; lowers the CPU's maximum frequency in ~300 MHz steps and trims the GPU clock, only when a limit you set is exceeded), *mode keeper* (repairs power settings changed by other tools, checked every minute).
 
 If you like the project: [☕ Buy me a coffee](https://buymeacoffee.com/13tpsxlcea)
@@ -64,9 +66,9 @@ Get one file from the **[Releases](https://github.com/ernklyc/klyc-pulse/release
 
 | File | Size | When |
 |---|---|---|
-| `KLYC-Pulse-Setup-v1.8.1.exe` | ~80 MB | **Recommended.** Double-click to install: Start menu and desktop shortcut, removable from "Apps". Nothing else to install, no admin rights needed to install |
-| `KLYC-Pulse-v1.8.1-win-x64.zip` | ~11 MB (zip) | If the [.NET 8 Desktop Runtime](https://dotnet.microsoft.com/download/dotnet/8.0) is installed |
-| `KLYC-Pulse-v1.8.1-win-x64-self-contained.zip` | ~68 MB (zip) | If you don't want to install anything (runtime included) |
+| `KLYC-Pulse-Setup-v1.9.0.exe` | ~80 MB | **Recommended.** Double-click to install: Start menu and desktop shortcut, removable from "Apps". Nothing else to install, no admin rights needed to install |
+| `KLYC-Pulse-v1.9.0-win-x64.zip` | ~11 MB (zip) | If the [.NET 8 Desktop Runtime](https://dotnet.microsoft.com/download/dotnet/8.0) is installed |
+| `KLYC-Pulse-v1.9.0-win-x64-self-contained.zip` | ~68 MB (zip) | If you don't want to install anything (runtime included) |
 
 **With the installer:** run it, then open "KLYC-Pulse" from the Start menu (the app itself asks for administrator rights). Uninstalling keeps your settings and history (`%LOCALAPPDATA%\Pulse`), so a reinstall picks up where you left off; delete that folder by hand if you want them gone.
 
@@ -79,7 +81,7 @@ Get one file from the **[Releases](https://github.com/ernklyc/klyc-pulse/release
 > **Windows SmartScreen / antivirus warning:** the app is not code-signed yet, so an "Unknown publisher" warning may appear. Compare the SHA-256 hash with `SHA256SUMS.txt` on the release page, or build from source yourself.
 
 ```powershell
-Get-FileHash .\KLYC-Pulse-v1.8.1-win-x64.zip -Algorithm SHA256
+Get-FileHash .\KLYC-Pulse-v1.9.0-win-x64.zip -Algorithm SHA256
 ```
 
 ## First use

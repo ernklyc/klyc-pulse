@@ -52,6 +52,8 @@ Tasarım ilkesi: **uygula → geri oku → doğrula.** Bir ayar yazıldıktan so
   <img src="docs/img/oyunlar.png" alt="Oyunlar" width="380" />
 </p>
 
+**Açık uygulamaları kapat:** Ana ekranda tek düğmeyle bellek yiyen açık uygulamaları listeler; zararsız olanlar ön seçili gelir, kaydedilmemiş işi olabilecekler uyarıyla ayrılır. Nazikçe kapatır, gerçekten kapandığını doğrular, boşalan belleği ölçer. Sistem, sürücü, güvenlik, çalışan oyun ve şu an kullandığın uygulamaya dokunmaz. **Masaüstü ve dizüstü** ile uyumludur (türü otomatik algılar, pil/klavye özellikleri masaüstünde gizlenir).
+
 **Koruma özellikleri:** *ısı koruması* (tehlikeli sıcaklık sürerse Sessiz moda geçer), *sıcaklık sınırı* (fan eğrisi yerine; işlemci/GPU'yu kademeli kısar), *mod koruyucu* (başka bir program güç ayarını bozarsa dakikada bir düzeltir).
 
 Projeyi beğendiysen: [☕ Bir kahve ısmarla](https://buymeacoffee.com/13tpsxlcea)
@@ -62,9 +64,9 @@ Projeyi beğendiysen: [☕ Bir kahve ısmarla](https://buymeacoffee.com/13tpsxlc
 
 | Dosya | Boyut | Ne zaman |
 |---|---|---|
-| `KLYC-Pulse-Setup-v1.8.1.exe` | ~80 MB | **Önerilen.** Çift tıkla kur: Başlat menüsü ve masaüstü kısayolu, "Uygulamalar"dan kaldırma. Hiçbir şey ayrıca kurmak gerekmez, yönetici izni istemez |
-| `KLYC-Pulse-v1.8.1-win-x64.zip` | ~11 MB (zip) | [.NET 8 Masaüstü Çalışma Zamanı](https://dotnet.microsoft.com/download/dotnet/8.0) kuruluysa |
-| `KLYC-Pulse-v1.8.1-win-x64-self-contained.zip` | ~68 MB (zip) | Hiçbir şey kurmak istemiyorsanız (her şey içinde) |
+| `KLYC-Pulse-Setup-v1.9.0.exe` | ~80 MB | **Önerilen.** Çift tıkla kur: Başlat menüsü ve masaüstü kısayolu, "Uygulamalar"dan kaldırma. Hiçbir şey ayrıca kurmak gerekmez, yönetici izni istemez |
+| `KLYC-Pulse-v1.9.0-win-x64.zip` | ~11 MB (zip) | [.NET 8 Masaüstü Çalışma Zamanı](https://dotnet.microsoft.com/download/dotnet/8.0) kuruluysa |
+| `KLYC-Pulse-v1.9.0-win-x64-self-contained.zip` | ~68 MB (zip) | Hiçbir şey kurmak istemiyorsanız (her şey içinde) |
 
 **Kurulum dosyasıyla:** çalıştırın, bitince Başlat menüsünden "KLYC-Pulse"u açın (uygulama kendisi yönetici izni ister). Kaldırırsanız ayarlarınız ve geçmişiniz (`%LOCALAPPDATA%\Pulse`) silinmez; yeniden kurunca kaldığınız yerden devam edersiniz. Silmek isterseniz o klasörü elle silin.
 
@@ -78,7 +80,7 @@ Projeyi beğendiysen: [☕ Bir kahve ısmarla](https://buymeacoffee.com/13tpsxlc
 
 ```powershell
 # özet kontrolü
-Get-FileHash .\KLYC-Pulse-v1.8.1-win-x64.zip -Algorithm SHA256
+Get-FileHash .\KLYC-Pulse-v1.9.0-win-x64.zip -Algorithm SHA256
 ```
 
 ## İlk kullanım

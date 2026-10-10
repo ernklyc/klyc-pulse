@@ -2,6 +2,13 @@
 
 Biçim [Keep a Changelog](https://keepachangelog.com/tr/) esaslıdır; sürümleme [SemVer](https://semver.org/lang/tr/).
 
+## [1.9.0] — 2026-10-11
+
+### Eklenenler
+- **Açık uygulamaları kapat** (PC Manager benzeri, gerçekten çalışan): Ana ekran düğmesi ve tepsi menüsü. Bellek yiyen açık uygulamaları listeler; Discord/OneDrive/Widgets gibi zararsızlar **önerilen** (ön seçili), tarayıcılar **isteğe bağlı**, Word/kod editörü/OBS gibi kayıp riski olanlar **dikkat**. Sistem ve güvenlik süreçleri, donanım/sürücü yardımcıları (ASUS, NVIDIA, Intel, Realtek, Logitech...), ekrandaki uygulama, çalışan oyun ve oyun başlatıcıları listeye girmez. Pencereli uygulamalar nazikçe kapatılır (kaydedilmemiş iş için uygulama sorar, zorla kapatılmaz; ayrı onayla zorla kapatılabilir), pencerisiz arka plan programları cevap vermezse sonlandırılır. Sonuç yeniden okunarak doğrulanır ve boşalan bellek ölçülür.
+- **Masaüstü ve dizüstü uyumu:** Bilgisayar türü Windows kasa türünden algılanır (dizüstü, tablet, masaüstü, hepsi bir arada, mini bilgisayar). Masaüstünde yanlış "Pil algılanmıyor" uyarısı çıkmaz, pil/klavye ışığı/"fişi çekince" ayarları gizlenir, "Dizüstü" menüsü "Donanım" olur, harici monitör için parlaklık adımı atlanır.
+- Testler: `openapps-test` (sahte süreç listeleri + gerçek pencereli/pencerisiz/kapanmayı reddeden sahte uygulamalar), `device-test`; ikisi de CI'da. `pulse-cli openapps` adayları hiçbir şey kapatmadan yazar.
+
 ## [1.8.1] — 2026-10-10
 
 ### Düzeltilenler
