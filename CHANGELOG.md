@@ -2,6 +2,11 @@
 
 Biçim [Keep a Changelog](https://keepachangelog.com/tr/) esaslıdır; sürümleme [SemVer](https://semver.org/lang/tr/).
 
+## [1.8.1] — 2026-10-10
+
+### Düzeltilenler
+- **Boşta modunda ekran 1 dk'da kararıyordu** (bilgisayar başındayken bile rahatsız ediyordu). Artık fişteyken ekran kapanma ve uyku **30 dakika** sonra devreye girer. Mod kapanınca eski ekran/uyku ayarları aynen geri yüklenir.
+
 ## [1.8.0] — 2026-10-09
 
 ### Eklenenler

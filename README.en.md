@@ -64,9 +64,9 @@ Get one file from the **[Releases](https://github.com/ernklyc/klyc-pulse/release
 
 | File | Size | When |
 |---|---|---|
-| `KLYC-Pulse-Setup-v1.8.0.exe` | ~80 MB | **Recommended.** Double-click to install: Start menu and desktop shortcut, removable from "Apps". Nothing else to install, no admin rights needed to install |
-| `KLYC-Pulse-v1.8.0-win-x64.zip` | ~11 MB (zip) | If the [.NET 8 Desktop Runtime](https://dotnet.microsoft.com/download/dotnet/8.0) is installed |
-| `KLYC-Pulse-v1.8.0-win-x64-self-contained.zip` | ~68 MB (zip) | If you don't want to install anything (runtime included) |
+| `KLYC-Pulse-Setup-v1.8.1.exe` | ~80 MB | **Recommended.** Double-click to install: Start menu and desktop shortcut, removable from "Apps". Nothing else to install, no admin rights needed to install |
+| `KLYC-Pulse-v1.8.1-win-x64.zip` | ~11 MB (zip) | If the [.NET 8 Desktop Runtime](https://dotnet.microsoft.com/download/dotnet/8.0) is installed |
+| `KLYC-Pulse-v1.8.1-win-x64-self-contained.zip` | ~68 MB (zip) | If you don't want to install anything (runtime included) |
 
 **With the installer:** run it, then open "KLYC-Pulse" from the Start menu (the app itself asks for administrator rights). Uninstalling keeps your settings and history (`%LOCALAPPDATA%\Pulse`), so a reinstall picks up where you left off; delete that folder by hand if you want them gone.
 
@@ -79,7 +79,7 @@ Get one file from the **[Releases](https://github.com/ernklyc/klyc-pulse/release
 > **Windows SmartScreen / antivirus warning:** the app is not code-signed yet, so an "Unknown publisher" warning may appear. Compare the SHA-256 hash with `SHA256SUMS.txt` on the release page, or build from source yourself.
 
 ```powershell
-Get-FileHash .\KLYC-Pulse-v1.8.0-win-x64.zip -Algorithm SHA256
+Get-FileHash .\KLYC-Pulse-v1.8.1-win-x64.zip -Algorithm SHA256
 ```
 
 ## First use
