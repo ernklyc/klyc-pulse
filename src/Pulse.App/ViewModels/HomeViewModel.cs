@@ -29,6 +29,9 @@ public sealed class OptRowVm
 
 public partial class HomeViewModel : ObservableObject, IDisposable
 {
+    /// <summary>"Parlaklığı da ayarla" yalnızca dahili ekranlı bilgisayarlarda gösterilir (masaüstü harici monitör ayarlanamaz).</summary>
+    public bool ShowBrightness { get; } = Pulse.Core.Platform.DisplayService.BrightnessSupported;
+
     private readonly ModeController _controller = AppServices.Modes;
 
     public HomeViewModel()
@@ -152,6 +155,8 @@ public partial class HomeViewModel : ObservableObject, IDisposable
         if (mode is null) return;
         await _controller.ApplyAsync(mode.Key);
     }
+
+    [RelayCommand] private void OpenBoost() => App.ShowBoost();
 
     partial void OnChangeBrightnessChanged(bool value)
     {

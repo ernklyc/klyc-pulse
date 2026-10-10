@@ -34,6 +34,9 @@ public sealed class FindingVm
 
 public partial class HealthViewModel : ObservableObject, IDisposable
 {
+    /// <summary>Pil kutusu yalnızca dizüstü/tabletlerde gösterilir.</summary>
+    public bool ShowBattery { get; } = Pulse.Core.Platform.DeviceInfo.Current.IsPortable;
+
     private const int HistoryLength = 90; // 3 sn x 90 = 4,5 dk
     private readonly HealthSampler _sampler = new();
     private readonly DispatcherTimer _timer = new() { Interval = TimeSpan.FromSeconds(3) };
@@ -88,7 +91,8 @@ public partial class HealthViewModel : ObservableObject, IDisposable
             FanNote = s.GpuFanRpm is { } gf ? Loc.F("CPU fanı · GPU {0:N0} RPM", gf) : Loc.T("CPU fanı (RPM)");
 
             var b = s.Battery;
-            if (!b.Present) { BatteryText = "Yok"; BatteryNote = Loc.T("Pil algılanmadı"); BatteryBrush = Res("WarnBrush"); }
+            if (!ShowBattery) { BatteryText = "—"; BatteryNote = ""; BatteryBrush = Res("InkBrush"); }
+            else if (!b.Present) { BatteryText = "Yok"; BatteryNote = Loc.T("Pil algılanmadı"); BatteryBrush = Res("WarnBrush"); }
             else if (b.Volts is < 6.0) { BatteryText = $"{b.Volts:N2} V"; BatteryNote = Loc.T("Pil sorunlu görünüyor"); BatteryBrush = Res("BadBrush"); }
             else { BatteryText = b.WearPercent is { } w ? $"%{100 - w:N0}" : "—"; BatteryNote = Loc.T("Kalan kapasite (tasarıma göre)"); BatteryBrush = Res("InkBrush"); }
 

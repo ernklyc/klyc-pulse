@@ -85,6 +85,9 @@ public partial class App : Application
         CreateTray();
 
         // Açılışta tepsiye başlatma: pencere gösterilmez.
+        // Sınama: pencereyi başlangıçta açar (ortam değişkeni: komut satırı argümanı bazı başlatma yollarında kaybolabiliyor)
+        if (Environment.GetEnvironmentVariable("KLYC_PULSE_OPEN") == "boost" || e.Args.Contains("--boost", StringComparer.OrdinalIgnoreCase))
+            Dispatcher.BeginInvoke(new Action(OpenBoost), System.Windows.Threading.DispatcherPriority.Loaded);
         if (!e.Args.Contains("--tray") && selfTest is null)
         {
             _window.Show();
@@ -184,6 +187,7 @@ public partial class App : Application
         if (_trayMenu is null) return;
         _trayMenu.Items.Clear();
         _trayMenu.Items.Add(Loc.T("KLYC-Pulse'ı aç"), null, (_, _) => ShowWindow());
+        _trayMenu.Items.Add(Loc.T("Açık uygulamaları kapat…"), null, (_, _) => OpenBoost());
         _trayMenu.Items.Add(new System.Windows.Forms.ToolStripSeparator());
 
         var current = AppServices.Modes.CurrentKey;
@@ -248,6 +252,24 @@ public partial class App : Application
             if (tour.NavigateTo is { } page) _window.GoTo(page);
         }
         finally { _tourOpen = false; }
+    }
+
+    private BoostWindow? _boost;
+
+    /// <summary>"Açık uygulamaları kapat" penceresini açar (Ana ekran düğmesi, tepsi menüsü).</summary>
+    public static void ShowBoost() => (Current as App)?.Dispatcher.BeginInvoke(new Action(() => (Current as App)?.OpenBoost()));
+
+    private void OpenBoost()
+    {
+        try
+        {
+            if (_boost is { IsVisible: true }) { _boost.Activate(); return; }
+            _boost = new BoostWindow();
+            if (_window?.IsVisible == true) _boost.Owner = _window; else _boost.WindowStartupLocation = WindowStartupLocation.CenterScreen;
+            _boost.Show();
+            _boost.Activate();
+        }
+        catch (Exception ex) { Pulse.Core.Diagnostics.Journal.Write("Açık uygulamaları kapat penceresi açılamadı: " + ex); }
     }
 
     /// <summary>Ayarlar sayfasındaki "Turu göster" düğmesi için.</summary>

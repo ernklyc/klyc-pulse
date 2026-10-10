@@ -9,6 +9,8 @@ public partial class MainWindow : FluentWindow
     public MainWindow()
     {
         InitializeComponent();
+        // Masaüstünde "Dizüstü" yerine "Donanım" yazar (pil/klavye özellikleri yok)
+        if (!Pulse.Core.Platform.DeviceInfo.Current.IsPortable) HardwareNavItem.Content = Pulse.Core.Localization.Loc.T("Donanım");
         Loaded += (_, _) => RootNavigation.Navigate(StartPage());
     }
 

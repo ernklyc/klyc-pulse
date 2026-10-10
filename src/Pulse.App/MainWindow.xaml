@@ -38,7 +38,7 @@
                 <ui:NavigationViewItem Content="İzleme" Icon="{ui:SymbolIcon DataTrending24}" TargetPageType="{x:Type pages:MonitorPage}" />
                 <ui:NavigationViewItem Content="Sürücüler" Icon="{ui:SymbolIcon DeveloperBoard24}" TargetPageType="{x:Type pages:DriversPage}" />
                 <ui:NavigationViewItem Content="Araçlar" Icon="{ui:SymbolIcon Wrench24}" TargetPageType="{x:Type pages:ToolsPage}" />
-                <ui:NavigationViewItem Content="Dizüstü" Icon="{ui:SymbolIcon Laptop24}" TargetPageType="{x:Type pages:LaptopPage}" />
+                <ui:NavigationViewItem x:Name="HardwareNavItem" Content="Dizüstü" Icon="{ui:SymbolIcon Laptop24}" TargetPageType="{x:Type pages:LaptopPage}" />
             </ui:NavigationView.MenuItems>
             <ui:NavigationView.FooterMenuItems>
                 <ui:NavigationViewItem Content="Ayarlar" Icon="{ui:SymbolIcon Settings24}" TargetPageType="{x:Type pages:SettingsPage}" />

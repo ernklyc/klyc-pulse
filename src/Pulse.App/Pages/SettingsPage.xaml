@@ -29,6 +29,7 @@
                         </StackPanel>
                         <ui:ToggleSwitch Grid.Column="1" IsChecked="{Binding AutoGameMode}" VerticalAlignment="Center" />
                     </Grid>
+                    <StackPanel Visibility="{Binding ShowBatterySettings, Converter={StaticResource BoolToVis}}">
                     <Border Style="{StaticResource PulseHairline}" />
                     <Grid Margin="14,11">
                         <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
@@ -38,6 +39,7 @@
                         </StackPanel>
                         <ui:ToggleSwitch Grid.Column="1" IsChecked="{Binding AutoQuietOnBattery}" VerticalAlignment="Center" />
                     </Grid>
+                    </StackPanel>
                 </StackPanel>
             </Border>
 

@@ -189,6 +189,8 @@ public sealed class ModeEngine : IDisposable
     private static StepResult ApplyBrightness(ModeDefinition mode)
     {
         var name = Loc.T("Ekran parlaklığı");
+        if (!DisplayService.BrightnessSupported)
+            return new(name, StepStatus.Skipped, Loc.T("Masaüstü monitörün parlaklığı Windows'tan ayarlanamaz."));
         if (DisplayService.GetBrightnessWithRetry(attempts: 4) is null)
             return new(name, StepStatus.Skipped, Loc.T("Bu ekranın parlaklığı yazılımla okunamıyor."));
 

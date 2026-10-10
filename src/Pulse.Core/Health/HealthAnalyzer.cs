@@ -12,13 +12,15 @@ public sealed record HealthFinding(FindingLevel Level, string Title, string Deta
 /// <summary>Ölçümlerden, kullanıcıya sade dille söylenecek bulgular çıkarır.</summary>
 public static class HealthAnalyzer
 {
-    public static IReadOnlyList<HealthFinding> Analyze(HealthSample s)
+    public static IReadOnlyList<HealthFinding> Analyze(HealthSample s, DeviceProfile? device = null)
     {
+        var dev = device ?? DeviceInfo.Current;
         var f = new List<HealthFinding>();
 
         // ---- Pil ----
         var b = s.Battery;
-        if (!b.Present)
+        if (!dev.IsPortable) { /* masaüstü / hepsi bir arada / mini bilgisayar: pil bulgusu yok (bağlı bir UPS pil sayılmaz) */ }
+        else if (!b.Present)
             f.Add(new(FindingLevel.Warning, Loc.T("Pil algılanmıyor"), Loc.T("Windows pili görmüyor. Pilsiz çalışmak ASUS'ta performans kısıtlamasına yol açabilir.")));
         else if (b.OnAc == true && b.RemainingMwh == 0 && b.ChargeRateMw == 0)
             f.Add(new(FindingLevel.Bad, Loc.T("Pil şarj almıyor"),

@@ -39,6 +39,12 @@ public static class DisplayService
         return set.ToList();
     }
 
+    /// <summary>
+    /// Yazılımla parlaklık ayarı bu bilgisayarda anlamlı mı? Dizüstü, tablet ve hepsi bir arada ekranlar dahili panel kullanır;
+    /// masaüstüne bağlı harici monitörlerin parlaklığı Windows'tan ayarlanamaz (monitörün kendi düğmesi gerekir).
+    /// </summary>
+    public static bool BrightnessSupported => DeviceInfo.Current.Kind is DeviceKind.Laptop or DeviceKind.Tablet or DeviceKind.AllInOne or DeviceKind.Unknown;
+
     // ---- Parlaklık (WMI, COM late binding) -----------------------------
     /// <summary>Yenileme hızı değişince monitör kaydı kısa süre kaybolur; bu yüzden birkaç kez dener.</summary>
     public static int? GetBrightnessWithRetry(int attempts = 10, int delayMs = 300)

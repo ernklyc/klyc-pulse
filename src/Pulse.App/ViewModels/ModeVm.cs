@@ -25,7 +25,7 @@ public partial class ModeVm : ObservableObject
             def.Asus.ToString() switch { "Turbo" => "Turbo", "Silent" => Loc.T("Sessiz profil"), _ => Loc.T("Dengeli profil") },
             Loc.T(def.Boost > 0 ? "CPU turbo açık" : "CPU turbo kapalı"),
             def.RefreshHz == Modes.MaxHz ? Loc.T("Ekranın en yüksek Hz'i") : $"{def.RefreshHz} Hz",
-            Loc.F("Parlaklık %{0}", def.Brightness),
+            .. Pulse.Core.Platform.DisplayService.BrightnessSupported ? new[] { Loc.F("Parlaklık %{0}", def.Brightness) } : [],
             .. def.MaxState < 100 ? new[] { Loc.F("CPU ≤ %{0}", def.MaxState) } : [],
             .. def.GpuCapMhz is { } cap ? new[] { $"GPU ≤ {cap} MHz" } : [],
             .. def.IdlePower ? new[] { Loc.T("Uyku kapalı") } : [],

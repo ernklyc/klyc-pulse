@@ -13,6 +13,9 @@ namespace Pulse.App.ViewModels;
 
 public partial class SettingsViewModel : ObservableObject, IDisposable
 {
+    /// <summary>"Fişi çekince Sessiz moda geç" yalnızca pilli dizüstü/tabletlerde gösterilir.</summary>
+    public bool ShowBatterySettings { get; } = Pulse.Core.Platform.DeviceInfo.Current.ShowBatteryFeatures;
+
     private readonly SettingsStore _store = AppServices.Settings;
     private readonly DispatcherTimer _timer = new() { Interval = TimeSpan.FromSeconds(3) };
     private bool _loading = true;

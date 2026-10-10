@@ -65,6 +65,18 @@ public sealed class ExitRowVm
 
 public partial class LaptopViewModel : ObservableObject
 {
+    private static readonly bool Portable = Pulse.Core.Platform.DeviceInfo.Current.IsPortable;
+
+    /// <summary>Sayfa başlıkları: dizüstüde "Dizüstü", masaüstünde "Donanım".</summary>
+    public string PageLabel { get; } = Loc.T(Portable ? "DİZÜSTÜ" : "DONANIM");
+    public string PageTitle { get; } = Loc.T(Portable ? "Pil, klavye, ekran kartı ve kısayollar." : "Ekran kartı ve kısayollar.");
+    public string PageLead { get; } = Loc.T(Portable
+        ? "Donanıma özel işler burada: pil sınırı, klavye ışığı, ekran kartı hızlandırma ve kısayollar."
+        : "Donanıma özel işler burada: ekran kartı hızlandırma ve kısayollar.");
+    public string NoDriverText { get; } = Loc.T(Portable
+        ? "Bu bilgisayarda üretici donanım sürücüsü (ASUS) bulunamadı; pil sınırı ve klavye ışığı kullanılamaz. Diğer özellikler çalışır."
+        : "Bu bir masaüstü bilgisayar: pil sınırı ve dizüstü klavye ışığı yok. Ekran kartı hızlandırma ve kısayollar çalışır.");
+
     private readonly SettingsStore _store = AppServices.Settings;
     private readonly GHelperExit _exit = new();
 
@@ -115,6 +127,9 @@ public partial class LaptopViewModel : ObservableObject
     public bool IsAdmin { get; }
     public bool HasDriver { get; }
     public bool HasNoDriver => !HasDriver;
+
+    /// <summary>Pil sınırı ve klavye ışığı kutuları: yalnızca üretici sürücüsü olan taşınabilir bilgisayarda.</summary>
+    public bool ShowLaptopHw => HasDriver && Portable;
     public ObservableCollection<ChoiceVm> BatteryChoices { get; } = new();
     public ObservableCollection<ChoiceVm> KeyboardChoices { get; } = new();
     public ObservableCollection<HotkeyRowVm> HotkeyRows { get; } = new();

@@ -150,8 +150,12 @@
             <!-- Hızlandır -->
             <Border Style="{StaticResource PulseCard}" Margin="0,0,0,12" Padding="16,12">
                 <DockPanel>
-                    <Button DockPanel.Dock="Right" Content="Hızlandır" Style="{StaticResource PulsePrimaryButton}" VerticalAlignment="Center" Margin="16,0,0,0"
-                            Command="{Binding OptimizeCommand}" IsEnabled="{Binding IsOptimizing, Converter={StaticResource InvertBool}}" />
+                    <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center" Margin="16,0,0,0">
+                        <Button Content="Açık uygulamaları kapat" Style="{StaticResource PulseGhostButton}" VerticalAlignment="Center" Margin="0,0,8,0"
+                                Command="{Binding OpenBoostCommand}" />
+                        <Button Content="Hızlandır" Style="{StaticResource PulsePrimaryButton}" VerticalAlignment="Center"
+                                Command="{Binding OptimizeCommand}" IsEnabled="{Binding IsOptimizing, Converter={StaticResource InvertBool}}" />
+                    </StackPanel>
                     <StackPanel>
                         <TextBlock Text="Tek tuşla hızlandır" FontFamily="{StaticResource DisplayFont}" FontSize="20" Foreground="{StaticResource InkBrush}" />
                         <TextBlock Style="{StaticResource PulseMuted}" TextWrapping="Wrap" Margin="0,2,0,0"
@@ -204,7 +208,7 @@
 
             <DockPanel Margin="0,0,0,8">
                 <ui:ToggleSwitch DockPanel.Dock="Right" IsChecked="{Binding ChangeBrightness}" Content="Parlaklığı da ayarla"
-                                 FontSize="12" />
+                                 FontSize="12" Visibility="{Binding ShowBrightness, Converter={StaticResource BoolToVis}}" />
                 <TextBlock Style="{StaticResource PulseLabel}" Text="MODLAR" VerticalAlignment="Center" />
             </DockPanel>
             <ItemsControl ItemsSource="{Binding Modes}" ItemTemplate="{StaticResource ModeCard}" Margin="0,0,-10,0">

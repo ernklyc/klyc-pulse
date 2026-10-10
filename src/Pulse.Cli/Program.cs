@@ -1220,6 +1220,153 @@ if (cmd == "orphan-test")
     return fails == 0 ? 0 : 1;
 }
 
+if (cmd == "openapps")
+{
+    // Gerçek bilgisayarda: şu an hangi uygulamaların kapatma adayı olduğunu yazar (HİÇBİR ŞEY KAPATMAZ).
+    var insp = new Pulse.Core.Processes.ProcessInspector();
+    insp.Sample(); Thread.Sleep(2500);
+    var groups = insp.Sample();
+    var game = Pulse.Core.Automation.GameDetector.FindRunningGameInfo();
+    var fg = Pulse.Core.Processes.OpenAppsAdvisor.ForegroundPid();
+    var scan = Pulse.Core.Processes.OpenAppsAdvisor.Build(groups, fg, game?.Name, game is null ? null : System.IO.Path.GetDirectoryName(game.Path));
+    Console.WriteLine($"Ön plandaki süreç: {fg}  |  oyun: {game?.Name ?? "yok"}  |  toplam {groups.Count} program, aday {scan.Apps.Count}");
+    foreach (var a in scan.Apps)
+        Console.WriteLine($"  [{a.Advice,-9}] {a.Display,-30} {(a.HasWindow ? "pencereli " : "arka plan")} ×{a.Count,-3} {a.MemoryBytes / 1048576.0,7:N0} MB  {a.Why}");
+    Console.WriteLine($"Toplam {scan.TotalBytes / 1073741824.0:N2} GB, önerilen {scan.SuggestedBytes / 1073741824.0:N2} GB");
+    return 0;
+}
+
+if (cmd == "openapps-test")
+{
+    // Açık uygulamaları kapat: sınıflandırma (sahte süreç listeleriyle) ve gerçek kapatma (sahte pencereli/pencerisiz uygulamalarla).
+    var fails = 0;
+    void Check(bool ok, string what) { Console.WriteLine($"  [{(ok ? "GEÇTİ" : "KALDI")}] {what}"); if (!ok) fails++; }
+    const long Mb = 1L << 20;
+    Pulse.Core.Processes.ProcGroup G(string name, long mb, bool window = true, string? path = null, int pid = 100, bool prot = false, double cpu = 0, int count = 1) =>
+        new(name, path ?? $@"C:\Users\x\AppData\Local\{name}\{name}.exe", "", count, cpu, mb * Mb, [pid], null, false, prot, prot ? "korumalı" : null, window);
+    Pulse.Core.Processes.OpenAppsScan Scan(IReadOnlyList<Pulse.Core.Processes.ProcGroup> gs, int? fg = null, string? game = null, string? gameDir = null) =>
+        Pulse.Core.Processes.OpenAppsAdvisor.Build(gs, fg, game, gameDir);
+    bool Has(Pulse.Core.Processes.OpenAppsScan s, string name) => s.Apps.Any(a => a.Name.Equals(name, StringComparison.OrdinalIgnoreCase));
+    Pulse.Core.Processes.OpenApp? Get(Pulse.Core.Processes.OpenAppsScan s, string name) => s.Apps.FirstOrDefault(a => a.Name.Equals(name, StringComparison.OrdinalIgnoreCase));
+
+    // 1) Asla listeye girmeyenler
+    var s1 = Scan([G("svchost", 300, false, prot: true), G("KLYC-Pulse", 200, pid: 5), G("explorer", 300, prot: true), G("discord", 400, pid: 10)]);
+    Check(!Has(s1, "svchost") && !Has(s1, "KLYC-Pulse") && !Has(s1, "explorer") && Has(s1, "discord"), "Korumalı sistem süreçleri ve Pulse listeye girmez");
+    var s2 = Scan([G("AsusOptimization", 120, false, @"C:\Program Files (x86)\ASUS\ArmouryDevice\AsusOptimization.exe"), G("RtkAudUService64", 90, false, @"C:\Windows\System32\DriverStore\RtkAudUService64.exe"),
+                   G("LGHUB", 200, true, @"C:\Program Files\LGHUB\lghub.exe"), G("nvcontainer", 150, false, @"C:\Program Files\NVIDIA Corporation\x.exe"),
+                   G("SomeTool", 300, false, @"C:\Program Files\Intel\Driver\tool.exe"), G("msedgewebview2", 200, false), G("avastui", 150), G("MsiAfterburner", 100)]);
+    Check(s2.Apps.Count == 0, $"Donanım/sürücü yardımcıları (ASUS, Realtek, Logitech, NVIDIA, Intel), WebView2, antivirüs listeye girmez (kalan: {string.Join(",", s2.Apps.Select(a => a.Name))})");
+    var s3 = Scan([G("spotify", 300, pid: 20), G("chrome", 900, pid: 21), G("notepad", 80, pid: 22)], fg: 21);
+    Check(!Has(s3, "chrome") && Has(s3, "spotify"), "Şu an ekranda önde olan uygulama (kullandığın) listelenmez");
+    var s4 = Scan([G("FIFA25", 5000, pid: 30, path: @"C:\Games\FC25\FIFA25.exe"), G("EAAntiCheat", 200, false, @"C:\Games\FC25\Anticheat\EAAntiCheat.exe", pid: 31),
+                   G("steam", 300, pid: 32), G("eadesktop", 400, pid: 33), G("discord", 400, pid: 34)], game: "FIFA25", gameDir: @"C:\Games\FC25");
+    Check(!Has(s4, "FIFA25") && !Has(s4, "EAAntiCheat") && !Has(s4, "steam") && !Has(s4, "eadesktop") && Has(s4, "discord"), "Çalışan oyun, klasöründeki süreçler ve oyun başlatıcıları (Steam, EA) korunur; Discord listelenir");
+    var s5 = Scan([G("steam", 300, pid: 40), G("eadesktop", 400, pid: 41)]);
+    Check(Has(s5, "steam") && Get(s5, "steam")!.Advice == Pulse.Core.Processes.AppAdvice.Optional, "Oyun yokken başlatıcılar listelenir ama ön seçili değil");
+
+    // 2) Öneriler
+    var s6 = Scan([G("discord", 400, pid: 50), G("chrome", 1200, pid: 51, count: 14), G("winword", 200, pid: 52), G("krita", 600, pid: 53), G("OneDrive", 150, false, pid: 54)]);
+    Check(Get(s6, "discord")!.Advice == Pulse.Core.Processes.AppAdvice.Suggested && Get(s6, "OneDrive")!.Advice == Pulse.Core.Processes.AppAdvice.Suggested, "Discord ve OneDrive: önerilen (ön seçili)");
+    Check(Get(s6, "chrome")!.Advice == Pulse.Core.Processes.AppAdvice.Optional && Get(s6, "chrome")!.Count == 14, "Tarayıcı: isteğe bağlı (14 süreç tek satır)");
+    Check(Get(s6, "winword")!.Advice == Pulse.Core.Processes.AppAdvice.Careful && Get(s6, "krita")!.Advice == Pulse.Core.Processes.AppAdvice.Careful, "Word ve Krita: dikkat (kaydedilmemiş iş olabilir)");
+    Check(s6.Apps[0].Advice == Pulse.Core.Processes.AppAdvice.Suggested && s6.Apps.Last().Advice == Pulse.Core.Processes.AppAdvice.Careful, "Sıra: önerilenler, isteğe bağlılar, dikkatliler");
+    Check(s6.SuggestedBytes == (400 + 150) * Mb && s6.TotalBytes == (400 + 1200 + 200 + 600 + 150) * Mb, "Toplam ve önerilen bellek doğru hesaplanır");
+    Check(Pulse.Core.Processes.OpenAppsAdvisor.Build([G("someapp", 200, pid: 60)], displayName: (n, p) => "Benim Uygulamam").Apps[0].Display == "Benim Uygulamam", "Bilinmeyen uygulama için dosyanın ürün adı gösterilir");
+
+    // 3) Eşikler
+    var s7 = Scan([G("tinywin", 10, pid: 70), G("tinybg", 40, false, pid: 71), G("bigbg", 120, false, pid: 72), G("busy", 10, false, pid: 73, cpu: 9), G("bigwin", 50, pid: 74)]);
+    Check(!Has(s7, "tinywin") && !Has(s7, "tinybg") && Has(s7, "bigbg") && Has(s7, "busy") && Has(s7, "bigwin"), "Önemsiz küçük programlar listeyi kalabalıklaştırmaz (eşikler)");
+
+    // 4) Gerçek kapatma: sahte pencereli, pencerisiz ve kapanmayı reddeden uygulamalar
+    System.Diagnostics.Process Spawn(string script) => System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo("powershell.exe", $"-NoProfile -ExecutionPolicy Bypass -Command \"{script}\"") { CreateNoWindow = true, UseShellExecute = false })!;
+    const string Form = "Add-Type -AssemblyName System.Windows.Forms; $f = New-Object Windows.Forms.Form; $f.Text = 'PulseTest'; ";
+    var polite = Spawn(Form + "[Windows.Forms.Application]::Run($f)");                                                        // kapat denince kapanır
+    var stubborn = Spawn(Form + "$f.Add_FormClosing({ $_.Cancel = $true }); [Windows.Forms.Application]::Run($f)");           // kapanmayı reddeder (kaydet? der gibi)
+    var bg = Spawn("Start-Sleep -Seconds 300");                                                                                // pencerisiz arka plan programı
+    try
+    {
+        for (var i = 0; i < 40 && (polite.MainWindowHandle == IntPtr.Zero || stubborn.MainWindowHandle == IntPtr.Zero); i++) { Thread.Sleep(250); polite.Refresh(); stubborn.Refresh(); }
+        // Ekransız ortamda (bazı CI makineleri) pencere açılamaz; o zaman pencereli denemeler atlanır, arka plan denemesi yine yapılır
+        var windowsOk = polite.MainWindowHandle != IntPtr.Zero && stubborn.MainWindowHandle != IntPtr.Zero;
+        if (!windowsOk) Console.WriteLine("  (bu ortamda pencere açılamadı: pencereli kapatma denemeleri atlandı)");
+        else Check(true, "Sahte pencereli uygulamalar açıldı");
+        Pulse.Core.Processes.OpenApp A(System.Diagnostics.Process p, bool window) => new("powershell", "Sahte", null, 1, 50 * Mb, 0, window, Pulse.Core.Processes.AppAdvice.Optional, "", [p.Id]);
+        var closer = new Pulse.Core.Processes.OpenAppsCloser();
+        var report = windowsOk ? closer.Close([A(polite, true), A(stubborn, true), A(bg, false)], waitMs: 6000) : closer.Close([A(bg, false)], waitMs: 3000);
+        var rp = report.Results.ToDictionary(r => r.App.Pids[0], r => r.Outcome);
+        if (windowsOk)
+        {
+            Check(polite.HasExited && rp[polite.Id] == Pulse.Core.Processes.CloseOutcome.Closed, "Nazikçe kapat denince kapanan uygulama: Kapandı");
+            Check(!stubborn.HasExited && rp[stubborn.Id] == Pulse.Core.Processes.CloseOutcome.WaitingForUser, "Kapanmayı reddeden pencereli uygulama zorla kapatılmaz: 'senden kayıt bekliyor'");
+        }
+        Check(bg.HasExited && rp[bg.Id] == Pulse.Core.Processes.CloseOutcome.Closed, "Pencerisiz arka plan programı sonlandırıldı ve doğrulandı");
+        if (windowsOk)
+        {
+            Check(report.Closed == 2 && report.Waiting.Count() == 1, "Rapor: 2 kapandı, 1 bekliyor");
+            var force = closer.ForceClose([report.Waiting.First().App]);
+            Check(stubborn.HasExited && force.Results[0].Outcome == Pulse.Core.Processes.CloseOutcome.Closed, "Kullanıcı onayıyla zorla kapatma çalışır");
+        }
+        // Korumalı bir şeyi hiçbir yoldan kapatamaz
+        var prot = closer.Close([new("svchost", "x", null, 1, 100 * Mb, 0, false, Pulse.Core.Processes.AppAdvice.Suggested, "", [System.Diagnostics.Process.GetCurrentProcess().Id])]);
+        Check(prot.Results[0].Outcome == Pulse.Core.Processes.CloseOutcome.Skipped, "Korumalı ad (svchost) verilse bile kapatıcı dokunmaz");
+        Check(!System.Diagnostics.Process.GetCurrentProcess().HasExited, "Kendi sürecimiz yerinde (yanlış süreç numarasına dokunulmadı)");
+    }
+    finally
+    {
+        foreach (var p in new[] { polite, stubborn, bg }) { try { if (!p.HasExited) p.Kill(); } catch { } }
+    }
+
+    Console.WriteLine(fails == 0 ? "AÇIK UYGULAMALARI KAPATMA TESTİ GEÇTİ" : $"{fails} TEST KALDI");
+    return fails == 0 ? 0 : 1;
+}
+
+if (cmd == "device-test")
+{
+    // Masaüstü / dizüstü uyumu: kasa türü sınıflandırması ve türe göre değişen bulgular (donanıma dokunmaz).
+    var fails = 0;
+    void Check(bool ok, string what) { Console.WriteLine($"  [{(ok ? "GEÇTİ" : "KALDI")}] {what}"); if (!ok) fails++; }
+    Pulse.Core.Platform.DeviceKind K(int[] types, bool bat = false, int? pcType = null) => Pulse.Core.Platform.DeviceInfo.Classify(types, bat, pcType).Kind;
+    var D = Pulse.Core.Platform.DeviceKind.Desktop;
+    var L = Pulse.Core.Platform.DeviceKind.Laptop;
+
+    Check(K([10], true) == L && K([9], true) == L && K([8], true) == L && K([14], true) == L, "Notebook / Laptop / Portable / Sub Notebook: dizüstü");
+    Check(K([31], true) == L, "Convertible (2'si 1 arada): dizüstü");
+    Check(K([30]) == Pulse.Core.Platform.DeviceKind.Tablet && K([32]) == Pulse.Core.Platform.DeviceKind.Tablet, "Tablet / Detachable: tablet");
+    Check(K([3]) == D && K([4]) == D && K([6]) == D && K([7]) == D && K([15]) == D && K([16]) == D, "Desktop / Mini Tower / Tower / Space-saving: masaüstü");
+    Check(K([13]) == Pulse.Core.Platform.DeviceKind.AllInOne, "All in One: hepsi bir arada");
+    Check(K([35]) == Pulse.Core.Platform.DeviceKind.MiniPc && K([36]) == Pulse.Core.Platform.DeviceKind.MiniPc, "Mini PC / Stick PC: mini bilgisayar");
+    Check(K([3], bat: true) == D, "Masaüstü + bağlı UPS (pil görünür): yine masaüstü, pil sayılmaz");
+    Check(K([10, 12]) == L, "Dizüstü + dock (12) birlikte bildirilirse dizüstü");
+    Check(K([], true, 2) == L && K([2], false, 2) == L, "Kasa türü belirsiz ama Windows 'mobil' diyorsa: dizüstü");
+    Check(K([1], false, 1) == D && K([], false, 3) == D, "Kasa türü belirsiz, Windows masaüstü/iş istasyonu diyorsa: masaüstü");
+    Check(K([], true) == L && K([], false) == D, "Hiç ipucu yoksa: pil varsa dizüstü, yoksa masaüstü");
+
+    var desk = new Pulse.Core.Platform.DeviceProfile(D, false);
+    var deskUps = new Pulse.Core.Platform.DeviceProfile(D, true);
+    var lap = new Pulse.Core.Platform.DeviceProfile(L, true);
+    Check(!desk.ShowBatteryFeatures && !deskUps.ShowBatteryFeatures && lap.ShowBatteryFeatures, "Pil özellikleri yalnızca pilli dizüstünde gösterilir");
+    Check(!lap.IsPortable == false && !desk.IsPortable, "Taşınabilir: dizüstü evet, masaüstü hayır");
+
+    // Sağlık bulguları
+    var noBattery = new Pulse.Core.Health.BatteryInfo(false, null, null, null, null, null, true, null);
+    var sample = new Pulse.Core.Health.HealthSample(DateTime.Now, 55, 50, 10, 1500, 1500, noBattery);
+    var fDesk = Pulse.Core.Health.HealthAnalyzer.Analyze(sample, desk);
+    Check(!fDesk.Any(f => f.Title.Contains("Pil")), "Masaüstünde 'Pil algılanmıyor' uyarısı çıkmaz (eskiden masaüstünde yanlış uyarı verirdi)");
+    var fLap = Pulse.Core.Health.HealthAnalyzer.Analyze(sample, lap);
+    Check(fLap.Any(f => f.Title.Contains("Pil algılanmıyor")), "Pilsiz görünen dizüstünde uyarı hâlâ çıkar");
+    var ups = new Pulse.Core.Health.BatteryInfo(true, 12.0, 0, 0, 0, null, true, false, 0);
+    var fUps = Pulse.Core.Health.HealthAnalyzer.Analyze(sample with { Battery = ups }, deskUps);
+    Check(!fUps.Any(f => f.Title.Contains("Pil")), "Masaüstüne bağlı UPS 'bozuk pil' diye raporlanmaz");
+    Check(Pulse.Core.Health.HealthAnalyzer.Analyze(sample, desk).Any(f => f.Title.Contains("sıcaklığı normal")), "Isı ve disk bulguları masaüstünde de çalışır");
+
+    // Parlaklık: dahili panel varsa
+    Environment.SetEnvironmentVariable("KLYC_PULSE_DEVICE", null);
+    Console.WriteLine($"  (bu bilgisayar: {Pulse.Core.Platform.DeviceInfo.Current.Label}, pil özellikleri: {Pulse.Core.Platform.DeviceInfo.Current.ShowBatteryFeatures}, parlaklık: {Pulse.Core.Platform.DisplayService.BrightnessSupported})");
+
+    Console.WriteLine(fails == 0 ? "CİHAZ TÜRÜ TESTİ GEÇTİ" : $"{fails} TEST KALDI");
+    return fails == 0 ? 0 : 1;
+}
+
 if (cmd == "loc-test")
 {
     // Çeviri: sözlük kaynak koddaki Loc.T/Loc.F metinleriyle ve XAML'deki sabit metinlerle uyuşuyor mu? (donanıma dokunmaz)
@@ -1289,6 +1436,12 @@ if (cmd == "loc-test")
     }
     foreach (var mkey in xmissing.Take(20)) Console.WriteLine("    XAML'de eksik: " + mkey[..Math.Min(90, mkey.Length)]);
     Check(xmissing.Count == 0, $"XAML'deki her sabit metnin İngilizcesi var (eksik: {xmissing.Count})");
+
+    // 3b) "Açık uygulamaları kapat" kataloğu: anahtarları koddan dinamik okunduğu için ayrıca denetlenir
+    var catMissing = Pulse.Core.Processes.OpenAppsAdvisor.CatalogTexts()
+        .Where(t => (System.Text.RegularExpressions.Regex.IsMatch(t, "[çğıöşüÇĞİÖŞÜ]") || t.EndsWith('.')) && !entries.ContainsKey(t)).ToList();
+    foreach (var mkey in catMissing.Take(10)) Console.WriteLine("    katalogda eksik: " + mkey);
+    Check(catMissing.Count == 0, $"Uygulama kataloğundaki her açıklamanın İngilizcesi var (eksik: {catMissing.Count})");
 
     // 4) Çalışma: İngilizce modda çeviri yapılır, Türkçe modda metin aynen kalır
     Pulse.Core.Localization.Loc.Configure("tr");

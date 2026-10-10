@@ -57,9 +57,9 @@
                         <TextBlock Style="{StaticResource PulseMuted}" Text="{Binding FanNote}" />
                         <c:Sparkline Height="34" Margin="0,8,0,0" Values="{Binding FanHistory}" Stroke="{StaticResource AccentGrayBrush}" Minimum="0" Maximum="6000" />
                     </StackPanel>
-                    <Border Grid.Column="5" Background="{StaticResource LineBrush}" />
+                    <Border Grid.Column="5" Background="{StaticResource LineBrush}" Visibility="{Binding ShowBattery, Converter={StaticResource BoolToVis}}" />
 
-                    <StackPanel Grid.Column="6" Margin="14,10">
+                    <StackPanel Grid.Column="6" Margin="14,10" Visibility="{Binding ShowBattery, Converter={StaticResource BoolToVis}}">
                         <TextBlock Style="{StaticResource PulseLabel}" Text="PİL" />
                         <TextBlock Style="{StaticResource PulseStat}" Text="{Binding BatteryText}" Foreground="{Binding BatteryBrush}" />
                         <TextBlock Style="{StaticResource PulseMuted}" Text="{Binding BatteryNote}" />

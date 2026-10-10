@@ -886,3 +886,99 @@ KISMEN	PARTLY
 Discord kod	Discord code
 Ekran {0} dk'da kapanır, uyku kapalı.	Screen turns off after {0} min, sleep is off.
 Ekran ve uyku {0} dk sonra devreye girer.	Screen off and sleep kick in after {0} min.
+Masaüstü monitörün parlaklığı Windows'tan ayarlanamaz.	A desktop monitor's brightness can't be set from Windows.
+DONANIM	HARDWARE
+Ekran kartı ve kısayollar.	Graphics card and shortcuts.
+Donanıma özel işler burada: ekran kartı hızlandırma ve kısayollar.	Hardware-specific things are here: graphics card boost and shortcuts.
+Bu bir masaüstü bilgisayar: pil sınırı ve dizüstü klavye ışığı yok. Ekran kartı hızlandırma ve kısayollar çalışır.	This is a desktop computer: there is no battery limit or laptop keyboard light. Graphics card boost and shortcuts work.
+Donanım	Hardware
+Adobe arka plan işi	Adobe background job
+Edge güncelleyici	Edge updater
+Google güncelleyici	Google updater
+Java güncelleyici	Java updater
+Görev Yöneticisi	Task Manager
+Komut İstemi	Command Prompt
+Not Defteri	Notepad
+Telefon Bağlantısı	Phone Link
+Windows Pano (Widgets)	Windows Widgets
+Adobe'nin güncelleme/bildirim yardımcısı.	Adobe's update/notification helper.
+Adobe'nin yardımcısı.	Adobe's helper.
+Açık belge olabilir.	A document may be open.
+Açık proje kaybolabilir.	An open project could be lost.
+Açık çizim kaybolabilir.	An open drawing could be lost.
+Canlı duvar kağıdı; ekran kartını ve işlemciyi yorar.	Live wallpaper; it strains the graphics card and the CPU.
+Dosya eşitleme; kapatınca eşitleme durur, sonra kendiliğinden açılır.	File sync; syncing stops while it is closed, and it opens again by itself later.
+Dosya eşitleme; kapatınca eşitleme durur.	File sync; syncing stops while it is closed.
+Edge'in güncelleme denetçisi.	Edge's update checker.
+Google'ın güncelleme denetçisi.	Google's update checker.
+Java'nın güncelleme denetçisi.	Java's update checker.
+Haber/hava durumu panosu; arka planda bellek tutar.	News/weather board; it holds memory in the background.
+Kapatılması zararsız.	Harmless to close.
+Kaydedilmemiş belge olabilir; kapatırken sana sorar.	There may be an unsaved document; it asks you when closing.
+Kaydedilmemiş dosya olabilir; kapatırken sana sorar.	There may be an unsaved file; it asks you when closing.
+Kaydedilmemiş kod olabilir.	There may be unsaved code.
+Kaydedilmemiş kod olabilir; kapatırken sana sorar.	There may be unsaved code; it asks you when closing.
+Kaydedilmemiş not olabilir.	There may be an unsaved note.
+Kaydedilmemiş not olabilir; kapatırken sana sorar.	There may be an unsaved note; it asks you when closing.
+Kaydedilmemiş sunum olabilir; kapatırken sana sorar.	There may be an unsaved presentation; it asks you when closing.
+Kaydedilmemiş tablo olabilir; kapatırken sana sorar.	There may be an unsaved spreadsheet; it asks you when closing.
+Kayıt ya da yayın sürüyor olabilir.	A recording or stream may be in progress.
+Medya oynatıcı.	Media player.
+Medya uygulaması.	Media app.
+Müzik uygulaması; çalıyorsa müzik durur.	Music app; if it is playing, the music stops.
+Oyun başlatıcı.	Game launcher.
+Oyun başlatıcı; açık Steam oyunu varsa o da kapanır. Oyunu açınca yeniden açılır.	Game launcher; an open Steam game closes too. It reopens when you start a game.
+Oyun başlatıcı; oyunu açınca yeniden açılır.	Game launcher; it reopens when you start a game.
+Sekmeler açıksa kaydedilmemiş bir şey için sorar.	If tabs are open it asks about anything unsaved.
+Sekmeler açıksa kaydedilmemiş bir şey için sorar; Chrome çoğu zaman sekmeleri geri açar.	If tabs are open it asks about anything unsaved; Chrome usually reopens the tabs.
+Sekmeler açıksa kaydedilmemiş bir şey için sorar; Edge sekmeleri geri açabilir.	If tabs are open it asks about anything unsaved; Edge can reopen the tabs.
+Sohbet uygulaması.	Chat app.
+Sohbet uygulaması; arka planda bellek ve işlemci harcar.	Chat app; it uses memory and CPU in the background.
+Steam'in tarayıcı parçası; oyun başlatınca yeniden açılır.	Steam's browser component; it reopens when you start a game.
+Toplantı uygulaması.	Meeting app.
+Toplantı/sohbet uygulaması; arka planda ağır çalışır.	Meeting/chat app; it runs heavily in the background.
+Valorant/LoL başlatıcısı; oyunu açınca yeniden açılır.	Valorant/LoL launcher; it reopens when you start a game.
+Windows'un telefon eşleme uygulaması; çoğu kişi kullanmaz.	Windows' phone pairing app; most people don't use it.
+Yapay zekâ asistanı arka plan uygulaması.	AI assistant background app.
+Yapay zekâ asistanı; kapatırsan açık oturum da biter.	AI assistant; if you close it, the open session ends too.
+Yapay zekâ asistanı; kapatırsan açık sohbet/çalışma oturumu da biter.	AI assistant; if you close it, the open chat/work session ends too.
+Yazılmakta olan e-posta olabilir.	An e-mail may be being written.
+Çalışan bir komut olabilir.	A command may be running.
+Çalışan bir komut/oturum olabilir.	A command/session may be running.
+Açık bir uygulama; kapatırken kaydedilmemiş iş için sana sorar.	An open app; when closing it asks you about unsaved work.
+Arka planda çalışan program; kapatınca sonlandırılır, ihtiyaç olunca yeniden açılır.	A program running in the background; it is ended when closed and reopens when needed.
+Korumalı; dokunulmadı.	Protected; left alone.
+Zaten kapanmıştı.	It had already closed.
+Kapandı.	Closed.
+Senden kayıt bekliyor ya da yanıt vermiyor; zorla kapatılmadı.	It is waiting for you to save, or not responding; it was not force-closed.
+Kapatılamadı.	Could not be closed.
+Zorla sonlandırıldı.	Force-ended.
+Sonlandırılamadı.	Could not be ended.
+ÖNERİLEN	SUGGESTED
+İSTEĞE BAĞLI	OPTIONAL
+Pencereli uygulama	Windowed app
+Arka plan programı	Background program
+Açık uygulamalar taranıyor…	Scanning open apps…
+Tarama yapılamadı.	The scan could not be done.
+Kapatılacak bir şey bulunamadı. Her şey zaten sade.	Nothing to close was found. Everything is already lean.
+{0} uygulama açık, toplam {1}. Önerilen {2} uygulama ({3}) ön seçili.	{0} apps are open, {1} in total. The suggested {2} apps ({3}) are pre-selected.
+{0} çalışıyor: oyunun kendisi ve oyun başlatıcıları listede yok, kapatılmaz.	{0} is running: the game itself and game launchers are not in the list and will not be closed.
+Hiçbir uygulama seçili değil.	No app is selected.
+{0} uygulama seçili · {1}	{0} apps selected · {1}
+Şu uygulamalarda kaydedilmemiş iş olabilir: {0}.\n\nKapatırken uygulamalar sana soracak; kaydetmek istemezsen kapanmaz. Devam edilsin mi?	These apps may have unsaved work: {0}.\n\nWhen closing, the apps will ask you; if you don't want to save they won't close. Continue?
+Açık uygulamaları kapat	Close open apps
+Açık uygulamaları kapat…	Close open apps…
+Uygulamalar kapatılıyor…	Closing apps…
+{0} uygulama kapandı, yaklaşık {1} bellek boşaldı.	{0} apps closed, about {1} of memory was freed.
+{0} uygulama senden kayıt bekliyor ya da yanıt vermiyor ({1}); zorla kapatılmadı.	{0} apps are waiting for you to save or not responding ({1}); they were not force-closed.
+{0} uygulama kapatılamadı.	{0} apps could not be closed.
+{0} zorla kapatılacak. Kaydedilmemiş veri KAYBOLUR.\n\nEmin misin?	{0} will be force-closed. Unsaved data WILL BE LOST.\n\nAre you sure?
+Zorla kapatılıyor…	Force-closing…
+{0} uygulama zorla kapatıldı, yaklaşık {1} bellek daha boşaldı.	{0} apps were force-closed, about {1} more memory was freed.
+HIZLANDIR	SPEED UP
+Beklemeyenleri zorla kapat	Force-close the ones that didn't close
+Hiçbirini seçme	Select none
+Önerilenleri seç	Select suggested
+Seçilenleri kapat	Close selected
+Yeniden tara	Scan again
+Bellek ve işlemci yiyen açık uygulamaları listeler. Pencereli uygulamalar nazikçe kapatılır: kaydedilmemiş iş varsa uygulama sana sorar, zorla kapatılmaz. Sistem, sürücü, güvenlik ve şu an kullandığın uygulama listede yok.	Lists open apps that use memory and CPU. Windowed apps are closed politely: if there is unsaved work the app asks you and is not force-closed. System, driver, security programs and the app you are using right now are not in the list.

@@ -31,16 +31,16 @@
     </Page.Resources>
     <ScrollViewer VerticalScrollBarVisibility="Auto">
         <StackPanel Margin="26,18,26,22" MaxWidth="1000" HorizontalAlignment="Stretch">
-            <TextBlock Style="{StaticResource PulseLabel}" Text="DİZÜSTÜ" />
-            <TextBlock Style="{StaticResource PulseDisplay}" Margin="0,2,0,0" Text="Pil, klavye, ekran kartı ve kısayollar." />
+            <TextBlock Style="{StaticResource PulseLabel}" Text="{Binding PageLabel}" />
+            <TextBlock Style="{StaticResource PulseDisplay}" Margin="0,2,0,0" Text="{Binding PageTitle}" />
             <TextBlock Style="{StaticResource PulseLead}" Margin="0,2,0,0"
-                       Text="Donanıma özel işler burada: pil sınırı, klavye ışığı, ekran kartı hızlandırma ve kısayollar." />
+                       Text="{Binding PageLead}" />
             <Border Style="{StaticResource PulseHairline}" Margin="0,14,0,12" />
 
             <Border Style="{StaticResource PulseCard}" Padding="16,12" Margin="0,0,0,12"
                     Visibility="{Binding HasNoDriver, Converter={StaticResource BoolToVis}}">
                 <TextBlock Style="{StaticResource PulseMuted}" TextWrapping="Wrap"
-                           Text="Bu bilgisayarda üretici donanım sürücüsü (ASUS) bulunamadı; pil sınırı ve klavye ışığı kullanılamaz. Diğer özellikler çalışır." />
+                           Text="{Binding NoDriverText}" />
             </Border>
 
             <Border Style="{StaticResource PulseCard}" Padding="16,12" Margin="0,0,0,12"
@@ -49,8 +49,8 @@
             </Border>
 
             <!-- Pil -->
-            <TextBlock Style="{StaticResource PulseLabel}" Text="PİL ŞARJ SINIRI" Margin="0,0,0,8" />
-            <Border Style="{StaticResource PulseCard}" Padding="16,12">
+            <TextBlock Style="{StaticResource PulseLabel}" Text="PİL ŞARJ SINIRI" Margin="0,0,0,8" Visibility="{Binding ShowLaptopHw, Converter={StaticResource BoolToVis}}" />
+            <Border Style="{StaticResource PulseCard}" Padding="16,12" Visibility="{Binding ShowLaptopHw, Converter={StaticResource BoolToVis}}">
                 <StackPanel>
                     <TextBlock Style="{StaticResource SettingTitle}" Text="Pil en fazla şu kadar dolsun" />
                     <TextBlock Style="{StaticResource PulseMuted}" TextWrapping="Wrap"
@@ -65,8 +65,8 @@
             </Border>
 
             <!-- Klavye ışığı -->
-            <TextBlock Style="{StaticResource PulseLabel}" Text="KLAVYE IŞIĞI" Margin="0,18,0,8" />
-            <Border Style="{StaticResource PulseCard}" Padding="16,12">
+            <TextBlock Style="{StaticResource PulseLabel}" Text="KLAVYE IŞIĞI" Margin="0,18,0,8" Visibility="{Binding ShowLaptopHw, Converter={StaticResource BoolToVis}}" />
+            <Border Style="{StaticResource PulseCard}" Padding="16,12" Visibility="{Binding ShowLaptopHw, Converter={StaticResource BoolToVis}}">
                 <StackPanel>
                     <TextBlock Style="{StaticResource SettingTitle}" Text="Işık parlaklığı" />
                     <TextBlock Style="{StaticResource PulseMuted}" Text="Seçtiğin parlaklık ayarlanır ve gerçekten değiştiği kontrol edilir." />

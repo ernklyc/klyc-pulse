@@ -1,0 +1,94 @@
+<Window x:Class="Pulse.App.BoostWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:c="clr-namespace:Pulse.App.Controls"
+        Title="Açık uygulamaları kapat" Width="780" Height="700" MinWidth="640" MinHeight="520"
+        WindowStartupLocation="CenterOwner"
+        Background="{StaticResource PaperBrush}" FontFamily="{StaticResource BodyFont}">
+    <Grid Margin="26,20,26,18">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <StackPanel Grid.Row="0">
+            <TextBlock Style="{StaticResource PulseLabel}" Text="HIZLANDIR" />
+            <TextBlock FontFamily="{StaticResource DisplayFont}" FontSize="30" Foreground="{StaticResource InkBrush}" Margin="0,2,0,0" TextWrapping="Wrap"
+                       Text="Açık uygulamaları kapat" />
+            <TextBlock Style="{StaticResource PulseMuted}" TextWrapping="Wrap" Margin="0,4,0,0"
+                       Text="Bellek ve işlemci yiyen açık uygulamaları listeler. Pencereli uygulamalar nazikçe kapatılır: kaydedilmemiş iş varsa uygulama sana sorar, zorla kapatılmaz. Sistem, sürücü, güvenlik ve şu an kullandığın uygulama listede yok." />
+            <Border Style="{StaticResource PulseHairline}" Margin="0,12,0,0" />
+        </StackPanel>
+
+        <StackPanel Grid.Row="1" Margin="0,10,0,6">
+            <TextBlock Text="{Binding Summary}" Style="{StaticResource PulseBody}" FontWeight="Medium" TextWrapping="Wrap" />
+            <TextBlock Text="{Binding SelectedText}" Style="{StaticResource PulseMuted}" Margin="0,2,0,0" />
+            <TextBlock Text="{Binding GameNote}" Style="{StaticResource PulseMuted}" TextWrapping="Wrap" Margin="0,2,0,0"
+                       Visibility="{Binding GameNote, Converter={StaticResource StringToVis}}" />
+            <Border Style="{StaticResource PulseCard}" Padding="16,12" Margin="0,8,0,0" Visibility="{Binding Op.IsActive, Converter={StaticResource BoolToVis}}">
+                <c:BusyBar IsActive="{Binding Op.IsActive}" Fraction="{Binding Op.Fraction}" Text="{Binding Op.Text}" Counter="{Binding Op.Counter}" />
+            </Border>
+            <Border Style="{StaticResource PulseCard}" Padding="16,12" Margin="0,8,0,0" Visibility="{Binding HasResult, Converter={StaticResource BoolToVis}}">
+                <DockPanel>
+                    <Button DockPanel.Dock="Right" Content="Beklemeyenleri zorla kapat" Style="{StaticResource PulseGhostButton}" VerticalAlignment="Center" Margin="12,0,0,0"
+                            Command="{Binding ForceWaitingCommand}" Visibility="{Binding CanForce, Converter={StaticResource BoolToVis}}" />
+                    <TextBlock Text="{Binding ResultText}" Style="{StaticResource PulseBody}" TextWrapping="Wrap" VerticalAlignment="Center" />
+                </DockPanel>
+            </Border>
+        </StackPanel>
+
+        <Border Grid.Row="2" Style="{StaticResource PulseCard}" Padding="0" Margin="0,4,0,10">
+            <ScrollViewer VerticalScrollBarVisibility="Auto">
+                <ItemsControl ItemsSource="{Binding Items}">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <StackPanel>
+                                <Grid Margin="14,9">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <CheckBox IsChecked="{Binding IsSelected}" IsEnabled="{Binding Done, Converter={StaticResource InvertBool}}"
+                                              VerticalAlignment="Top" MinWidth="0" Margin="0,2,10,0" />
+                                    <StackPanel Grid.Column="1">
+                                        <StackPanel Orientation="Horizontal">
+                                            <TextBlock Text="{Binding Display}" Style="{StaticResource PulseBody}" FontWeight="Medium" />
+                                            <TextBlock Text="{Binding CountText}" Style="{StaticResource PulseMuted}" Margin="6,2,0,0" />
+                                            <Border Style="{StaticResource PulseBadge}" Margin="10,0,0,0" VerticalAlignment="Center">
+                                                <TextBlock Text="{Binding Badge}" FontSize="10.5" FontWeight="SemiBold" Foreground="{Binding BadgeBrush}" />
+                                            </Border>
+                                            <TextBlock Text="{Binding KindText}" Style="{StaticResource PulseMuted}" Margin="10,2,0,0" />
+                                        </StackPanel>
+                                        <TextBlock Text="{Binding Why}" Style="{StaticResource PulseMuted}" TextWrapping="Wrap" />
+                                        <TextBlock Text="{Binding Status}" Foreground="{Binding StatusBrush}" Style="{StaticResource PulseMuted}" FontWeight="Medium" TextWrapping="Wrap"
+                                                   Visibility="{Binding Status, Converter={StaticResource StringToVis}}" />
+                                    </StackPanel>
+                                    <TextBlock Grid.Column="2" Text="{Binding MemoryText}" Style="{StaticResource PulseBody}" FontWeight="Medium"
+                                               VerticalAlignment="Top" TextAlignment="Right" MinWidth="80" />
+                                </Grid>
+                                <Border Style="{StaticResource PulseHairline}" />
+                            </StackPanel>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </ScrollViewer>
+        </Border>
+
+        <DockPanel Grid.Row="3">
+            <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+                <Button Content="Kapat" Style="{StaticResource PulseGhostButton}" Click="Close_Click" Margin="0,0,8,0" MinWidth="70" />
+                <Button Content="Seçilenleri kapat" Style="{StaticResource PulsePrimaryButton}" Command="{Binding CloseSelectedCommand}"
+                        IsEnabled="{Binding IsBusy, Converter={StaticResource InvertBool}}" MinWidth="150" />
+            </StackPanel>
+            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                <Button Content="Önerilenleri seç" Style="{StaticResource PulseGhostButton}" Command="{Binding SelectSuggestedCommand}" Margin="0,0,8,0" />
+                <Button Content="Hiçbirini seçme" Style="{StaticResource PulseGhostButton}" Command="{Binding SelectNoneCommand}" Margin="0,0,8,0" />
+                <Button Content="Yeniden tara" Style="{StaticResource PulseGhostButton}" Command="{Binding ScanCommand}"
+                        IsEnabled="{Binding IsBusy, Converter={StaticResource InvertBool}}" />
+            </StackPanel>
+        </DockPanel>
+    </Grid>
+</Window>
