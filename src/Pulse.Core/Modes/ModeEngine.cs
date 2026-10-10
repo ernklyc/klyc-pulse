@@ -232,6 +232,9 @@ public sealed class ModeEngine : IDisposable
         return !c.Ok ? new(name, StepStatus.Failed, c.Message) : new(name, c.Verified ? StepStatus.Verified : StepStatus.Applied, c.Message);
     }
 
+    /// <summary>Boşta modunda (fişteyken) ekranın kapanma ve uykuya geçme süresi (30 dk, kullanıcının isteği). Eskiden 1 dk ekran / uyku kapalıydı; bilgisayar başındayken ekran kararıyordu.</summary>
+    private const int IdleScreenSeconds = 1800;
+
     private static StepResult ApplyIdlePower(ModeDefinition mode)
     {
         var name = Loc.T("Ekran kapanma ve uyku");
@@ -247,13 +250,13 @@ public sealed class ModeEngine : IDisposable
                 state.OriginalStandbySeconds = Powercfg.GetAc(active, Powercfg.SubSleep, Powercfg.StandbyIdle);
                 SaveState(state);
             }
-            Powercfg.SetAc(active, Powercfg.SubVideo, Powercfg.VideoIdle, 60);
-            Powercfg.SetAc(active, Powercfg.SubSleep, Powercfg.StandbyIdle, 0);
+            Powercfg.SetAc(active, Powercfg.SubVideo, Powercfg.VideoIdle, IdleScreenSeconds);
+            Powercfg.SetAc(active, Powercfg.SubSleep, Powercfg.StandbyIdle, IdleScreenSeconds);
             Powercfg.SetActive(active);
             var mon = Powercfg.GetAc(active, Powercfg.SubVideo, Powercfg.VideoIdle);
             var slp = Powercfg.GetAc(active, Powercfg.SubSleep, Powercfg.StandbyIdle);
-            return mon == 60 && slp == 0
-                ? new(name, StepStatus.Verified, Loc.T("Ekran 1 dk'da kapanır, uyku kapalı."))
+            return mon == IdleScreenSeconds && slp == IdleScreenSeconds
+                ? new(name, StepStatus.Verified, Loc.F("Ekran ve uyku {0} dk sonra devreye girer.", IdleScreenSeconds / 60))
                 : new(name, StepStatus.Failed, Loc.F("Okunan: ekran {0} sn, uyku {1} sn.", mon, slp));
         }
 

@@ -884,3 +884,5 @@ VAR	YES
 ORTAK	SHARED
 KISMEN	PARTLY
 Discord kod	Discord code
+Ekran {0} dk'da kapanır, uyku kapalı.	Screen turns off after {0} min, sleep is off.
+Ekran ve uyku {0} dk sonra devreye girer.	Screen off and sleep kick in after {0} min.
