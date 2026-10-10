@@ -5,6 +5,7 @@
       xmlns:c="clr-namespace:Pulse.App.Controls"
       Background="Transparent" FontFamily="{StaticResource BodyFont}"
       ScrollViewer.CanContentScroll="False" ScrollViewer.VerticalScrollBarVisibility="Disabled">
+    <Grid>
     <ScrollViewer VerticalScrollBarVisibility="Auto">
         <StackPanel Margin="26,18,26,22" MaxWidth="1000" HorizontalAlignment="Stretch">
             <TextBlock Style="{StaticResource PulseLabel}" Text="UYGULAMALAR" />
@@ -32,10 +33,6 @@
             </ItemsControl>
 
             <TextBlock Text="{Binding Status}" Style="{StaticResource PulseMuted}" Margin="0,0,0,8" />
-            <Border Style="{StaticResource PulseCard}" Padding="16,12" Margin="0,0,0,10"
-                    Visibility="{Binding Op.IsActive, Converter={StaticResource BoolToVis}}">
-                <c:BusyBar IsActive="{Binding Op.IsActive}" Fraction="{Binding Op.Fraction}" Text="{Binding Op.Text}" Counter="{Binding Op.Counter}" />
-            </Border>
 
             <!-- 0: Güncellemeler -->
             <StackPanel Visibility="{Binding Tab, Converter={StaticResource EqualsToVis}, ConverterParameter=0}">
@@ -181,4 +178,10 @@
             </StackPanel>
         </StackPanel>
     </ScrollViewer>
+    <!-- İşlem çubuğu sayfanın üstünde yüzer: açılıp kapanınca altındaki içerik aşağı-yukarı kaymaz -->
+    <Border Style="{StaticResource PulseCard}" Margin="26,10,26,0" Padding="16,12" MaxWidth="1000" VerticalAlignment="Top"
+            Visibility="{Binding Op.IsActive, Converter={StaticResource BoolToVis}}">
+        <c:BusyBar IsActive="{Binding Op.IsActive}" Fraction="{Binding Op.Fraction}" Text="{Binding Op.Text}" Counter="{Binding Op.Counter}" />
+    </Border>
+    </Grid>
 </Page>

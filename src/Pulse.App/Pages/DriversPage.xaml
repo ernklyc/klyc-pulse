@@ -22,6 +22,7 @@
             </StackPanel>
         </DataTemplate>
     </Page.Resources>
+    <Grid>
     <ScrollViewer VerticalScrollBarVisibility="Auto">
         <StackPanel Margin="26,18,26,22" MaxWidth="1000" HorizontalAlignment="Stretch">
             <TextBlock Style="{StaticResource PulseLabel}" Text="SÜRÜCÜLER" />
@@ -56,9 +57,6 @@
                     <TextBlock Text="{Binding UpdateNote}" Style="{StaticResource PulseBody}" FontWeight="Medium" TextWrapping="Wrap" VerticalAlignment="Center" Margin="0,0,16,0" />
                 </DockPanel>
             </Border>
-            <Border Style="{StaticResource PulseCard}" Padding="16,12" Margin="0,8,0,0" Visibility="{Binding Op.IsActive, Converter={StaticResource BoolToVis}}">
-                <c:BusyBar IsActive="{Binding Op.IsActive}" Fraction="{Binding Op.Fraction}" Text="{Binding Op.Text}" Counter="{Binding Op.Counter}" />
-            </Border>
             <Border Style="{StaticResource PulseCard}" Padding="0" Margin="0,8,0,0">
                 <ItemsControl ItemsSource="{Binding Updates}" ItemTemplate="{StaticResource RowTemplate}" />
             </Border>
@@ -69,4 +67,10 @@
             </Border>
         </StackPanel>
     </ScrollViewer>
+    <!-- İşlem çubuğu sayfanın üstünde yüzer: açılıp kapanınca altındaki içerik aşağı-yukarı kaymaz -->
+    <Border Style="{StaticResource PulseCard}" Margin="26,10,26,0" Padding="16,12" MaxWidth="1000" VerticalAlignment="Top"
+            Visibility="{Binding Op.IsActive, Converter={StaticResource BoolToVis}}">
+        <c:BusyBar IsActive="{Binding Op.IsActive}" Fraction="{Binding Op.Fraction}" Text="{Binding Op.Text}" Counter="{Binding Op.Counter}" />
+    </Border>
+    </Grid>
 </Page>

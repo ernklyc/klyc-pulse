@@ -2,6 +2,13 @@
 
 Biçim [Keep a Changelog](https://keepachangelog.com/tr/) esaslıdır; sürümleme [SemVer](https://semver.org/lang/tr/).
 
+## [1.9.1] — 2026-10-11
+
+### Düzeltilenler
+- **Sekme değiştirince işlem durmuş/sonuç kaybolmuş görünmesi:** Sayfalar artık bellekte tutulur. Temizlik taraması, güncelleme, disk analizi gibi süren işler başka sekmeye geçip dönünce kaybolmaz; sonuç yerinde durur. Canlı ölçüm yapan sayfalar (İzleme, Sağlık, Süreçler, Oyunlar, Ayarlar) ekrandan çıkınca ölçmeyi bırakır, dönünce yeniden başlar (arka planda boşuna iş yapmaz).
+- **Ekranın "nefes alması" ve beklenmedik açılan listeler:** Süreçler sayfasında satırlar her 2 saniyede yer değiştirdiği için tıklama başka satıra denk gelip öncelik listesini aniden açabiliyordu. Canlı sıralama kapatıldı; fare listedeyken sıra sabit kalır, değilken birkaç saniyede bir toplu sıralanır.
+- **Kayan sayfa düzeni:** İşlem çubuğu (tarama, güncelleme vb.) artık sayfanın üstünde yüzer; açılıp kapanınca altındaki kartlar aşağı-yukarı kaymaz. Ana ekran mod kartında "AKTİF" yazısı ve düğme genişliği için yer ayrıldı, aktif çerçeve kalınlaşırken kart ölçüsü değişmez.
+
 ## [1.9.0] — 2026-10-11
 
 ### Eklenenler

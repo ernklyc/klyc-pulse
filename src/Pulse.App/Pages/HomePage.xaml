@@ -40,11 +40,11 @@
                         </ItemsControl>
                     </StackPanel>
                     <StackPanel Grid.Column="2" VerticalAlignment="Top" HorizontalAlignment="Right">
-                        <Button x:Name="ApplyButton" Content="Uygula" Style="{StaticResource PulsePrimaryButton}"
+                        <Button x:Name="ApplyButton" Content="Uygula" MinWidth="124" Style="{StaticResource PulsePrimaryButton}"
                                 Command="{Binding DataContext.SelectModeCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
                                 CommandParameter="{Binding}" />
                         <TextBlock x:Name="ActiveText" Text="● AKTİF" FontFamily="{StaticResource BodyFont}" FontSize="11" FontWeight="SemiBold"
-                                   Foreground="{StaticResource GoodBrush}" HorizontalAlignment="Center" Margin="0,8,0,0" Visibility="Collapsed" />
+                                   Foreground="{StaticResource GoodBrush}" HorizontalAlignment="Center" Margin="0,8,0,0" Visibility="Hidden" />
                     </StackPanel>
                 </Grid>
             </Border>
@@ -52,6 +52,7 @@
                 <DataTrigger Binding="{Binding IsActive}" Value="True">
                     <Setter TargetName="Frame" Property="BorderBrush" Value="{StaticResource InkBrush}" />
                     <Setter TargetName="Frame" Property="BorderThickness" Value="1.5" />
+                    <Setter TargetName="Frame" Property="Padding" Value="11.5,9.5,11.5,9.5" />
                     <Setter TargetName="ApplyButton" Property="Content" Value="{app:Tr Yeniden uygula}" />
                     <Setter TargetName="ApplyButton" Property="Style" Value="{StaticResource PulseGhostButton}" />
                     <Setter TargetName="ActiveText" Property="Visibility" Value="Visible" />
@@ -67,6 +68,7 @@
         </DataTemplate>
     </Page.Resources>
 
+    <Grid>
     <ScrollViewer VerticalScrollBarVisibility="Auto">
         <StackPanel Margin="26,18,26,22" MaxWidth="1000" HorizontalAlignment="Stretch">
 
@@ -163,10 +165,6 @@
                     </StackPanel>
                 </DockPanel>
             </Border>
-            <Border Style="{StaticResource PulseCard}" Margin="0,0,0,12" Padding="16,12"
-                    Visibility="{Binding Op.IsActive, Converter={StaticResource BoolToVis}}">
-                <c:BusyBar IsActive="{Binding Op.IsActive}" Fraction="{Binding Op.Fraction}" Text="{Binding Op.Text}" Counter="{Binding Op.Counter}" />
-            </Border>
             <Border Style="{StaticResource PulseCard}" Margin="0,0,0,12" Padding="14,10"
                     Visibility="{Binding HasOpt, Converter={StaticResource BoolToVis}}">
                 <StackPanel>
@@ -250,4 +248,10 @@
 
         </StackPanel>
     </ScrollViewer>
+    <!-- İşlem çubuğu sayfanın üstünde yüzer: açılıp kapanınca altındaki kartlar aşağı-yukarı kaymaz -->
+    <Border Style="{StaticResource PulseCard}" Margin="26,10,26,0" Padding="16,12" MaxWidth="1000" VerticalAlignment="Top"
+            Visibility="{Binding Op.IsActive, Converter={StaticResource BoolToVis}}">
+        <c:BusyBar IsActive="{Binding Op.IsActive}" Fraction="{Binding Op.Fraction}" Text="{Binding Op.Text}" Counter="{Binding Op.Counter}" />
+    </Border>
+    </Grid>
 </Page>

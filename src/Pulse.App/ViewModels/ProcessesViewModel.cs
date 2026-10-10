@@ -79,13 +79,17 @@ public partial class ProcessesViewModel : ObservableObject, IDisposable
     private readonly DispatcherTimer _timer = new() { Interval = TimeSpan.FromSeconds(2) };
     private readonly Dictionary<string, ProcRowVm> _byName = new(StringComparer.OrdinalIgnoreCase);
     private bool _busy;
+    private DateTime _lastSort = DateTime.MinValue;
+
+    /// <summary>Fare listenin üstündeyken (veya bir menü açıkken) sıra değişmez; satırlar yerinde durur.</summary>
+    public bool HoldOrder { get; set; }
 
     public ProcessesViewModel()
     {
         View = (ListCollectionView)CollectionViewSource.GetDefaultView(Rows);
-        View.IsLiveSorting = true;
-        View.LiveSortingProperties.Add(nameof(ProcRowVm.CpuPercent));
-        View.LiveSortingProperties.Add(nameof(ProcRowVm.MemoryBytes));
+        // Canlı sıralama kapalı: satırlar her 2 sn'de yer değiştirirse tıklanan satır kayıp başka satıra denk geliyordu.
+        // Liste, fare üstünde değilken birkaç saniyede bir toplu olarak yeniden sıralanır (bkz. ResortIfIdle).
+        View.IsLiveSorting = false;
         View.Filter = o => o is ProcRowVm r && Matches(r);
         ApplySort();
         _timer.Tick += async (_, _) => await RefreshAsync();
@@ -114,6 +118,14 @@ public partial class ProcessesViewModel : ObservableObject, IDisposable
     {
         foreach (var c in SortChoices) c.IsActive = c.Value == value;
         ApplySort();
+        _lastSort = DateTime.Now;
+    }
+
+    private void ResortIfIdle()
+    {
+        if (HoldOrder || (DateTime.Now - _lastSort).TotalSeconds < 6) return;
+        _lastSort = DateTime.Now;
+        View.Refresh();
     }
 
     private bool Matches(ProcRowVm r) =>
@@ -153,6 +165,7 @@ public partial class ProcessesViewModel : ObservableObject, IDisposable
                 Rows.Remove(_byName[gone]);
                 _byName.Remove(gone);
             }
+            ResortIfIdle();
             var user = Rows.Where(r => !r.IsProtected).ToList();
             Summary = Loc.F("{0} program, toplam {1:0.0} GB bellek", user.Count, user.Sum(r => r.MemoryBytes) / 1073741824.0);
         }
