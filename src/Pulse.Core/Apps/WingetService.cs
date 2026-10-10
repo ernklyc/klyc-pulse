@@ -97,8 +97,12 @@ public static class WingetService
     }
 
     /// <summary>winget'i arka plan iş parçacığında çalıştırır. Çağıran (arayüz) iş parçacığını asla bloke etmez.</summary>
+    // winget aynı anda tek işlem kaldırır (ikinci kurulum "başka bir kurulum sürüyor" diye düşer); çağrılar sıraya girer.
+    private static readonly SemaphoreSlim Gate = new(1, 1);
+
     private static Task<(int Code, string Output)> RunAsync(string args, int timeoutMs) => Task.Run(async () =>
     {
+        await Gate.WaitAsync();
         try
         {
             var psi = new ProcessStartInfo("winget.exe", args)
@@ -118,5 +122,6 @@ public static class WingetService
             return (p.ExitCode, await read);
         }
         catch (Exception ex) { return (-1, ex.Message); }
+        finally { Gate.Release(); }
     });
 }

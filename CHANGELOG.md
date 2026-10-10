@@ -2,6 +2,16 @@
 
 Biçim [Keep a Changelog](https://keepachangelog.com/tr/) esaslıdır; sürümleme [SemVer](https://semver.org/lang/tr/).
 
+## [1.9.3] — 2026-10-11
+
+### Düzeltilenler
+- **Sekme değiştirince işlemler durmuyor/baştan başlamıyor:** Sayfalar artık yok edilip yeniden kurulmuyor; aynı sayfa ve içindeki durum korunur. Görünmezken yalnızca ölçüm ve yenileme zamanlayıcıları durur (İzleme sensör aboneliğini bırakır), geri gelince kaldığı yerden devam eder. Oyunlar sayfasında süren hız denemesi, Süreçler'de süren kapatma gibi işlemler sekme değişince kaybolmaz.
+- **Hatalar artık görünür:** Temizlik, Uygulamalar, Sürücüler, Araçlar ve Dizüstü sayfalarında bir işlem hata verirse ekranda "Hata: …" yazar, işlem çubuğu ve düğmeler takılı kalmaz (eskiden hata sessizce yutuluyordu). Mod uygulanırken beklenmeyen hata olursa Ana ekran "uygulanıyor"da takılmaz.
+- **winget:** Aynı anda yalnızca bir winget işlemi çalışır (iki güncelleme üst üste açılıp biri düşmesin). Güncelleme sürerken "Yenile" listeyi silemez; arka plan sekmesine art arda basınca aynı tarama üst üste başlamaz.
+- **Disk analizi:** Profil içindeki AppData gibi başka bir kökü kapsayan klasörler iki kez sayılıp listelenmiyor; OneDrive'ın "yalnızca çevrimiçi" dosyaları diskte yer kaplamadığı için sayılmıyor; klasörler paralel taranıyor (gerçek diskte ~7 sn). Testi eklendi (`diskscan-test`).
+- **Temizlik taraması/silmesi** iş parçacığını düşük öncelikli yapıp işi bitince eski önceliğe döndürür (eskiden öncelik havuzda kalıyordu).
+- Sağlık sayfasında pil yoksa "Yok" yazısı İngilizce arayüzde de çevrilir.
+
 ## [1.9.2] — 2026-10-11
 
 ### Düzeltilenler

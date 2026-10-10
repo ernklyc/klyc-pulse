@@ -79,6 +79,7 @@ public partial class ProcessesViewModel : ObservableObject, IDisposable
     private readonly DispatcherTimer _timer = new() { Interval = TimeSpan.FromSeconds(2) };
     private readonly Dictionary<string, ProcRowVm> _byName = new(StringComparer.OrdinalIgnoreCase);
     private bool _busy;
+    private bool _paused;
     private DateTime _lastSort = DateTime.MinValue;
 
     /// <summary>Fare listenin üstündeyken (veya bir menü açıkken) sıra değişmez; satırlar yerinde durur.</summary>
@@ -212,6 +213,9 @@ public partial class ProcessesViewModel : ObservableObject, IDisposable
         Status = result == ProcResult.Ok ? Loc.F("{0}: Verimlilik Modu {1} ve doğrulandı.", row.Name, Loc.T(on ? "açıldı" : "kapatıldı"))
             : Loc.F("{0}: Verimlilik Modu {1}/{2} süreçte değişti.", row.Name, changed, row.Group.Count);
     }
+
+    public void Pause() { if (_paused) return; _paused = true; _timer.Stop(); }
+    public void Resume() { if (!_paused) return; _paused = false; HoldOrder = false; _timer.Start(); _ = RefreshAsync(); }
 
     public void Dispose() => _timer.Stop();
 }

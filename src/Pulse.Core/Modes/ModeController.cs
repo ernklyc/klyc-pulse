@@ -32,6 +32,8 @@ public sealed class ModeController : IDisposable
     /// <summary>Bir mod uygulandığında (nereden başlatılırsa başlatılsın) tetiklenir.</summary>
     public event Action<ModeResult>? Applied;
     public event Action<string>? Busy;
+    /// <summary>Mod uygulanırken beklenmeyen hata olursa (anahtar, ileti). Ekran "uygulanıyor"da takılı kalmasın diye.</summary>
+    public event Action<string, string>? Failed;
 
     public Task<ModeResult?> ApplyAsync(string key) => ApplyAsync(key, null);
 
@@ -56,6 +58,7 @@ public sealed class ModeController : IDisposable
         catch (Exception ex)
         {
             Journal.Write($"Mod uygulanamadı ({key}): {ex}");
+            try { Failed?.Invoke(key, ex.Message); } catch { /* arayüz bildirimi hata verirse mod yine de bırakılır */ }
             return null;
         }
         finally

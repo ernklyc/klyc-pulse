@@ -92,7 +92,7 @@ public partial class HealthViewModel : ObservableObject, IDisposable
 
             var b = s.Battery;
             if (!ShowBattery) { BatteryText = "—"; BatteryNote = ""; BatteryBrush = Res("InkBrush"); }
-            else if (!b.Present) { BatteryText = "Yok"; BatteryNote = Loc.T("Pil algılanmadı"); BatteryBrush = Res("WarnBrush"); }
+            else if (!b.Present) { BatteryText = Loc.T("Yok"); BatteryNote = Loc.T("Pil algılanmadı"); BatteryBrush = Res("WarnBrush"); }
             else if (b.Volts is < 6.0) { BatteryText = $"{b.Volts:N2} V"; BatteryNote = Loc.T("Pil sorunlu görünüyor"); BatteryBrush = Res("BadBrush"); }
             else { BatteryText = b.WearPercent is { } w ? $"%{100 - w:N0}" : "—"; BatteryNote = Loc.T("Kalan kapasite (tasarıma göre)"); BatteryBrush = Res("InkBrush"); }
 
@@ -118,6 +118,10 @@ public partial class HealthViewModel : ObservableObject, IDisposable
     }
 
     private static Brush Res(string key) => (Brush)System.Windows.Application.Current.FindResource(key);
+
+    private bool _paused;
+    public void Pause() { if (_paused) return; _paused = true; _timer.Stop(); }
+    public void Resume() { if (!_paused) return; _paused = false; _timer.Start(); _ = SampleAsync(); }
 
     public void Dispose()
     {

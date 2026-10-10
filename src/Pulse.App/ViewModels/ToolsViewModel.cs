@@ -283,11 +283,14 @@ public partial class ToolsViewModel : ObservableObject
 
         tool.Busy = true;
         Op.Begin(Loc.F("{0} kapatılıyor ve doğrulanıyor…", tool.Name));
-        var steps = await tool.ApplyAsync();
-        await Task.Run(tool.Refresh);
-        Op.End();
-        tool.Busy = false;
-        Note = steps.All(s => s.Ok) ? Loc.F("{0}: tamam, her adım doğrulandı.", tool.Name) : Loc.F("{0}: {1} adım doğrulanamadı.", tool.Name, steps.Count(s => !s.Ok));
+        try
+        {
+            var steps = await tool.ApplyAsync();
+            await Task.Run(tool.Refresh);
+            Note = steps.All(s => s.Ok) ? Loc.F("{0}: tamam, her adım doğrulandı.", tool.Name) : Loc.F("{0}: {1} adım doğrulanamadı.", tool.Name, steps.Count(s => !s.Ok));
+        }
+        catch (Exception ex) { Pulse.Core.Diagnostics.Journal.Write($"{tool.Name} kapatma hatası: " + ex); Note = Loc.F("Hata: {0}", ex.Message); }
+        finally { Op.End(); tool.Busy = false; }
     }
 
     [RelayCommand]
@@ -297,11 +300,14 @@ public partial class ToolsViewModel : ObservableObject
         if (!Admin) { Note = Loc.T("Bu işlem için KLYC-Pulse'ın yönetici olarak çalışması gerekir."); return; }
         tool.Busy = true;
         Op.Begin(Loc.F("{0} eski haline döndürülüyor…", tool.Name));
-        var steps = await tool.RevertAsync();
-        await Task.Delay(1200);
-        await Task.Run(tool.Refresh);
-        Op.End();
-        tool.Busy = false;
-        Note = steps.All(s => s.Ok) ? Loc.F("{0}: geri alındı.", tool.Name) : Loc.F("{0}: {1} adım geri alınamadı.", tool.Name, steps.Count(s => !s.Ok));
+        try
+        {
+            var steps = await tool.RevertAsync();
+            await Task.Delay(1200);
+            await Task.Run(tool.Refresh);
+            Note = steps.All(s => s.Ok) ? Loc.F("{0}: geri alındı.", tool.Name) : Loc.F("{0}: {1} adım geri alınamadı.", tool.Name, steps.Count(s => !s.Ok));
+        }
+        catch (Exception ex) { Pulse.Core.Diagnostics.Journal.Write($"{tool.Name} geri alma hatası: " + ex); Note = Loc.F("Hata: {0}", ex.Message); }
+        finally { Op.End(); tool.Busy = false; }
     }
 }

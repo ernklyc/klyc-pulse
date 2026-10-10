@@ -26,7 +26,7 @@ public sealed class CleanupEngine
     public Task<IReadOnlyList<CategoryScan>> ScanAsync(IEnumerable<CleanupCategory> categories, IProgress<string>? progress = null, CancellationToken ct = default) =>
         Task.Run<IReadOnlyList<CategoryScan>>(() =>
         {
-            Thread.CurrentThread.Priority = ThreadPriority.BelowNormal; // fanları ve diski zorlamasın
+            using var _ = LowPriority();   // fanları ve diski zorlamasın
             var result = new List<CategoryScan>();
             foreach (var c in categories)
             {
@@ -36,6 +36,19 @@ public sealed class CleanupEngine
             }
             return result;
         }, ct);
+
+    /// <summary>İş parçacığını geçici olarak düşük öncelikli yapar; havuz iş parçacığı olduğu için bitince eski önceliği geri verir (yoksa öncelik havuzda kalıp başka işleri yavaşlatır).</summary>
+    private static IDisposable LowPriority()
+    {
+        var old = Thread.CurrentThread.Priority;
+        Thread.CurrentThread.Priority = ThreadPriority.BelowNormal;
+        return new Restore(old);
+    }
+
+    private sealed class Restore(ThreadPriority old) : IDisposable
+    {
+        public void Dispose() => Thread.CurrentThread.Priority = old;
+    }
 
     public CategoryScan Scan(CleanupCategory c)
     {
@@ -52,7 +65,7 @@ public sealed class CleanupEngine
     public Task<IReadOnlyList<CategoryClean>> CleanAsync(IEnumerable<CleanupCategory> categories, IProgress<string>? progress = null, CancellationToken ct = default) =>
         Task.Run<IReadOnlyList<CategoryClean>>(() =>
         {
-            Thread.CurrentThread.Priority = ThreadPriority.BelowNormal;
+            using var _ = LowPriority();
             var result = new List<CategoryClean>();
             foreach (var c in categories)
             {

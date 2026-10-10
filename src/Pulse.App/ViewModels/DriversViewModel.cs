@@ -41,6 +41,12 @@ public partial class DriversViewModel : ObservableObject
 
     private async Task LoadAsync()
     {
+        try { await LoadCoreAsync(); }
+        catch (Exception ex) { Pulse.Core.Diagnostics.Journal.Write("Sürücü bilgisi hatası: " + ex); BiosText = Loc.F("Hata: {0}", ex.Message); }
+    }
+
+    private async Task LoadCoreAsync()
+    {
         (_bios, _installed) = await Task.Run(() => (DriverCenter.ReadBios(), DriverCenter.ReadInstalled()));
         BiosText = _bios is null ? Loc.T("Okunamadı") : $"{_bios.Model}  ·  BIOS {_bios.Version}";
         BiosNote = _bios?.Date is { } d ? Loc.F("BIOS tarihi {0:yyyy-MM-dd} ({1:0.0} yıl önce). BIOS kendiliğinden güncellenmez; ASUS destek sayfasından sen karar verirsin.", d, (DateTime.Now - d).TotalDays / 365.25) : "";
@@ -82,6 +88,7 @@ public partial class DriversViewModel : ObservableObject
                 : newer == 0 ? Loc.F("{0} öneri var ama hiçbiri kurulu sürümden yeni değil. Yapılacak bir şey yok.", list.Count)
                 : Loc.F("{0} gerçekten yeni güncelleme var. Windows Update'ten kurabilirsin (Windows kendi geri alma desteğiyle kurar).", newer);
         }
+        catch (Exception ex) { Pulse.Core.Diagnostics.Journal.Write("Sürücü arama hatası: " + ex); UpdateNote = Loc.F("Hata: {0}", ex.Message); }
         finally { IsBusy = false; Op.End(); }
     }
 

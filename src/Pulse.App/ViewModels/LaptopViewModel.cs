@@ -229,6 +229,17 @@ public partial class LaptopViewModel : ObservableObject
     [RelayCommand]
     private async Task SetGpuOc(ChoiceVm c)
     {
+        try { await SetGpuOcCore(c); }
+        catch (Exception ex)
+        {
+            Pulse.Core.Diagnostics.Journal.Write("SetGpuOc hatası: " + ex);
+            GpuOcStatus = Loc.F("Hata: {0}", ex.Message);
+            Op.End();
+        }
+    }
+
+    private async Task SetGpuOcCore(ChoiceVm c)
+    {
         if (!IsAdmin) { GpuOcStatus = Loc.T("Bu işlem için KLYC-Pulse'ın yönetici olarak çalışması gerekir."); return; }
         var l = GpuOcLadder[c.Value];
         _store.Current.GpuOcCore = l.Core == 0 ? null : l.Core;
@@ -286,6 +297,17 @@ public partial class LaptopViewModel : ObservableObject
 
     private async Task ApplyRgb(string what)
     {
+        try { await ApplyRgbCore(what); }
+        catch (Exception ex)
+        {
+            Pulse.Core.Diagnostics.Journal.Write("ApplyRgb hatası: " + ex);
+            RgbStatus = Loc.F("Hata: {0}", ex.Message);
+            Op.End();
+        }
+    }
+
+    private async Task ApplyRgbCore(string what)
+    {
         Op.Begin(Loc.T("Klavye rengi yazılıyor…"));
         var result = await Task.Run(() => LaptopControl.SetKeyboardRgb(_rgb));
         Op.End();
@@ -304,6 +326,17 @@ public partial class LaptopViewModel : ObservableObject
     [RelayCommand]
     private async Task SetBattery(ChoiceVm choice)
     {
+        try { await SetBatteryCore(choice); }
+        catch (Exception ex)
+        {
+            Pulse.Core.Diagnostics.Journal.Write("SetBattery hatası: " + ex);
+            BatteryStatus = Loc.F("Hata: {0}", ex.Message);
+            Op.End();
+        }
+    }
+
+    private async Task SetBatteryCore(ChoiceVm choice)
+    {
         BatteryStatus = Loc.T("Uygulanıyor…");
         Op.Begin(Loc.T("Pil sınırı ayarlanıyor…"));
         var result = await Task.Run(() => LaptopControl.SetBatteryLimit(choice.Value));
@@ -319,6 +352,17 @@ public partial class LaptopViewModel : ObservableObject
 
     [RelayCommand]
     private async Task SetKeyboard(ChoiceVm choice)
+    {
+        try { await SetKeyboardCore(choice); }
+        catch (Exception ex)
+        {
+            Pulse.Core.Diagnostics.Journal.Write("SetKeyboard hatası: " + ex);
+            KeyboardStatus = Loc.F("Hata: {0}", ex.Message);
+            Op.End();
+        }
+    }
+
+    private async Task SetKeyboardCore(ChoiceVm choice)
     {
         KeyboardStatus = Loc.T("Uygulanıyor…");
         Op.Begin(Loc.T("Klavye ışığı ayarlanıyor…"));
@@ -340,6 +384,12 @@ public partial class LaptopViewModel : ObservableObject
 
     private async Task RefreshExitAsync()
     {
+        try { await RefreshExitCoreAsync(); }
+        catch (Exception ex) { Pulse.Core.Diagnostics.Journal.Write("G-Helper denetimi hatası: " + ex); ExitStatus = Loc.F("Hata: {0}", ex.Message); }
+    }
+
+    private async Task RefreshExitCoreAsync()
+    {
         var steps = await Task.Run(_exit.Probe);
         Show(steps);
         HasBackup = _exit.HasBackup;
@@ -350,6 +400,17 @@ public partial class LaptopViewModel : ObservableObject
 
     [RelayCommand]
     private async Task LeaveGHelper()
+    {
+        try { await LeaveGHelperCore(); }
+        catch (Exception ex)
+        {
+            Pulse.Core.Diagnostics.Journal.Write("LeaveGHelper hatası: " + ex);
+            ExitStatus = Loc.F("Hata: {0}", ex.Message); ExitBusy = false;
+            Op.End();
+        }
+    }
+
+    private async Task LeaveGHelperCore()
     {
         if (!IsAdmin) { ExitStatus = Loc.T("Bu işlem için KLYC-Pulse'ın yönetici olarak çalışması gerekir."); return; }
         var ask = MessageBox.Show(
@@ -370,6 +431,17 @@ public partial class LaptopViewModel : ObservableObject
 
     [RelayCommand]
     private async Task RevertGHelper()
+    {
+        try { await RevertGHelperCore(); }
+        catch (Exception ex)
+        {
+            Pulse.Core.Diagnostics.Journal.Write("RevertGHelper hatası: " + ex);
+            ExitStatus = Loc.F("Hata: {0}", ex.Message); ExitBusy = false;
+            Op.End();
+        }
+    }
+
+    private async Task RevertGHelperCore()
     {
         if (!IsAdmin) { ExitStatus = Loc.T("Bu işlem için KLYC-Pulse'ın yönetici olarak çalışması gerekir."); return; }
         ExitBusy = true;

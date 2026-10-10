@@ -128,6 +128,7 @@ public partial class CleanupViewModel : ObservableObject
                 ? Loc.T("Birebir aynı büyük dosya bulunamadı.")
                 : Loc.F("{0} grup, fazladan {1}. Her grupta en eski kopya korunur, silinmez. Hiçbiri seçili değil.", DupGroups.Count, FolderVm.Format(found.Sum(g => g.WastedBytes)));
         }
+        catch (Exception ex) { Pulse.Core.Diagnostics.Journal.Write("Kopya arama hatası: " + ex); DupNote = Loc.F("Hata: {0}", ex.Message); }
         finally { IsBusy = false; Op.End(); }
     }
 
@@ -164,6 +165,7 @@ public partial class CleanupViewModel : ObservableObject
             }
             DupNote = Loc.F("{0}/{1} kopya Geri Dönüşüm Kutusu'na gönderildi ({2}). Alan, kutuyu boşaltınca açılır. Listeyi yenilemek için “Kopyaları bul”a bas.", done, chosen.Count, FolderVm.Format(freed));
         }
+        catch (Exception ex) { Pulse.Core.Diagnostics.Journal.Write("Kopya silme hatası: " + ex); DupNote = Loc.F("Hata: {0}", ex.Message); }
         finally { IsBusy = false; Op.End(); }
     }
     private readonly QuarantineStore _quarantine = new();
@@ -190,6 +192,7 @@ public partial class CleanupViewModel : ObservableObject
                 ? Loc.T("Kalıntı bulunamadı.")
                 : Loc.F("{0} aday, toplam {1}. Hiçbiri seçili değil; emin olduklarını işaretle. Silinenler Geri Dönüşüm Kutusu'na gider, geri alabilirsin.", Orphans.Count, FolderVm.Format(found.Sum(o => o.Bytes)));
         }
+        catch (Exception ex) { Pulse.Core.Diagnostics.Journal.Write("Kalıntı arama hatası: " + ex); OrphanNote = Loc.F("Hata: {0}", ex.Message); }
         finally { IsBusy = false; Op.End(); }
     }
 
@@ -221,6 +224,7 @@ public partial class CleanupViewModel : ObservableObject
             HasOrphans = Orphans.Count > 0;
             OrphanNote = Loc.F("{0}/{1} klasör Geri Dönüşüm Kutusu'na gönderildi ({2}). Alan, kutuyu boşaltınca açılır.", done, chosen.Count, FolderVm.Format(freed));
         }
+        catch (Exception ex) { Pulse.Core.Diagnostics.Journal.Write("Kalıntı silme hatası: " + ex); OrphanNote = Loc.F("Hata: {0}", ex.Message); }
         finally { IsBusy = false; Op.End(); }
     }
 
@@ -255,7 +259,9 @@ public partial class CleanupViewModel : ObservableObject
     private async Task LoadRestorePoints()
     {
         RestoreNote = Loc.T("Geri Yükleme Noktaları okunuyor…");
-        var (items, error) = await RestorePoint.ListAsync();
+        (IReadOnlyList<RestorePoint.Info> items, string? error) = ([], null);
+        try { (items, error) = await RestorePoint.ListAsync(); }
+        catch (Exception ex) { Pulse.Core.Diagnostics.Journal.Write("Geri yükleme noktaları hatası: " + ex); error = Loc.F("Hata: {0}", ex.Message); }
         RestorePoints.Clear();
         foreach (var i in items) RestorePoints.Add(new RestorePointVm(i));
         HasRestorePoints = RestorePoints.Count > 0;
@@ -286,6 +292,7 @@ public partial class CleanupViewModel : ObservableObject
             UpdateTotal();
             Status = Loc.T("Tarama bitti. İstemediklerinin işaretini kaldırıp “Seçilenleri temizle”ye bas.");
         }
+        catch (Exception ex) { Pulse.Core.Diagnostics.Journal.Write("Tarama hatası: " + ex); Status = Loc.F("Hata: {0}", ex.Message); }
         finally { IsBusy = false; Op.End(); }
     }
 
@@ -328,6 +335,7 @@ public partial class CleanupViewModel : ObservableObject
             Status = Loc.F("Bitti. {0} alan açıldı.", FolderVm.Format(total));
             RefreshQuarantine();
         }
+        catch (Exception ex) { Pulse.Core.Diagnostics.Journal.Write("Temizlik hatası: " + ex); Status = Loc.F("Hata: {0}", ex.Message); }
         finally { IsBusy = false; Op.End(); }
     }
 
@@ -347,6 +355,7 @@ public partial class CleanupViewModel : ObservableObject
             HasFolders = Folders.Count > 0;
             Status = Loc.T("Analiz bitti. Silme kararı sana ait, KLYC-Pulse bu klasörlere dokunmaz.");
         }
+        catch (Exception ex) { Pulse.Core.Diagnostics.Journal.Write("Disk analizi hatası: " + ex); Status = Loc.F("Hata: {0}", ex.Message); }
         finally { IsBusy = false; Op.End(); }
     }
 

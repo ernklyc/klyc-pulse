@@ -211,5 +211,9 @@ public partial class SettingsViewModel : ObservableObject, IDisposable
         _store.Save();
     }
 
+    private bool _paused;
+    public void Pause() { if (_paused) return; _paused = true; _timer.Stop(); }
+    public void Resume() { if (!_paused) return; _paused = false; RefreshLive(); _timer.Start(); }
+
     public void Dispose() => _timer.Stop();
 }

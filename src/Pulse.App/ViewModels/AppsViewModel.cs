@@ -176,24 +176,36 @@ public partial class AppsViewModel : ObservableObject
 
     private async Task LoadAsync()
     {
-        var apps = await Task.Run(() => InstalledAppsReader.Read().Select(a => new AppVm(a)).ToList());
-        _allApps = apps;
-        FilterApps();
-        var startups = await Task.Run(StartupManager.List);
-        Startups.Clear();
-        foreach (var s in startups) Startups.Add(new StartupVm(s, this));
+        try
+        {
+            var apps = await Task.Run(() => InstalledAppsReader.Read().Select(a => new AppVm(a)).ToList());
+            _allApps = apps;
+            FilterApps();
+            var startups = await Task.Run(StartupManager.List);
+            Startups.Clear();
+            foreach (var s in startups) Startups.Add(new StartupVm(s, this));
+        }
+        catch (Exception ex) { Pulse.Core.Diagnostics.Journal.Write("Uygulama listesi hatası: " + ex); AppsNote = Loc.F("Hata: {0}", ex.Message); }
         await RefreshUpdates();
     }
 
+    private bool _bgLoading;
+
     private async Task LoadBackground()
     {
+        if (_bgLoading) return;           // sekmeye art arda basınca aynı tarama üst üste başlamasın
+        _bgLoading = true;
         Op.Begin(Loc.T("Servisler ve zamanlanmış görevler taranıyor…"));
-        var items = await Task.Run(Background.List);
-        Op.End();
-        BackgroundItems.Clear();
-        foreach (var i in items) BackgroundItems.Add(new BackgroundVm(i, this));
-        var optional = items.Count(i => i.Advice == BgAdvice.Optional && i.StartsAtBoot);
-        BackgroundNote = Loc.F("{0} öğe. {1} tanesi kapatılabilir; kapatmak silmez, istediğin an geri açılır.", items.Count, optional);
+        try
+        {
+            var items = await Task.Run(Background.List);
+            BackgroundItems.Clear();
+            foreach (var i in items) BackgroundItems.Add(new BackgroundVm(i, this));
+            var optional = items.Count(i => i.Advice == BgAdvice.Optional && i.StartsAtBoot);
+            BackgroundNote = Loc.F("{0} öğe. {1} tanesi kapatılabilir; kapatmak silmez, istediğin an geri açılır.", items.Count, optional);
+        }
+        catch (Exception ex) { Pulse.Core.Diagnostics.Journal.Write("Arka plan taraması hatası: " + ex); BackgroundNote = Loc.F("Hata: {0}", ex.Message); }
+        finally { _bgLoading = false; Op.End(); }
     }
 
     private void FilterApps()
@@ -211,15 +223,23 @@ public partial class AppsViewModel : ObservableObject
     [RelayCommand]
     private async Task RefreshUpdates()
     {
+        // Güncelleme sürerken liste yenilenmez: Updates.Clear() sürmekte olan güncellemenin durumunu silerdi, üst üste winget de açılırdı
+        if (IsBusy || _checking || Updates.Any(u => u.IsBusy)) { UpdatesNote = Loc.T("Bir işlem sürüyor; bitince “Yenile”ye bas."); return; }
+        _checking = true;
         UpdatesNote = Loc.T("Güncellemeler denetleniyor…");
         Op.Begin(Loc.T("Güncellemeler denetleniyor (winget)…"));
-        var (items, error) = await WingetService.GetUpgradesAsync();
-        Op.End();
-        Updates.Clear();
-        foreach (var i in items) Updates.Add(new UpdateVm(i));
-        _updatesLoaded = true;
-        UpdatesNote = error ?? (items.Count == 0 ? Loc.T("Tüm uygulamalar güncel.") : Loc.F("{0} uygulamanın güncellemesi var.", items.Count));
+        try
+        {
+            var (items, error) = await WingetService.GetUpgradesAsync();
+            Updates.Clear();
+            foreach (var i in items) Updates.Add(new UpdateVm(i));
+            _updatesLoaded = true;
+            UpdatesNote = error ?? (items.Count == 0 ? Loc.T("Tüm uygulamalar güncel.") : Loc.F("{0} uygulamanın güncellemesi var.", items.Count));
+        }
+        catch (Exception ex) { Pulse.Core.Diagnostics.Journal.Write("Güncelleme denetimi hatası: " + ex); UpdatesNote = Loc.F("Hata: {0}", ex.Message); }
+        finally { _checking = false; Op.End(); }
     }
+    private bool _checking;
 
     [RelayCommand]
     private async Task UpdateOne(UpdateVm? u)
@@ -230,19 +250,23 @@ public partial class AppsViewModel : ObservableObject
                 Loc.T("Oyun başlatıcısı"), System.Windows.MessageBoxButton.YesNo, System.Windows.MessageBoxImage.Question, System.Windows.MessageBoxResult.No) != System.Windows.MessageBoxResult.Yes)
             return;
         u.IsBusy = true; u.State = Loc.T("Güncelleniyor…");
-        var (ok, _) = await WingetService.UpgradeAsync(u.Id);
-        if (ok)
+        try
         {
-            u.State = Loc.T("Doğrulanıyor…");
-            var (installed, versionOk) = await WingetService.VerifyAsync(u.Id, u.Info.Available);
-            u.IsBusy = false;
-            u.IsDone = installed;
-            u.State = !installed ? Loc.T("Dikkat: güncelleme bitti ama uygulama kurulu görünmüyor. Yeniden kurman gerekebilir.")
-                : versionOk ? Loc.T("Güncellendi ve doğrulandı") : Loc.T("Güncellendi (sürüm doğrulanamadı)");
-            return;
+            var (ok, _) = await WingetService.UpgradeAsync(u.Id);
+            if (ok)
+            {
+                u.State = Loc.T("Doğrulanıyor…");
+                var (installed, versionOk) = await WingetService.VerifyAsync(u.Id, u.Info.Available);
+                u.IsDone = installed;
+                u.State = !installed ? Loc.T("Dikkat: güncelleme bitti ama uygulama kurulu görünmüyor. Yeniden kurman gerekebilir.")
+                    : versionOk ? Loc.T("Güncellendi ve doğrulandı") : Loc.T("Güncellendi (sürüm doğrulanamadı)");
+                return;
+            }
+            u.IsDone = false;
+            u.State = Loc.T("Güncellenemedi (yönetici izni ya da açık uygulama olabilir)");
         }
-        u.IsBusy = false; u.IsDone = false;
-        u.State = Loc.T("Güncellenemedi (yönetici izni ya da açık uygulama olabilir)");
+        catch (Exception ex) { Pulse.Core.Diagnostics.Journal.Write($"Güncelleme hatası ({u.Id}): " + ex); u.IsDone = false; u.State = Loc.F("Hata: {0}", ex.Message); }
+        finally { u.IsBusy = false; }
     }
 
     [RelayCommand]
@@ -309,6 +333,7 @@ public partial class AppsViewModel : ObservableObject
             _allApps = await Task.Run(() => InstalledAppsReader.Read().Select(x => new AppVm(x)).ToList());
             FilterApps();
         }
+        catch (Exception ex) { Pulse.Core.Diagnostics.Journal.Write("Kaldırma hatası: " + ex); Status = Loc.F("Hata: {0}", ex.Message); }
         finally { IsBusy = false; Op.End(); }
     }
 }

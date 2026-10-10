@@ -176,6 +176,7 @@ public partial class GamesViewModel : ObservableObject, IDisposable
         Probing = true;
         FreqCapText = Loc.T("Deneniyor… (yaklaşık 20 saniye, işlemci tam yüklenir)");
         try { await FreqCapService.RunAsync(); }
+        catch (Exception ex) { Pulse.Core.Diagnostics.Journal.Write("Hız sınırı denemesi hatası: " + ex); }
         finally { Probing = false; RefreshFreqCapText(); foreach (var g in Games) g.SyncAuto(); }
     }
 
@@ -306,6 +307,20 @@ public partial class GamesViewModel : ObservableObject, IDisposable
         _store.Current.GameProfiles.Remove(g.Profile);
         _store.Save();
         Reload();
+    }
+
+    private bool _paused;
+
+    /// <summary>Sayfa görünmezken yalnızca yenileme zamanlayıcısı durur; sayfanın durumu (süren hız denemesi, rapor...) korunur.</summary>
+    public void Pause() { if (_paused) return; _paused = true; _timer.Stop(); }
+
+    public void Resume()
+    {
+        if (!_paused) return;
+        _paused = false;
+        Reload(); GameText = Detected();
+        foreach (var g in Games) { g.RefreshGpu(); g.SyncAuto(); }
+        _timer.Start();
     }
 
     public void Dispose()

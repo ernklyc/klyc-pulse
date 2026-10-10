@@ -10,11 +10,13 @@ namespace Pulse.App.ViewModels;
 /// <summary>İzleme sayfası: canlı CPU/GPU/bellek/fan değerleri, kısıtlama algılama ve oyun üstü gösterge ayarı.</summary>
 public partial class MonitorViewModel : ObservableObject, IDisposable
 {
-    private readonly IDisposable _subscription;
+    private IDisposable? _subscription;
+    private readonly bool _withFps;
     private readonly List<double> _cpuH = new(), _gpuH = new(), _gpuTempH = new(), _ramH = new(), _cpuMhzH = new();
 
     public MonitorViewModel(bool withFps = true)
     {
+        _withFps = withFps;
         foreach (var (title, value) in new[] { ("Sol üst", 0), ("Sağ üst", 1), ("Sol alt", 2), ("Sağ alt", 3) })
             Corners.Add(new ChoiceVm(Loc.T(title), value));
         MarkCorner(AppServices.Settings.Current.OverlayCorner);
@@ -141,10 +143,25 @@ public partial class MonitorViewModel : ObservableObject, IDisposable
 
     private void MarkCorner(int value) { foreach (var c in Corners) c.IsActive = c.Value == value; }
 
-    public void Dispose()
+    /// <summary>Sayfa görünmezken sensör aboneliği bırakılır (boşuna ölçüm yapılmaz); geri gelince yeniden abone olunur, geçmiş grafik korunur.</summary>
+    public void Pause()
     {
+        if (_subscription is null) return;
         AppServices.Sensors.Updated -= OnSensors;
         AppServices.Overlay.Changed -= OnOverlayChanged;
         _subscription.Dispose();
+        _subscription = null;
     }
+
+    public void Resume()
+    {
+        if (_subscription is not null) return;
+        OverlayOn = AppServices.Overlay.IsOn;
+        AppServices.Overlay.Changed += OnOverlayChanged;
+        _subscription = AppServices.Sensors.Subscribe(_withFps);
+        AppServices.Sensors.Updated += OnSensors;
+        if (AppServices.Sensors.Latest is { } s) Apply(s);
+    }
+
+    public void Dispose() => Pause();
 }

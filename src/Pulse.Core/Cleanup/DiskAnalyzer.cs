@@ -24,27 +24,55 @@ public static class DiskAnalyzer
         return roots.Where(Directory.Exists).ToList();
     }
 
+    // Bulut yer tutucuları (OneDrive "yalnızca çevrimiçi" dosyalar) diskte yer kaplamaz ama Length tam boyutu söyler; sayılmamalı
+    private const FileAttributes CloudOnly = (FileAttributes)0x00400000 /* RECALL_ON_DATA_ACCESS */ | (FileAttributes)0x00040000 /* RECALL_ON_OPEN */ | FileAttributes.Offline;
+
+    private static bool IsUnder(string path, string root) =>
+        path.Equals(root, StringComparison.OrdinalIgnoreCase) ||
+        path.StartsWith(root.TrimEnd('\\') + "\\", StringComparison.OrdinalIgnoreCase);
+
+    /// <summary>
+    /// Verilen köklerin her alt klasörünün boyutunu ölçer. Başka bir kökü içeren klasör atlanır (ör. profil içindeki AppData, kendi köküyle ayrıca taranıyor),
+    /// böylece aynı klasör iki kez sayılıp listelenmez. Klasörler birkaç iş parçacığıyla paralel taranır.
+    /// </summary>
     public static Task<IReadOnlyList<FolderSize>> AnalyzeAsync(IEnumerable<string> roots, long minBytes = 300L * 1024 * 1024, int top = 40, IProgress<string>? progress = null, CancellationToken ct = default) =>
         Task.Run<IReadOnlyList<FolderSize>>(() =>
         {
-            Thread.CurrentThread.Priority = ThreadPriority.BelowNormal;
-            var found = new List<FolderSize>();
-            foreach (var root in roots)
+            var rootList = roots.Select(r => r.TrimEnd('\\')).Where(Directory.Exists).Distinct(StringComparer.OrdinalIgnoreCase).ToList();
+            var dirs = new List<string>();
+            foreach (var root in rootList)
             {
-                foreach (var dir in Directory.EnumerateDirectories(root))
+                try
                 {
-                    ct.ThrowIfCancellationRequested();
-                    progress?.Report(dir);
-                    try
+                    foreach (var dir in Directory.EnumerateDirectories(root))
                     {
-                        if ((File.GetAttributes(dir) & FileAttributes.ReparsePoint) != 0) continue;
-                        long bytes = 0;
-                        foreach (var f in new DirectoryInfo(dir).EnumerateFiles("*", Walk)) bytes += f.Length;
-                        if (bytes >= minBytes) found.Add(new FolderSize(dir, bytes, Directory.GetLastWriteTime(dir)));
+                        if (rootList.Any(o => !o.Equals(root, StringComparison.OrdinalIgnoreCase) && IsUnder(o, dir))) continue;   // başka bir kökü kapsıyor
+                        if (dirs.Contains(dir, StringComparer.OrdinalIgnoreCase)) continue;
+                        dirs.Add(dir);
                     }
-                    catch { /* erişilemeyen klasör */ }
                 }
+                catch { /* kök okunamadı */ }
             }
+
+            var found = new System.Collections.Concurrent.ConcurrentBag<FolderSize>();
+            var options = new ParallelOptions { MaxDegreeOfParallelism = Math.Clamp(Environment.ProcessorCount / 2, 2, 4), CancellationToken = ct };
+            Parallel.ForEach(dirs, options, dir =>
+            {
+                progress?.Report(dir);
+                try
+                {
+                    if ((File.GetAttributes(dir) & FileAttributes.ReparsePoint) != 0) return;
+                    long bytes = 0;
+                    foreach (var f in new DirectoryInfo(dir).EnumerateFiles("*", Walk))
+                    {
+                        if ((f.Attributes & CloudOnly) != 0) continue;
+                        bytes += f.Length;
+                    }
+                    if (bytes >= minBytes) found.Add(new FolderSize(dir, bytes, Directory.GetLastWriteTime(dir)));
+                }
+                catch (OperationCanceledException) { throw; }
+                catch { /* erişilemeyen klasör */ }
+            });
             return found.OrderByDescending(f => f.Bytes).Take(top).ToList();
         }, ct);
 }

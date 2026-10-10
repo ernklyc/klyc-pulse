@@ -165,6 +165,41 @@ if (cmd == "winget-parse-test")
     return ok ? 0 : 1;
 }
 
+if (cmd == "diskscan-test")
+{
+    // Disk analizi: iç içe kökler iki kez sayılmaz, küçük klasörler elenir, sonuç büyükten küçüğe sıralanır
+    var fails = 0;
+    void Check(bool ok, string what) { Console.WriteLine($"  [{(ok ? "GEÇTİ" : "KALDI")}] {what}"); if (!ok) fails++; }
+    var tmp = Path.Combine(Path.GetTempPath(), "pulse-diskscan-test");
+    if (Directory.Exists(tmp)) Directory.Delete(tmp, true);
+    var a = Path.Combine(tmp, "A"); var bigA = Path.Combine(a, "big"); var small = Path.Combine(a, "small");
+    var nested = Path.Combine(a, "sub"); var b = Path.Combine(nested, "inner"); var bigB = Path.Combine(b, "big2");
+    foreach (var d in new[] { bigA, small, bigB }) Directory.CreateDirectory(d);
+    File.WriteAllBytes(Path.Combine(bigA, "x.bin"), new byte[3 * 1024 * 1024]);
+    File.WriteAllBytes(Path.Combine(small, "x.bin"), new byte[10 * 1024]);
+    File.WriteAllBytes(Path.Combine(bigB, "y.bin"), new byte[2 * 1024 * 1024]);
+    var res = await DiskAnalyzer.AnalyzeAsync(new[] { a, b }, minBytes: 1024 * 1024);
+    foreach (var r in res) Console.WriteLine($"  {r.Path}  {r.Bytes / 1048576.0:0.0} MB");
+    Check(res.Count == 2, "İki büyük klasör bulunur, küçük olan ve iç içe kök kapsayan klasör listelenmez");
+    Check(res.Any(r => r.Path == bigA) && res.Any(r => r.Path == bigB), "Doğru klasörler listelenir");
+    Check(!res.Any(r => r.Path == nested), "Başka bir kökü kapsayan klasör (sub) atlanır, çift sayılmaz");
+    Check(res.Count > 0 && res[0].Path == bigA, "Büyükten küçüğe sıralanır");
+    var none = await DiskAnalyzer.AnalyzeAsync(new[] { Path.Combine(tmp, "yok") }, minBytes: 1);
+    Check(none.Count == 0, "Olmayan kök hata vermez");
+    using var cts = new CancellationTokenSource(); cts.Cancel();
+    var cancelled = false;
+    try { await DiskAnalyzer.AnalyzeAsync(new[] { a }, minBytes: 1, ct: cts.Token); } catch (OperationCanceledException) { cancelled = true; }
+    Check(cancelled, "İptal edilince durur");
+    var sw = System.Diagnostics.Stopwatch.StartNew();
+    var real = await DiskAnalyzer.AnalyzeAsync(DiskAnalyzer.DefaultRoots());
+    Console.WriteLine($"  Gerçek tarama: {sw.Elapsed.TotalSeconds:0.0} sn, {real.Count} büyük klasör");
+    foreach (var r in real.Take(8)) Console.WriteLine($"    {r.Bytes / 1073741824.0,6:0.0} GB  {r.Path}");
+    Check(real.Select(r => r.Path).Distinct(StringComparer.OrdinalIgnoreCase).Count() == real.Count, "Gerçek taramada aynı klasör iki kez çıkmaz");
+    try { Directory.Delete(tmp, true); } catch { }
+    Console.WriteLine(fails == 0 ? "DİSK ANALİZİ TESTİ GEÇTİ" : $"{fails} TEST KALDI");
+    return fails == 0 ? 0 : 1;
+}
+
 if (cmd == "health")
 {
     using var sampler = new HealthSampler();

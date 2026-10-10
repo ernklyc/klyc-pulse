@@ -5,18 +5,17 @@ namespace Pulse.App.Pages;
 
 public partial class ProcessesPage : Page
 {
-    private ProcessesViewModel _vm = new();
-    private bool _stopped;
+    private readonly ProcessesViewModel _vm = new();
 
     public ProcessesPage()
     {
         InitializeComponent();
         DataContext = _vm;
-        // Sayfa önbellekte kalır: ekrandan çıkınca ölçümler durur, geri gelince yeni ViewModel ile yeniden başlar
-        Loaded += (_, _) => { if (_stopped) { _vm = new ProcessesViewModel(); DataContext = _vm; _stopped = false; } };
+        // Sayfa önbellekte kalır: görünmezken yalnızca ölçüm/yenileme durur, işlemler ve durum korunur
+        Loaded += (_, _) => _vm.Resume();
         // Fare listedeyken sıralama dondurulur: tıklanan satır kaymaz
         MouseEnter += (_, _) => _vm.HoldOrder = true;
         MouseLeave += (_, _) => _vm.HoldOrder = false;
-        Unloaded += (_, _) => { _vm.Dispose(); _stopped = true; };
+        Unloaded += (_, _) => _vm.Pause();
     }
 }

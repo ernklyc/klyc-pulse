@@ -5,15 +5,14 @@ namespace Pulse.App.Pages;
 
 public partial class HealthPage : Page
 {
-    private HealthViewModel _vm = new();
-    private bool _stopped;
+    private readonly HealthViewModel _vm = new();
 
     public HealthPage()
     {
         InitializeComponent();
         DataContext = _vm;
-        // Sayfa önbellekte kalır: ekrandan çıkınca ölçümler durur, geri gelince yeni ViewModel ile yeniden başlar
-        Loaded += (_, _) => { if (_stopped) { _vm = new HealthViewModel(); DataContext = _vm; _stopped = false; } };
-        Unloaded += (_, _) => { _vm.Dispose(); _stopped = true; };
+        // Sayfa önbellekte kalır: görünmezken yalnızca ölçüm/yenileme durur, işlemler ve durum korunur
+        Loaded += (_, _) => _vm.Resume();
+        Unloaded += (_, _) => _vm.Pause();
     }
 }

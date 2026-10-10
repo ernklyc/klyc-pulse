@@ -990,3 +990,6 @@ Dikkat: güncelleme bitti ama uygulama kurulu görünmüyor. Yeniden kurman gere
 Güncellendi ve doğrulandı	Updated and verified
 Güncellendi (sürüm doğrulanamadı)	Updated (version could not be verified)
 {0} oyun başlatıcısı ayrı bırakıldı; istersen tek tek güncelle.	{0} game launcher(s) left out; update them one by one if you want.
+Hata: {0}	Error: {0}
+Bir işlem sürüyor; bitince “Yenile”ye bas.	Another operation is running; press “Refresh” when it finishes.
+{0} modu uygulanamadı	{0} mode could not be applied

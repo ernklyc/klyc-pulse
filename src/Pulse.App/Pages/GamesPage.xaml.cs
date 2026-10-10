@@ -5,15 +5,14 @@ namespace Pulse.App.Pages;
 
 public partial class GamesPage : Page
 {
-    private GamesViewModel _vm = new();
-    private bool _stopped;
+    private readonly GamesViewModel _vm = new();
 
     public GamesPage()
     {
         InitializeComponent();
         DataContext = _vm;
-        // Sayfa önbellekte kalır: ekrandan çıkınca ölçümler durur, geri gelince yeni ViewModel ile yeniden başlar
-        Loaded += (_, _) => { if (_stopped) { _vm = new GamesViewModel(); DataContext = _vm; _stopped = false; } };
-        Unloaded += (_, _) => { _vm.Dispose(); _stopped = true; };
+        // Sayfa önbellekte kalır: görünmezken yalnızca ölçüm/yenileme durur, işlemler ve durum korunur
+        Loaded += (_, _) => _vm.Resume();
+        Unloaded += (_, _) => _vm.Pause();
     }
 }

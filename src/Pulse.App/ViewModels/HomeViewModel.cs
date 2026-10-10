@@ -44,6 +44,7 @@ public partial class HomeViewModel : ObservableObject, IDisposable
         AppServices.Update.Changed += OnUpdateChanged;
         AppServices.Settings.Changed += OnSettingsChanged;
         _controller.Busy += OnBusy;
+        _controller.Failed += OnFailed;
 
     }
 
@@ -172,6 +173,18 @@ public partial class HomeViewModel : ObservableObject, IDisposable
             Op.Begin(Loc.F("{0} modu uygulanıyor ve doğrulanıyor (güç planı, ekran, fan profili)…", title));
         });
 
+    private void OnFailed(string key, string message) =>
+        System.Windows.Application.Current.Dispatcher.Invoke(() =>
+        {
+            foreach (var m in Modes) m.IsBusy = false;
+            Op.End();
+            Steps.Clear();
+            var title = Modes.FirstOrDefault(m => m.Key == key)?.Title ?? key;
+            ResultTitle = Loc.F("{0} modu uygulanamadı", title);
+            ResultSummary = message;
+            HasResult = true;
+        });
+
     private void OnApplied(ModeResult result) =>
         System.Windows.Application.Current.Dispatcher.Invoke(() =>
         {
@@ -194,6 +207,7 @@ public partial class HomeViewModel : ObservableObject, IDisposable
     {
         _controller.Applied -= OnApplied;
         _controller.Busy -= OnBusy;
+        _controller.Failed -= OnFailed;
         AppServices.Update.Changed -= OnUpdateChanged;
         AppServices.Settings.Changed -= OnSettingsChanged;
     }
