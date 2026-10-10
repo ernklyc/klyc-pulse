@@ -2,6 +2,13 @@
 
 Biçim [Keep a Changelog](https://keepachangelog.com/tr/) esaslıdır; sürümleme [SemVer](https://semver.org/lang/tr/).
 
+## [1.9.2] — 2026-10-11
+
+### Düzeltilenler
+- **Oyun başlatıcısı güncellemesi:** Epic Games Launcher gibi bazı başlatıcıların kurulum paketi yükseltirken eskisini kaldırıp yeniden kuruyor; başlatıcı birkaç dakika kayboluyordu (oyun dosyaları silinmez). Oyun başlatıcıları (Epic, Steam, Rockstar, EA, Ubisoft, GOG, Battle.net...) artık listede uyarı notuyla işaretlenir, "Tümünü güncelle"ye girmez, tek tek güncellerken onay sorulur.
+- **Güncelleme sonrası doğrulama:** winget "başarılı" dese de Pulse paketin hâlâ kurulu olduğunu ve sürümünü yeniden okuyup kontrol eder; eksikse uyarır.
+- **winget tablosu ayrıştırma hatası:** Ad sütunu tam dolunca (ör. "Microsoft Visual C++ 2013 Redistributable (x86) - 12.0.30501") sürüm numarası paket kimliği sanılıp yanlış kimlikle yükseltme deneniyordu. Sütunlar artık başlık satırındaki konumdan okunur. Testi eklendi.
+
 ## [1.9.1] — 2026-10-11
 
 ### Düzeltilenler

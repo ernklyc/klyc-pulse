@@ -141,6 +141,26 @@ if (cmd == "winget-parse-test")
     Console.WriteLine($"Ayrıştırılan: {parsed.Count}");
     foreach (var i in parsed) Console.WriteLine($"  {i.Name} | {i.Id} | {i.Current} -> {i.Available}");
     var ok = parsed.Count == 3 && parsed[2].Name == "My Cool App Pro" && parsed[0].Id == "Google.Chrome" && parsed[1].Available == "2.51.0";
+    // Gerçek hata: ad sütunu tam dolunca ad ile kimlik arasında tek boşluk kalıyor; sürüm numarası kimlik sanılmamalı
+    string Row(string a, string b2, string c, string d, string e) => a.PadRight(61) + b2.PadRight(32) + c.PadRight(14) + d.PadRight(16) + e + "\r\n";
+    var tight = Row("Ad", "Kimlik", "Sürüm", "Kullanılabilir", "Kaynak") + new string('-', 120) + "\r\n" +
+                Row("Epic Online Services", "EpicGames.EpicOnlineServices", "4.2.1", "4.3.1", "winget") +
+                Row("Microsoft Visual C++ 2013 Redistributable (x86) - 12.0.30501", "Microsoft.VCRedist.2013.x86", "12.0.30501.0", "12.0.40664.0", "winget") +
+                "2 yükseltme var.\r\n";
+    var t = WingetService.ParseTable(tight);
+    foreach (var i in t) Console.WriteLine($"  {i.Name} | {i.Id} | {i.Current} -> {i.Available}");
+    var ok2 = t.Count == 2 && t[1].Id == "Microsoft.VCRedist.2013.x86" && t[1].Current == "12.0.30501.0" && t[1].Name.EndsWith("12.0.30501") && t[0].Id == "EpicGames.EpicOnlineServices";
+    Console.WriteLine(ok2 ? "  [GEÇTİ] Dolu ad sütununda kimlik doğru okunur" : "  [KALDI] Dolu ad sütununda kimlik yanlış okundu");
+    ok &= ok2;
+    var okL = WingetService.IsGameLauncher("EpicGames.EpicGamesLauncher") && WingetService.IsGameLauncher("valve.steam") && !WingetService.IsGameLauncher("Git.Git");
+    Console.WriteLine(okL ? "  [GEÇTİ] Oyun başlatıcıları tanınır (Epic, Steam), sıradan uygulama tanınmaz" : "  [KALDI] Oyun başlatıcısı tanıma");
+    ok &= okL;
+    if (WingetService.IsAvailable())
+    {
+        var (inst, _) = await WingetService.VerifyAsync("Not.Installed.Pulse.Test", "1.0");
+        Console.WriteLine(!inst ? "  [GEÇTİ] Kurulu olmayan paket doğrulamada 'kurulu değil' çıkar" : "  [KALDI] Olmayan paket kurulu göründü");
+        ok &= !inst;
+    }
     Console.WriteLine(ok ? "AYRIŞTIRICI TESTİ GEÇTİ" : "AYRIŞTIRICI TESTİ KALDI");
     return ok ? 0 : 1;
 }

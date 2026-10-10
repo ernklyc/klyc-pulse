@@ -23,6 +23,8 @@ public partial class UpdateVm : ObservableObject
     public string Name => Info.Name;
     public string Id => Info.Id;
     public string Versions => $"{Info.Current}  →  {Info.Available}";
+    public bool IsLauncher => WingetService.IsGameLauncher(Info.Id);
+    public string LauncherNote => IsLauncher ? Loc.T("Oyun başlatıcısı: güncelleme programı kaldırıp yeniden kurabilir, başlatıcı birkaç dakika kaybolur. Oyunların silinmez. Toplu güncellemeye girmez.") : "";
     [ObservableProperty] private string _state = "";
     [ObservableProperty] private bool _isBusy;
     [ObservableProperty] private bool _isDone;
@@ -223,10 +225,24 @@ public partial class AppsViewModel : ObservableObject
     private async Task UpdateOne(UpdateVm? u)
     {
         if (u is null || u.IsBusy) return;
+        if (u.IsLauncher && System.Windows.MessageBox.Show(
+                Loc.F("“{0}” oyun başlatıcısıdır.\n\nGüncelleme programı kaldırıp yeniden kurabilir; başlatıcı birkaç dakika kaybolur, oyun dosyaların silinmez. Açıksa önce kapat.\n\nGüncellensin mi?", u.Name),
+                Loc.T("Oyun başlatıcısı"), System.Windows.MessageBoxButton.YesNo, System.Windows.MessageBoxImage.Question, System.Windows.MessageBoxResult.No) != System.Windows.MessageBoxResult.Yes)
+            return;
         u.IsBusy = true; u.State = Loc.T("Güncelleniyor…");
         var (ok, _) = await WingetService.UpgradeAsync(u.Id);
-        u.IsBusy = false; u.IsDone = ok;
-        u.State = ok ? Loc.T("Güncellendi") : Loc.T("Güncellenemedi (yönetici izni ya da açık uygulama olabilir)");
+        if (ok)
+        {
+            u.State = Loc.T("Doğrulanıyor…");
+            var (installed, versionOk) = await WingetService.VerifyAsync(u.Id, u.Info.Available);
+            u.IsBusy = false;
+            u.IsDone = installed;
+            u.State = !installed ? Loc.T("Dikkat: güncelleme bitti ama uygulama kurulu görünmüyor. Yeniden kurman gerekebilir.")
+                : versionOk ? Loc.T("Güncellendi ve doğrulandı") : Loc.T("Güncellendi (sürüm doğrulanamadı)");
+            return;
+        }
+        u.IsBusy = false; u.IsDone = false;
+        u.State = Loc.T("Güncellenemedi (yönetici izni ya da açık uygulama olabilir)");
     }
 
     [RelayCommand]
@@ -234,7 +250,9 @@ public partial class AppsViewModel : ObservableObject
     {
         if (IsBusy) return;
         IsBusy = true;
-        var pending = Updates.Where(x => !x.IsDone).ToList();
+        // Oyun başlatıcıları toplu güncellemeye girmez (kaldırıp yeniden kurabilir): tek tek, onayla güncellenir
+        var pending = Updates.Where(x => !x.IsDone && !x.IsLauncher).ToList();
+        var skipped = Updates.Count(x => !x.IsDone && x.IsLauncher);
         Op.Begin(Loc.T("Güncelleniyor…"), pending.Count);
         try
         {
@@ -245,7 +263,8 @@ public partial class AppsViewModel : ObservableObject
             }
         }
         finally { IsBusy = false; Op.End(); }
-        UpdatesNote = Loc.F("{0} / {1} güncellendi.", Updates.Count(x => x.IsDone), Updates.Count);
+        UpdatesNote = Loc.F("{0} / {1} güncellendi.", Updates.Count(x => x.IsDone), Updates.Count)
+            + (skipped > 0 ? " " + Loc.F("{0} oyun başlatıcısı ayrı bırakıldı; istersen tek tek güncelle.", skipped) : "");
     }
 
     [RelayCommand]

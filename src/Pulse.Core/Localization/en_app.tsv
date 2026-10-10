@@ -982,3 +982,11 @@ Hiçbirini seçme	Select none
 Seçilenleri kapat	Close selected
 Yeniden tara	Scan again
 Bellek ve işlemci yiyen açık uygulamaları listeler. Pencereli uygulamalar nazikçe kapatılır: kaydedilmemiş iş varsa uygulama sana sorar, zorla kapatılmaz. Sistem, sürücü, güvenlik ve şu an kullandığın uygulama listede yok.	Lists open apps that use memory and CPU. Windowed apps are closed politely: if there is unsaved work the app asks you and is not force-closed. System, driver, security programs and the app you are using right now are not in the list.
+Oyun başlatıcısı: güncelleme programı kaldırıp yeniden kurabilir, başlatıcı birkaç dakika kaybolur. Oyunların silinmez. Toplu güncellemeye girmez.	Game launcher: the updater may uninstall and reinstall it, so the launcher disappears for a few minutes. Your games are not deleted. It is left out of "Update all".
+“{0}” oyun başlatıcısıdır.\n\nGüncelleme programı kaldırıp yeniden kurabilir; başlatıcı birkaç dakika kaybolur, oyun dosyaların silinmez. Açıksa önce kapat.\n\nGüncellensin mi?	“{0}” is a game launcher.\n\nThe updater may uninstall and reinstall it; the launcher disappears for a few minutes, your game files are not deleted. Close it first if it is open.\n\nUpdate it?
+Oyun başlatıcısı	Game launcher
+Doğrulanıyor…	Verifying…
+Dikkat: güncelleme bitti ama uygulama kurulu görünmüyor. Yeniden kurman gerekebilir.	Warning: the update finished but the app does not look installed. You may need to reinstall it.
+Güncellendi ve doğrulandı	Updated and verified
+Güncellendi (sürüm doğrulanamadı)	Updated (version could not be verified)
+{0} oyun başlatıcısı ayrı bırakıldı; istersen tek tek güncelle.	{0} game launcher(s) left out; update them one by one if you want.

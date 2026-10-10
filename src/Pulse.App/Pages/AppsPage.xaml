@@ -59,6 +59,8 @@
                                         <StackPanel>
                                             <TextBlock Text="{Binding Name}" Style="{StaticResource PulseBody}" FontWeight="Medium" />
                                             <TextBlock Text="{Binding Id}" Style="{StaticResource PulseMuted}" />
+                                            <TextBlock Text="{Binding LauncherNote}" Style="{StaticResource PulseMuted}" TextWrapping="Wrap" Foreground="{StaticResource WarnBrush}" Margin="0,2,0,0"
+                                                       Visibility="{Binding IsLauncher, Converter={StaticResource BoolToVis}}" />
                                         </StackPanel>
                                         <StackPanel Grid.Column="1" Margin="0,0,16,0" VerticalAlignment="Center">
                                             <TextBlock Text="{Binding Versions}" Style="{StaticResource PulseMuted}" HorizontalAlignment="Right" />
