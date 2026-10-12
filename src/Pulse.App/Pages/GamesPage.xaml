@@ -75,6 +75,8 @@
                         </ItemsControl>
                         <Button Content="{Binding SuggestionText}" Style="{StaticResource PulseGhostButton}" Margin="0,4,0,2" HorizontalAlignment="Left"
                                 Visibility="{Binding ShowSuggestion, Converter={StaticResource BoolToVis}}" Command="{Binding ApplySuggestionCommand}" />
+                        <TextBlock Text="{Binding FpsCapText}" Style="{StaticResource PulseBody}" FontWeight="Medium" TextWrapping="Wrap" Margin="0,6,0,0"
+                                   Visibility="{Binding FpsCapText, Converter={StaticResource StringToVis}}" />
                         <TextBlock Text="{Binding ReportNote}" Style="{StaticResource PulseMuted}" TextWrapping="Wrap" Margin="0,4,0,0"
                                    Visibility="{Binding ReportNote, Converter={StaticResource StringToVis}}" />
                     </StackPanel>

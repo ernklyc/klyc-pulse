@@ -1041,3 +1041,22 @@ sıcaklık okunamadı	temperature could not be read
 Ortalama {0:0} FPS	Average {0:0} FPS
 Otomatik ayar: 	Auto-tune: 
  Sonraki oyundan sonra yeniden denenecek.	 It will be tried again after the next game.
+Öneri: oyunun kendi ayarlarında FPS sınırını {0}'e koy. Ekranın gösteremeyeceği kareleri üretmek gereksiz ısı ve güç harcar; görüntü aynı kalır.	Tip: set the FPS limit to {0} in the game's own settings. Producing frames the screen cannot show wastes heat and power; the picture stays the same.
+Açılış süresi için Windows'un ölçümü bulunamadı.	Windows has no measurement for the boot time.
+Son açılış ({0:d MMM HH:mm}): {1:0} sn toplam, masaüstü {2:0} sn'de geldi.	Last boot ({0:d MMM HH:mm}): {1:0} s in total, the desktop appeared after {2:0} s.
+Bu yavaş sayılır.	That is considered slow.
+En çok geciktirenler: 	Biggest delays: 
+Windows açılışı belirgin geciktiren bir program bildirmemiş.	Windows did not report any program that clearly delayed the boot.
+Windows bu bilgisayarda açılış süresini kaydetmemiş (günlük kapalı ya da henüz ölçüm yok).	Windows has not recorded the boot time on this computer (log disabled or no measurement yet).
+Açılış süresi için KLYC-Pulse'ın yönetici olarak çalışması gerekir.	KLYC-Pulse must run as administrator to read the boot time.
+Windows açılış günlüğü bu bilgisayarda yok.	The Windows boot log does not exist on this computer.
+Açılış süresi okunamadı: {0}	Boot time could not be read: {0}
+Bu hafta kayıtlı oyun oturumu ya da otomatik temizlik yok.	No recorded game sessions or automatic cleanups this week.
+{0} oyun oturumu, toplam {1:0.#} saat	{0} game sessions, {1:0.#} hours in total
+en çok oynanan: {0}	most played: {0}
+ortalama {0:0} FPS	average {0:0} FPS
+en yüksek işlemci ısısı {0:0} °C ({1})	highest CPU temperature {0:0} °C ({1})
+hiçbir oturumda sorun görülmedi	no problems seen in any session
+{0} oturumda dikkat edilecek şey vardı	{0} sessions had something to look at
+son otomatik temizlik {0:d MMM}: {1:0} MB	last automatic cleanup {0:d MMM}: {1:0} MB
+Bu hafta: 	This week: 

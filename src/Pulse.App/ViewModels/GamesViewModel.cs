@@ -152,6 +152,7 @@ public partial class GamesViewModel : ObservableObject, IDisposable
     // ---- İşlemci hız sınırı desteği ---------------------------------------
     [ObservableProperty] private string _freqCapText = "";
     [ObservableProperty] private bool _probing;
+    [ObservableProperty] private string _fpsCapText = "";
 
     private void RefreshFreqCapText()
     {
@@ -213,6 +214,7 @@ public partial class GamesViewModel : ObservableObject, IDisposable
         ReportLines.Clear();
         ReportNote = "";
         ShowSuggestion = r?.SuggestedCpuCapMhz is not null;
+        FpsCapText = r?.SuggestedFpsCap is { } fc ? Loc.F("Öneri: oyunun kendi ayarlarında FPS sınırını {0}'e koy. Ekranın gösteremeyeceği kareleri üretmek gereksiz ısı ve güç harcar; görüntü aynı kalır.", fc) : "";
         SuggestionText = r?.SuggestedCpuCapMhz is { } sc ? Loc.F("Bu oyun için işlemciyi en çok {0:0.0} GHz'e sınırla", sc / 1000.0) : "";
         HasReport = r is not null;
         NoReport = r is null;

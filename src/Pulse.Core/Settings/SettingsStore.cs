@@ -53,6 +53,7 @@ public sealed class AppSettings
     public int? BatteryLimit { get; set; }       // kullanıcının seçtiği şarj limiti (%); null = dokunma
     public bool Hotkeys { get; set; } = true;    // Ctrl+Alt kısayolları
     public bool ThermalGuard { get; set; } = true;   // ısı bekçisi
+    public DateTime? LastWeeklyNotice { get; set; }            // haftalık özet bildirimi en son ne zaman gösterildi
     public bool StartKonsolWithPulse { get; set; } = false;   // Pulse açılırken (kurulu) KLYC Konsol da açılsın (varsayılan kapalı)
     public bool LinkWithKonsol { get; set; } = true;   // KLYC Konsol (kardeş proje) kuruluysa onunla çalış; yoksa hiçbir şey yapılmaz
     public bool KeepMode { get; set; } = true;       // başka bir program güç ayarını bozarsa geri düzelt

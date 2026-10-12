@@ -212,3 +212,4 @@ Aç	Open
 Kardeş proje: controller (kol) ile bilgisayarı konsol gibi kullanma arayüzü. İkisi birlikte çalışır: Konsol'dan başlattığın oyunu Pulse önceden bilir, güç planında savaşmazlar.	Sister project: a controller-first interface to use the PC like a console. They work together: Pulse knows in advance which game you launch from Konsol, and they do not fight over the power plan.
 Pulse açılırken Konsol da açılsın (kol takılı değilse gizli bekler)	Start Konsol when Pulse starts (waits hidden if no controller is connected)
 KLYC Konsol	KLYC Konsol
+BU HAFTA	THIS WEEK

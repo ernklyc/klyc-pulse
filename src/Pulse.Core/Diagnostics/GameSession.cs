@@ -30,6 +30,9 @@ public sealed class GameSessionReport
     /// <summary>Raporun önerdiği işlemci hızı sınırı (MHz); öneri yoksa null.</summary>
     public int? SuggestedCpuCapMhz { get; init; }
 
+    /// <summary>Oyun içinde önerilen FPS sınırı (ekran hızı): oyun ekranın gösterebileceğinden çok fazla kare üretiyorsa. Isınma yoksa da (pil/güç tasarrufu için) önerilir; yoksa null.</summary>
+    public int? SuggestedFpsCap { get; init; }
+
     /// <summary>Otomatik ayar bu oturumdan sonra işlemci sınırını değiştirdi mi?</summary>
     public bool AutoTuneChanged { get; set; }
 
@@ -228,6 +231,8 @@ public sealed class GameSessionRecorder
             findings.Add(Loc.F("Oyun ortalama {0:0} FPS çalıştı ama ekran {1} Hz. Ekranın gösteremeyeceği kareleri üretmek boşuna ısıtır. Oyunda FPS sınırını {2}'e koyarsan ısı düşer, görüntü aynı kalır.", fa, hz, hz));
         }
 
+        int? suggestedFpsCap = displayHz is { } dh && dh > 0 && fpsAvg is { } fav && fav >= dh * 1.15 ? dh : null;
+
         // 5c) Isı yüksekse işlemci hızı sınırı önerisi: yalnızca oyunu ekran kartı/kare sınırı belirliyorsa FPS'i az etkiler
         int? suggestedCap = null;
         var veryHot = above90 >= 40 || above95 >= 10;
@@ -282,6 +287,7 @@ public sealed class GameSessionRecorder
             BackgroundCpuAvgPercent = background is { Items.Count: > 0 } ? background.TotalCpuAvgPercent : null,
             CpuCapMhz = cpuCapMhz,
             SuggestedCpuCapMhz = suggestedCap,
+            SuggestedFpsCap = suggestedFpsCap,
             Bottleneck = bottleneck,
             Severity = severity,
             Findings = findings,

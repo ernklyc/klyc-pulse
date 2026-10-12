@@ -67,6 +67,12 @@
                 </Grid>
             </Border>
 
+            <!-- Haftalık özet -->
+            <TextBlock Style="{StaticResource PulseLabel}" Text="BU HAFTA" Margin="0,16,0,8" />
+            <Border Style="{StaticResource PulseCard}" Padding="16,12">
+                <TextBlock Style="{StaticResource PulseBody}" TextWrapping="Wrap" Text="{Binding WeekText}" />
+            </Border>
+
             <!-- Bulgular -->
             <TextBlock Style="{StaticResource PulseLabel}" Text="BULGULAR" Margin="0,16,0,8" />
             <Border Style="{StaticResource PulseCard}" Padding="0">

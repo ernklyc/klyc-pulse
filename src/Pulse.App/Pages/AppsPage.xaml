@@ -124,8 +124,10 @@
 
             <!-- 2: Başlangıç -->
             <StackPanel Visibility="{Binding Tab, Converter={StaticResource EqualsToVis}, ConverterParameter=2}">
-                <TextBlock Style="{StaticResource PulseMuted}" Margin="0,0,0,8"
+                <TextBlock Style="{StaticResource PulseMuted}" Margin="0,0,0,4"
                            Text="Kapattıkların bilgisayar açılınca başlamaz. Hiçbir şey silinmez, istediğin an yeniden açarsın." />
+                <TextBlock Style="{StaticResource PulseBody}" FontWeight="Medium" Margin="0,0,0,8" TextWrapping="Wrap" Text="{Binding BootText}"
+                           Visibility="{Binding BootText, Converter={StaticResource StringToVis}}" />
                 <Border Style="{StaticResource PulseCard}" Padding="0">
                     <ItemsControl ItemsSource="{Binding Startups}">
                         <ItemsControl.ItemTemplate>

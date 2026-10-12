@@ -168,6 +168,7 @@ public partial class AppsViewModel : ObservableObject
     [ObservableProperty] private bool _isBusy;
     [ObservableProperty] private string _updatesNote = Loc.T("Güncellemeler denetleniyor…");
     [ObservableProperty] private string _appsNote = "";
+    [ObservableProperty] private string _bootText = "";
 
     partial void OnSearchChanged(string value) => FilterApps();
 
@@ -191,6 +192,9 @@ public partial class AppsViewModel : ObservableObject
             var startups = await Task.Run(StartupManager.List);
             Startups.Clear();
             foreach (var s in startups) Startups.Add(new StartupVm(s, this));
+            var boot = await Task.Run(() => { var b = BootAnalyzer.Read(out var err); return BootAnalyzer.Describe(b, err); });
+            BootText = boot;
+            Pulse.Core.Diagnostics.Journal.Write("Açılış analizi: " + boot);
         }
         catch (Exception ex) { Pulse.Core.Diagnostics.Journal.Write("Uygulama listesi hatası: " + ex); AppsNote = Loc.F("Hata: {0}", ex.Message); }
         await RefreshUpdates();

@@ -115,6 +115,20 @@ public partial class App : Application
         AppServices.Update.Start();
         AppServices.Heat.Configure(AppServices.Settings.Current.HeatTarget);
         AppServices.Konsol.Start();
+        // Haftada en çok bir kez: son 7 günde oyun oturumu varsa kısa özet bildirimi (tıklayınca Sağlık sayfası)
+        _ = Task.Delay(TimeSpan.FromSeconds(20)).ContinueWith(_ =>
+        {
+            try
+            {
+                var st = AppServices.Settings.Current;
+                if (st.LastWeeklyNotice is { } last && (DateTime.Now - last).TotalDays < 7) return;
+                var week = Pulse.Core.Diagnostics.WeeklyReport.Build(Pulse.Core.Diagnostics.GameReportStore.LoadHistory(), DateTime.Now, st.LastAutoClean, st.LastAutoCleanBytes);
+                if (week.Sessions == 0) return;
+                st.LastWeeklyNotice = DateTime.Now; AppServices.Settings.Save();
+                Dispatcher.Invoke(() => NoticeChip.Show(Pulse.Core.Diagnostics.WeeklyReport.Describe(week), week.ProblemSessions > 0, () => OpenPage(typeof(Pages.HealthPage))));
+            }
+            catch (Exception ex) { Pulse.Core.Diagnostics.Journal.Write("Haftalık özet bildirimi hatası: " + ex.Message); }
+        });
         // İstenmişse (varsayılan kapalı) ve Konsol kuruluysa Pulse ile birlikte açılır: yetkisiz, kol yoksa gizli bekleyen --startup kipiyle
         if (AppServices.Settings.Current.StartKonsolWithPulse && Pulse.Core.Companion.KonsolInstall.FindExe() is { } konsolExe)
             _ = Task.Delay(TimeSpan.FromSeconds(6)).ContinueWith(_ =>

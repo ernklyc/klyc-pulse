@@ -46,12 +46,25 @@ public partial class HealthViewModel : ObservableObject, IDisposable
 
     public HealthViewModel()
     {
+        LoadWeek();
         _timer.Tick += async (_, _) => await SampleAsync();
         _timer.Start();
         _ = SampleAsync();
     }
 
     public ObservableCollection<FindingVm> Findings { get; } = new();
+
+    /// <summary>Haftalık özet (son 7 gün): kayıtlı oyun raporlarından, ağır iş değil.</summary>
+    [ObservableProperty] private string _weekText = "";
+    private void LoadWeek()
+    {
+        try
+        {
+            var s = AppServices.Settings.Current;
+            WeekText = Pulse.Core.Diagnostics.WeeklyReport.Describe(Pulse.Core.Diagnostics.WeeklyReport.Build(Pulse.Core.Diagnostics.GameReportStore.LoadHistory(), DateTime.Now, s.LastAutoClean, s.LastAutoCleanBytes));
+        }
+        catch { WeekText = ""; }
+    }
 
     [ObservableProperty] private IReadOnlyList<double> _cpuHistory = Array.Empty<double>();
     [ObservableProperty] private IReadOnlyList<double> _gpuHistory = Array.Empty<double>();

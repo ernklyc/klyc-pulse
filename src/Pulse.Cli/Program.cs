@@ -1,3 +1,4 @@
+using Pulse.Core.Diagnostics;
 using Pulse.Core.Companion;
 using Pulse.Core.Settings;
 using Pulse.Core.Apps;
@@ -570,6 +571,60 @@ if (cmd == "retranslate-test")
     catch (Exception ex) { Console.WriteLine("  (geçmiş okunamadı: " + ex.Message + ")"); }
     // Tüm şablonlar derlenebiliyor, kendi Türkçe çıktısını İngilizceye geri çevirebiliyor (örnek: 3 şablon)
     Console.WriteLine(fails == 0 ? "YENİDEN ÇEVİRİ TESTİ GEÇTİ" : $"{fails} TEST KALDI");
+    return fails == 0 ? 0 : 1;
+}
+
+if (cmd == "boot-test")
+{
+    // Açılış analizi: sahte olaylarla birleştirme/metin; gerçek günlükte neden/sonuç
+    var fails = 0;
+    void Check(bool ok, string what) { Console.WriteLine($"  [{(ok ? "GEÇTİ" : "KALDI")}] {what}"); if (!ok) fails++; }
+    BootAnalyzer.RawEvent E(int id, DateTime t, params (string K, string V)[] d) => new(id, t, d.ToDictionary(x => x.K, x => x.V));
+    var t0 = new DateTime(2026, 10, 12, 8, 0, 0);
+    var info = BootAnalyzer.Build([
+        E(100, t0.AddDays(-3), ("BootTime", "30000"), ("MainPathBootTime", "20000"), ("BootPostBootTime", "10000")),
+        E(100, t0, ("BootTime", "74500"), ("MainPathBootTime", "41000"), ("BootPostBootTime", "33500")),
+        E(101, t0.AddMinutes(1), ("FriendlyName", "Discord"), ("Name", "Discord.exe"), ("DegradationTime", "12000")),
+        E(101, t0.AddMinutes(2), ("FriendlyName", "OneDrive"), ("DegradationTime", "8000")),
+        E(101, t0.AddMinutes(2), ("FriendlyName", "OneDrive"), ("DegradationTime", "9500")),
+        E(101, t0.AddMinutes(3), ("Name", "steam.exe"), ("DegradationTime", "4000")),
+        E(101, t0.AddHours(5), ("FriendlyName", "BaşkaBoot"), ("DegradationTime", "99000")),
+        E(101, t0.AddDays(-3).AddMinutes(1), ("FriendlyName", "EskiBoot"), ("DegradationTime", "50000")),
+    ]);
+    Check(info is { TotalSeconds: 74.5, MainPathSeconds: 41, PostBootSeconds: 33.5 }, "En son açılış seçilir ve süreler saniyeye çevrilir");
+    Check(info!.Slow.Select(s => s.Name).SequenceEqual(["Discord", "OneDrive", "steam.exe"]), "Yalnız o açılışın geciktirenleri, aynı ad tekilleştirilip büyükten küçüğe");
+    Check(info.Slow[1].DelaySeconds == 9.5, "Aynı programın en büyük gecikmesi alınır");
+    var text = BootAnalyzer.Describe(info, null);
+    Check(text.Contains("75 sn") || text.Contains("74"), "Metinde toplam süre");
+    Check(text.Contains("yavaş") && text.Contains("Discord (+12 sn)"), "74 sn yavaş sayılır, geciktirenler yazılır");
+    Check(!BootAnalyzer.Describe(BootAnalyzer.Build([E(100, t0, ("BootTime", "20000"), ("MainPathBootTime", "12000"), ("BootPostBootTime", "8000"))]), null).Contains("yavaş"), "Hızlı açılış yavaş denmez");
+    Check(BootAnalyzer.Build([]) is null && BootAnalyzer.Describe(null, "neden").Contains("neden"), "Ölçüm yoksa nedeni söylenir");
+    var real = BootAnalyzer.Read(out var err);
+    Console.WriteLine("  Bu bilgisayar: " + BootAnalyzer.Describe(real, err));
+    Check(real is not null || !string.IsNullOrEmpty(err), "Gerçek günlükte ya sonuç ya da neden var");
+    Console.WriteLine(fails == 0 ? "AÇILIŞ ANALİZİ TESTİ GEÇTİ" : $"{fails} TEST KALDI");
+    return fails == 0 ? 0 : 1;
+}
+
+if (cmd == "weekly-test")
+{
+    var fails = 0;
+    void Check(bool ok, string what) { Console.WriteLine($"  [{(ok ? "GEÇTİ" : "KALDI")}] {what}"); if (!ok) fails++; }
+    var now = new DateTime(2026, 10, 12, 12, 0, 0);
+    GameSessionReport R(string g, int daysAgo, double min, double? fps, double? temp, int sev) => new() { Game = g, Start = now.AddDays(-daysAgo), Minutes = min, AvgFps = fps, CpuTempMax = temp, Severity = sev };
+    var hist = new[] { R("Hades", 1, 60, 120, 80, 0), R("Hades", 2, 120, 140, 91, 1), R("CS2", 3, 30, 200, 75, 0), R("Eski", 12, 600, 30, 99, 2) };
+    var w = WeeklyReport.Build(hist, now, now.AddDays(-2), 52428800);
+    Check(w.Sessions == 3 && w.Hours == 3.5, "Son 7 günün 3 oturumu ve 3,5 saati (12 gün önceki sayılmaz)");
+    Check(w.HottestCpuC == 91 && w.HottestGame == "Hades" && w.MostPlayed == "Hades", "En sıcak ve en çok oynanan oyun");
+    Check(w.AvgFps == 153 && w.ProblemSessions == 1, "Ortalama FPS ve sorunlu oturum sayısı");
+    Check(w.LastClean is not null && w.LastCleanBytes == 52428800, "Son 7 günde temizlik varsa gösterilir");
+    var old = WeeklyReport.Build(hist, now, now.AddDays(-20), 999);
+    Check(old.LastClean is null && old.LastCleanBytes == 0, "Eski temizlik haftalık özete girmez");
+    var text = WeeklyReport.Describe(w);
+    Check(text.Contains("3 oyun oturumu") && text.Contains("3,5") && text.Contains("91") && text.Contains("50 MB"), "Metin özetin tüm parçalarını içerir");
+    Check(WeeklyReport.Describe(WeeklyReport.Build([], now)).Contains("yok"), "Hiç kayıt yoksa bunu söyler");
+    Check(!WeeklyReport.Describe(WeeklyReport.Build([R("X", 1, 10, null, null, 0)], now)).Contains("FPS"), "Ölçülmeyen değer yazılmaz (FPS yok)");
+    Console.WriteLine(fails == 0 ? "HAFTALIK ÖZET TESTİ GEÇTİ" : $"{fails} TEST KALDI");
     return fails == 0 ? 0 : 1;
 }
 
@@ -2072,8 +2127,11 @@ if (cmd == "report-test")
     // 4c) Ekranın gösterebileceğinden fazla FPS ve ısı
     var fpsHigh = Run(600, i => (40, 3800, 93, 90, 0, 8, 220, 180), displayHz: 144);
     Check(fpsHigh!.Findings.Any(t => t.Contains("FPS sınırını 144")), "FPS ekran hızını aşıp ısındıysa FPS sınırı önerilir");
+    Check(fpsHigh.SuggestedFpsCap == 144, "Yapısal FPS sınırı önerisi ekran hızına eşit (144)");
+    var fpsCoolHigh = Run(600, i => (40, 3800, 72, 90, 0, 8, 220, 180), displayHz: 144);
+    Check(fpsCoolHigh!.SuggestedFpsCap == 144 && !fpsCoolHigh.Findings.Any(t => t.Contains("FPS sınırını 144")), "Serin olsa da FPS ekranın çok üstündeyse yapısal öneri var (güç tasarrufu), ısı uyarısı yok");
     var fpsOk = Run(600, i => (40, 3800, 72, 90, 0, 8, 100, 90), displayHz: 144);
-    Check(!fpsOk!.Findings.Any(t => t.Contains("FPS sınırı")), "Serin ve FPS düşükse FPS sınırı önerilmez");
+    Check(!fpsOk!.Findings.Any(t => t.Contains("FPS sınırı")) && fpsOk.SuggestedFpsCap is null, "Serin ve FPS düşükse FPS sınırı önerilmez");
 
     // 4d) Önceki oturumla karşılaştırma (ayarın işe yaradığı ölçülür)
     var before = Run(600, i => (35, 3900, 96, 98, 0, 8, 60, 55));
