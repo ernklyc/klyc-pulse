@@ -18,9 +18,24 @@ src/
 | `Apps/` | Kurulu uygulamalar, winget, kaldırma, açılış, arka plan servis/görevleri |
 | `Optimize/` | `Optimizer` (Hızlandır), oyun ayarları, oyun başına ayarlar |
 | `Processes/` | `ProcessInspector` (gruplama, öncelik, EcoQoS, koruma listesi) |
-| `Companion/` | ThrottleStop / Afterburner / G-Helper ile ortak çalışma |
+| `Companion/` | ThrottleStop / Afterburner / G-Helper ile ortak çalışma; `KonsolLink` (KLYC Konsol: `status.json` okuma, `konsol-feed.json` atomik yazma) |
 | `Platform/` | powercfg, servis, zamanlanmış görev, geri yükleme noktası |
 | `Settings/` | Ayarlar (atomik kayıt), kısayol bağlamaları |
+
+## KLYC Konsol bağlantısı (isteğe bağlı)
+
+Dosya tabanlı, olay tabanlı iki kanal; ikisi de kullanıcı profilinde, UTF-8, atomik yazım (geçici dosya + taşıma), bilinmeyen alanlar yok sayılır, bozuk/bayat dosya "veri yok" sayılır.
+
+| Kanal | Yön | Dosya | Ne zaman |
+|---|---|---|---|
+| Konsol durumu | Konsol → Pulse | `%AppData%\KLYC-Konsol\status.json` (şema 2; şema 1 de okunur) | Konsol'un durumu değişince (açıldı, oyun başlıyor, oyun bitti, gizlendi) |
+| Pulse özeti | Pulse → Konsol | `%LocalAppData%\Pulse\konsol-feed.json` | Mod değişince, oyun raporu hazır olunca, Konsol açıkken ~8 sn'de bir (Konsol "Pulse var mı" diye bakar: `running` ve en çok 20 sn eski). Oyun sırasında yazılmaz (rapor hariç) |
+
+- **Kod:** `Pulse.Core/Companion/KonsolLink.cs` (saf mantık: okuma, yazma, yollar; testlerde `KLYC_KONSOL_DIR` / `KLYC_PULSE_DIR`), `Pulse.App/KonsolLinkService.cs` (`FileSystemWatcher`, zamanlayıcılar, mod koruyucu bekletme), `Pulse.Core/Automation/AutoModeService.cs` (`NotifyGameLaunching/Playing/KonsolIdle`).
+- **Oyun ipucu:** `launching` → profil hemen uygulanır (otomatik oyun modu açıksa); süreç 180 sn içinde gelmezse geri alınır. `playing` → yalnızca algılamaya yardım eder. Konsol `launcher/desktop/background` olunca ipucu silinir. Süreç denetimi her durumda karar vericidir; ipuçları yalnızca ipucudur.
+- **Güç planı sahipliği:** `powerPlanManagedBy: "konsol"` ve oyun sürerken mod koruyucu `Pause()` ile bekletilir (12 saat sonra kendiliğinden bırakılır). `"pulse"` ise Konsol plana hiç dokunmaz.
+- **Bilerek yapılmayanlar:** Konsol'dan komut (mod değiştirme) kanalı yok: Pulse yönetici yetkisiyle kullanıcının yazabildiği bir klasörden komut alırdı, kazancı güvenlik yüzeyine değmez. `feed.acceptsCommands` hep `false`.
+- Tasarım belgesi ve Konsol tarafı: [KLYC-Konsol/docs/PULSE-ENTEGRASYON.md](https://github.com/ernklyc/klyc-konsol/blob/main/docs/PULSE-ENTEGRASYON.md).
 
 ## İlkeler
 

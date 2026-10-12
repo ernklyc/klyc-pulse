@@ -107,6 +107,16 @@ Works on any Windows 10 (2004+) / 11 x64 PC; **hardware-specific steps are shown
 
 Vendor modules are optional: if the hardware is missing the step is skipped and everything else keeps working. Details: [docs/UYUMLULUK.md](docs/UYUMLULUK.md) (Turkish).
 
+## Sister project: KLYC Konsol
+
+[KLYC Konsol](https://github.com/ernklyc/klyc-konsol) is a full-screen, controller-first launcher that lets you use the PC like a console. The two work independently; when both are installed they recognise each other:
+
+- When you launch a game from Konsol, Pulse **knows in advance**: it applies the game's profile/mode before the window opens and also finds games outside the standard folders.
+- **No power-plan fights:** when Pulse is running, only Pulse manages the power plan; Konsol leaves it alone.
+- Pulse's last game report shows up on the game's detail page in Konsol.
+
+They talk through two small JSON files in your user profile (no network, no account, no polling; details: [docs/MIMARI.md](docs/MIMARI.md)). If Konsol is not installed Pulse does nothing; you can switch it off in Settings → "Work together with KLYC Konsol".
+
 ## Safety principles
 
 - **Deletion is always confirmed.** Cleanup categories only contain regenerable files; risky ones go to quarantine and can be restored.

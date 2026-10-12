@@ -2,6 +2,18 @@
 
 Biçim [Keep a Changelog](https://keepachangelog.com/tr/) esaslıdır; sürümleme [SemVer](https://semver.org/lang/tr/).
 
+## [Yayınlanmamış]
+
+### Eklenenler
+- **KLYC Konsol ile birlikte çalışma** (kardeş proje, isteğe bağlı): Konsol kuruluysa Pulse onun `status.json` dosyasını (şema 1 ve 2) olay tabanlı izler, yoklama yapmaz.
+  - Konsol bir oyunu başlatırken Pulse oyun profilini **oyun penceresi açılmadan** uygular; süreç 180 sn içinde görünmezse uygulanan modu geri alır.
+  - Konsol'un söylediği kurulum klasöründeki süreç, klasör kuralına (`\steamapps\common\`, `\Epic Games\`…) uymasa da oyun sayılır ve profile eklenir.
+  - Konsol güç planını yönetiyorsa mod koruyucu o oyun boyunca bekler (çakışma biter); Konsol kapanırsa/oyun bitince yeniden çalışır.
+  - Pulse, Konsol'a `konsol-feed.json` özeti yazar (çalışıyor işareti, mod, son oyun raporu); Konsol yoksa hiçbir şey yazılmaz, oyun sırasında da yazılmaz.
+  - Ayarlar → "KLYC Konsol ile birlikte çalış" (varsayılan açık, kapatılabilir) ve durum satırı. Komut kutusu (Konsol'dan mod değiştirme) bilerek yapılmadı.
+- Test: `konsol-link-test` (ayrıştırma, bayat/bozuk dosya, atomik yazım, oyun ipuçları; sahte saat ve sahte mod anahtarı ile donanıma dokunmaz); CI'da.
+- `AutoModeService` artık `IModeSwitch` üzerinden çalışır (testlerde sahte mod anahtarı kullanılabilir).
+
 ## [1.9.3] — 2026-10-11
 
 ### Düzeltilenler
