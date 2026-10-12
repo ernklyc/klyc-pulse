@@ -114,7 +114,13 @@ public partial class App : Application
         AppServices.Cooling.Configure(AppServices.Settings.Current.CoolingFirst);
         AppServices.Update.Start();
         AppServices.Heat.Configure(AppServices.Settings.Current.HeatTarget);
-        AppServices.Konsol.Start();       // KLYC Konsol kuruluysa: oyun ipuçları ve güç planı sahipliği (yoksa hiçbir şey yapmaz)
+        AppServices.Konsol.Start();
+        // İstenmişse (varsayılan kapalı) ve Konsol kuruluysa Pulse ile birlikte açılır: yetkisiz, kol yoksa gizli bekleyen --startup kipiyle
+        if (AppServices.Settings.Current.StartKonsolWithPulse && Pulse.Core.Companion.KonsolInstall.FindExe() is { } konsolExe)
+            _ = Task.Delay(TimeSpan.FromSeconds(6)).ContinueWith(_ =>
+            {
+                if (!Pulse.Core.Companion.KonsolInstall.IsRunning() && AppServices.Auto.DetectedGame is null) Pulse.Core.Companion.KonsolInstall.Launch(konsolExe, "--startup");
+            });       // KLYC Konsol kuruluysa: oyun ipuçları ve güç planı sahipliği (yoksa hiçbir şey yapmaz)
         // Önceki oturumdan (çökme vb.) kalmış frekans sınırı varsa ve sıcaklık sınırı kapalıysa temizle; sessizce yavaş kalmasın.
         if (AppServices.Settings.Current.HeatTarget is null) _ = Task.Run(() => HeatTargetService.ClearStaleFrequencyCap());
         // Oyun raporu: oyun açılınca kayıt başlar, kapanınca küçük bir bilgi yazısı çıkar.

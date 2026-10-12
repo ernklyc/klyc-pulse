@@ -1003,3 +1003,41 @@ Oyun açık ({0}): güncellemeler oyun bitince yapılır, oyunu takıltmasın.	G
 KLYC Konsol (kol arayüzü)	KLYC Konsol (controller interface)
 Paket hazırlanıyor…	Preparing the package…
 Masaüstüne yazıldı: {0}. İçinde kişisel veri yok; sorun açarken ekleyebilirsin (kendiliğinden gönderilmez).	Written to the desktop: {0}. It contains no personal data; you can attach it when opening an issue (nothing is sent automatically).
+aşınma	wear
+sıcaklık	temperature
+çalışma saati	power-on hours
+{0} okunamadı: bu veriler için Pulse'ın yönetici olarak çalışması gerekir.	{0} could not be read: Pulse must run as administrator for these values.
+{0} okunamadı: bu disk (ya da USB/sürücü katmanı) bu veriyi Windows'a bildirmiyor; disk üreticisinin aracı gösterebilir.	{0} could not be read: this disk (or its USB/driver layer) does not report it to Windows; the manufacturer's tool may show it.
+Kurulu değil. Controller (kol) ile bilgisayarı konsol gibi kullanmak için ücretsiz KLYC Konsol'u indirebilirsin.	Not installed. You can download the free KLYC Konsol to use the PC like a console with a controller.
+Kurulu ve çalışıyor.	Installed and running.
+Kurulu, şu an kapalı.	Installed, currently closed.
+KLYC Konsol zaten açık (Ctrl+Alt+K ile öne getirebilirsin).	KLYC Konsol is already open (Ctrl+Alt+K brings it to the front).
+KLYC Konsol açıldı.	KLYC Konsol started.
+KLYC Konsol açılamadı (ayrıntı günlükte).	KLYC Konsol could not be started (details in the log).
+Windows Güvenliği'nin parçası: güvenlik ayarlarına dokunmuyoruz.	Part of Windows Security: we do not touch security settings.
+KLYC Konsol artık Windows ile açılmayacak (kol arayüzü açılışta gelmez). İstediğin an yeniden açabilirsin.	KLYC Konsol will no longer start with Windows (the controller interface will not appear at boot). You can turn it back on any time.
+Oyun açık ({0}): kaldırma oyun bitince yapılır.	Game running ({0}): uninstall after the game.
+“{0}” bir oyun başlatıcısı.\n\nKaldırıcısı kendi klasöründeki oyunları da silebilir (özellikle Steam: oyunlar Steam klasörünün içindeyse gider). Oyunların başka bir klasördeyse güvendedir.\n\nÖnemli oyun kayıtlarını/yedeklerini kontrol etmeden devam etme. Yine de devam edilsin mi?	“{0}” is a game launcher.\n\nIts uninstaller may also delete the games inside its own folder (especially Steam: games stored inside the Steam folder go away). Games in another folder are safe.\n\nDo not continue before checking important saves/backups. Continue anyway?
+Oyun başlatıcısı kaldırılıyor	Uninstalling a game launcher
+Voltaj {0:N2} V ve kalan kapasite {1} mWh. Pil derin boşalmış ya da bozulmuş olabilir; yazılımla düzelmez, pilin değişmesi gerekir. 	Voltage {0:N2} V and remaining capacity {1} mWh. The battery may be deeply discharged or damaged; software cannot fix this, the battery needs to be replaced. 
+{0} MHz sınırı	{0} MHz cap
+ + ekran kartı	 + graphics card
+{0}: dinleniyor ({1} sn)…	{0}: resting ({1} s)…
+{0}: tam yük ({1} sn)…	{0}: full load ({1} s)…
+{0}: ekran kartı yükü başlatılamadı (Edge yok?), aşama atlandı.	{0}: could not start the graphics load (no Edge?), phase skipped.
+Ölçüm yapılamadı.	Measurement could not be made.
+Yalnız işlemci yükü: 	CPU load only: 
+İşlemci + ekran kartı (oyundaki gibi): 	CPU + graphics card (like in a game): 
+Ekran kartı {0:0} °C	Graphics card {0:0} °C
+ çalıştı.	 ran.
+Ekran kartı da çalışınca işlemci sınırsızken {0} ({1:0} → {2:0} °C); oyunda gerçek ısı bu ikinci değere yakındır.	With the graphics card also running, the CPU is {0} when unlimited ({1:0} → {2:0} °C); the real heat in a game is close to the second value.
+{0:0.#} °C daha sıcak	{0:0.#} °C hotter
+{0:0.#} °C daha serin	{0:0.#} °C cooler
+Sınırsız	Unlimited
+{0:0} °C (en yüksek {1:0})	{0:0} °C (max {1:0})
+sıcaklık okunamadı	temperature could not be read
+{0}: hız {1:0} MHz, ısı {2}	{0}: speed {1:0} MHz, heat {2}
+{0} MHz sınırı: ısı {1:0.#} °C {2}, hız %{3:0} azaldı.	{0} MHz cap: heat {1:0.#} °C {2}, speed %{3:0} lower.
+Ortalama {0:0} FPS	Average {0:0} FPS
+Otomatik ayar: 	Auto-tune: 
+ Sonraki oyundan sonra yeniden denenecek.	 It will be tried again after the next game.

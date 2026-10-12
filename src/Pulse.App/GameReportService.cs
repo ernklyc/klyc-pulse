@@ -127,7 +127,7 @@ public sealed class GameReportService : IDisposable
     {
         var settings = AppServices.Settings;
         var s = settings.Current;
-        string Note(string text) { report.Findings.Add("Otomatik ayar: " + text); profile.AutoTuneNote = text; settings.Save(); Journal.Write($"Otomatik ayar ({report.Game}): {text}"); return text; }
+        string Note(string text) { report.Findings.Add(Loc.T("Otomatik ayar: ") + text); profile.AutoTuneNote = text; settings.Save(); Journal.Write($"Otomatik ayar ({report.Game}): {text}"); return text; }
 
         // Sınır koyulmuşken hız yine de sınırı aşıyorsa: bu bilgisayar sınırı uygulamıyor
         if (cap is { } c && report.CpuMhzPeak is { } peak && peak > c * 1.12)
@@ -166,7 +166,7 @@ public sealed class GameReportService : IDisposable
                     profile.CpuMaxMhz = d2.CapMhz; profile.AutoTuneLocked = d2.Locked; report.AutoTuneChanged = true;
                     Note(d2.Note);
                 }
-                else Note(r.Supported == true ? d2.Note : r.Note + (r.Supported == false ? Loc.T(" Otomatik ayar yapılmıyor.") : " Sonraki oyundan sonra yeniden denenecek."));
+                else Note(r.Supported == true ? d2.Note : r.Note + (r.Supported == false ? Loc.T(" Otomatik ayar yapılmıyor.") : Loc.T(" Sonraki oyundan sonra yeniden denenecek.")));
                 Publish(report);
             });
             return;

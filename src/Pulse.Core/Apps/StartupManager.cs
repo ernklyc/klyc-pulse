@@ -34,7 +34,10 @@ public static class StartupManager
             if (enabled) data[0] = 2;
             else { data[0] = 3; BitConverter.GetBytes(DateTime.UtcNow.ToFileTimeUtc()).CopyTo(data, 4); }
             key.SetValue(item.ApprovedValueName, data, RegistryValueKind.Binary);
-            Journal.Write($"Başlangıç {(enabled ? "etkinleştirildi" : "devre dışı bırakıldı")}: {item.Name}");
+            // Uygula, geri oku, doğrula: yazılan değer gerçekten istenen durumu veriyor mu?
+            var now = IsApproved(item.Machine, item.ApprovedSubKey, item.ApprovedValueName);
+            if (now != enabled) { Journal.Write($"Başlangıç ayarı doğrulanamadı ({item.Name}): istenen {(enabled ? "açık" : "kapalı")}, okunan {(now ? "açık" : "kapalı")}"); return false; }
+            Journal.Write($"Başlangıç {(enabled ? "etkinleştirildi" : "devre dışı bırakıldı")} (doğrulandı): {item.Name}");
             return true;
         }
         catch (Exception ex)
@@ -42,6 +45,20 @@ public static class StartupManager
             Journal.Write($"Başlangıç ayarı değiştirilemedi ({item.Name}): {ex.Message}");
             return false;
         }
+    }
+
+    /// <summary>
+    /// Kapatılmaması gereken açılış öğeleri: Windows Güvenliği (güvenlik ayarlarına dokunmayız) ve KLYC Konsol'un kendi öğesi uyarılır.
+    /// Null değilse neden; "block" öğeler hiç değiştirilmez, "warn" öğeler uyarıyla değiştirilebilir.
+    /// </summary>
+    public static (bool Block, string Reason)? ProtectionReason(string name)
+    {
+        var n = name.Trim();
+        if (n.StartsWith("SecurityHealth", StringComparison.OrdinalIgnoreCase) || n.Contains("Windows Defender", StringComparison.OrdinalIgnoreCase) || n.Equals("WindowsDefender", StringComparison.OrdinalIgnoreCase))
+            return (true, Loc.T("Windows Güvenliği'nin parçası: güvenlik ayarlarına dokunmuyoruz."));
+        if (n.Equals("KLYC-Konsol", StringComparison.OrdinalIgnoreCase) || n.Equals("KLYC Konsol", StringComparison.OrdinalIgnoreCase))
+            return (false, Loc.T("KLYC Konsol artık Windows ile açılmayacak (kol arayüzü açılışta gelmez). İstediğin an yeniden açabilirsin."));
+        return null;
     }
 
     private static void ReadRun(List<StartupItem> items, RegistryHive hive, RegistryView view, string approvedSub, bool machine, string location)

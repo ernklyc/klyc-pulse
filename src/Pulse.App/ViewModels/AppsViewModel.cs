@@ -74,6 +74,12 @@ public partial class StartupVm : ObservableObject
     partial void OnIsEnabledChanged(bool value)
     {
         if (_loading) return;
+        if (StartupManager.ProtectionReason(Item.Name) is { Block: true } blocked)
+        {
+            _loading = true; IsEnabled = !value; _loading = false;
+            _owner.Status = blocked.Reason;
+            return;
+        }
         if (!StartupManager.SetEnabled(Item, value))
         {
             _loading = true;
@@ -81,7 +87,8 @@ public partial class StartupVm : ObservableObject
             _loading = false;
             _owner.Status = Item.Machine ? Loc.T("Sistem öğesini değiştirmek için KLYC-Pulse'ın yönetici olarak çalışması gerekir.") : Loc.T("Bu öğe değiştirilemedi.");
         }
-        else _owner.Status = value ? Loc.F("{0} açılışta başlayacak.", Item.Name) : Loc.F("{0} açılışta başlamayacak.", Item.Name);
+        else _owner.Status = value ? Loc.F("{0} açılışta başlayacak.", Item.Name)
+            : StartupManager.ProtectionReason(Item.Name) is { } warn ? warn.Reason : Loc.F("{0} açılışta başlamayacak.", Item.Name);
     }
 }
 
@@ -298,6 +305,12 @@ public partial class AppsViewModel : ObservableObject
     private async Task Uninstall(AppVm? a)
     {
         if (a is null || IsBusy) return;
+        // Oyun sürerken kaldırıcı çalıştırılmaz (disk/işlemci yükü oyunu takıltır, oyun dosyalarına dokunabilir)
+        if (AppServices.Auto.DetectedGame is { } running) { Status = Loc.F("Oyun açık ({0}): kaldırma oyun bitince yapılır.", running); return; }
+        if (WingetService.LooksLikeGameLauncher(a.Name) && System.Windows.MessageBox.Show(
+                Loc.F("“{0}” bir oyun başlatıcısı.\n\nKaldırıcısı kendi klasöründeki oyunları da silebilir (özellikle Steam: oyunlar Steam klasörünün içindeyse gider). Oyunların başka bir klasördeyse güvendedir.\n\nÖnemli oyun kayıtlarını/yedeklerini kontrol etmeden devam etme. Yine de devam edilsin mi?", a.Name),
+                Loc.T("Oyun başlatıcısı kaldırılıyor"), System.Windows.MessageBoxButton.YesNo, System.Windows.MessageBoxImage.Warning, System.Windows.MessageBoxResult.No) != System.Windows.MessageBoxResult.Yes)
+            return;
         var ok = System.Windows.MessageBox.Show(
             Loc.F("“{0}” kaldırılacak.\n\nUygulamanın kendi kaldırıcısı çalışır. Bitince geride kalan klasörler varsa ayrıca sorulur.", a.Name),
             Loc.T("Kaldırmayı onayla"), System.Windows.MessageBoxButton.YesNo, System.Windows.MessageBoxImage.Question);

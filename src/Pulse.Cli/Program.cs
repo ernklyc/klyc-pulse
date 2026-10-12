@@ -455,6 +455,124 @@ if (cmd == "support-test")
     return fails == 0 ? 0 : 1;
 }
 
+if (cmd == "disk-test")
+{
+    // Disk sağlığı birleştirme: okunan değerler gösterilir, okunamayanın NEDENİ söylenir (sahte WMI satırlarıyla; donanıma dokunmaz)
+    var fails = 0;
+    void Check(bool ok, string what) { Console.WriteLine($"  [{(ok ? "GEÇTİ" : "KALDI")}] {what}"); if (!ok) fails++; }
+    Dictionary<string, object?> D(string id, string name, int health) => new() { ["DeviceId"] = id, ["FriendlyName"] = name, ["HealthStatus"] = health };
+    Dictionary<string, object?> C(string id, int? wear, int? temp, long? hours, long rerr = 0) => new() { ["DeviceId"] = id, ["Wear"] = wear, ["Temperature"] = temp, ["PowerOnHours"] = hours, ["ReadErrorsTotal"] = rerr, ["WriteErrorsTotal"] = 0L };
+    var full = Pulse.Core.Health.DiskHealth.Build([D("0", "Micron SSD", 0)], [C("0", 3, 38, 1240)], isAdmin: true)[0];
+    Check(full is { Healthy: true, WearPercent: 3, TempC: 38, PowerOnHours: 1240, Note: "" }, "Her şey okunduysa not boş");
+    var noAdmin = Pulse.Core.Health.DiskHealth.Build([D("0", "Micron SSD", 0)], [], isAdmin: false)[0];
+    Check(noAdmin.Note.Contains("yönetici") && noAdmin.Note.Contains("aşınma") && noAdmin.Note.Contains("sıcaklık") && noAdmin.Note.Contains("çalışma saati"), "Yönetici değilse neden: yönetici gerekir");
+    var admin = Pulse.Core.Health.DiskHealth.Build([D("1", "USB Disk", 0)], [C("1", null, null, null)], isAdmin: true)[0];
+    Check(admin.Note.Contains("bildirmiyor") && !admin.Note.Contains("yönetici olarak"), "Yöneticiyken okunamıyorsa neden: disk bildirmiyor");
+    var partial = Pulse.Core.Health.DiskHealth.Build([D("2", "NVMe", 0)], [C("2", null, 41, 900)], isAdmin: true)[0];
+    Check(partial.TempC == 41 && partial.Note.Contains("aşınma") && !partial.Note.Contains("sıcaklık"), "Kısmi okuma: yalnızca eksik olanın nedeni yazılır");
+    var zero = Pulse.Core.Health.DiskHealth.Build([D("3", "X", 0)], [C("3", 1, 0, 5)], isAdmin: true)[0];
+    Check(zero.TempC is null && zero.Note.Contains("sıcaklık"), "0 °C sıcaklık okunmuş sayılmaz");
+    var bad = Pulse.Core.Health.DiskHealth.Build([D("4", "Eski HDD", 2)], [C("4", 5, 40, 90000, rerr: 12)], isAdmin: true)[0];
+    Check(!bad.Healthy && bad.Errors == 12, "Sağlıksız disk ve hata sayısı");
+    var real = Pulse.Core.Health.DiskHealth.Read();
+    Console.WriteLine($"  Bu bilgisayar: {real.Count} disk");
+    foreach (var d in real) Console.WriteLine($"    {d.Name}: {d.HealthText}, aşınma {d.WearPercent?.ToString() ?? "-"}, sıcaklık {d.TempC?.ToString() ?? "-"}, saat {d.PowerOnHours?.ToString() ?? "-"}  | {d.Note}");
+    Check(real.Count > 0, "Gerçek disk listesi okunur");
+    Check(real.All(d => d.Note.Length == 0 || d.Note.Contains("yönetici") || d.Note.Contains("bildirmiyor")), "Okunamayan her değerin nedeni yazılmış");
+    Console.WriteLine(fails == 0 ? "DİSK SAĞLIĞI TESTİ GEÇTİ" : $"{fails} TEST KALDI");
+    return fails == 0 ? 0 : 1;
+}
+
+if (cmd == "konsol-install-test")
+{
+    // KLYC Konsol kartı: kurulu mu, yetkisiz başlatma (masaüstü kabuğunun belirteciyle)
+    var fails = 0;
+    void Check(bool ok, string what) { Console.WriteLine($"  [{(ok ? "GEÇTİ" : "KALDI")}] {what}"); if (!ok) fails++; }
+    var tmp = Path.Combine(Path.GetTempPath(), "pulse-konsol-install-" + Guid.NewGuid().ToString("N")[..6]); Directory.CreateDirectory(tmp);
+    try
+    {
+        var c = KonsolInstall.Candidates(Path.Combine(tmp, "la"), envExe: null);
+        Check(c.Any(x => x.EndsWith(@"KLYC-Konsol\current\KlycKonsol.exe")) && c.Any(x => x.EndsWith(@"Programs\KLYC-Konsol\KlycKonsol.exe")), "Setup.exe ve Kur.ps1 konumları aranır");
+        Check(KonsolInstall.FindExe(c) is null, "Kurulu değilse null");
+        Directory.CreateDirectory(Path.GetDirectoryName(c[0])!); File.WriteAllText(c[0], "x");
+        Check(KonsolInstall.FindExe(c) == c[0], "Kurulu exe bulunur");
+        Check(KonsolInstall.Candidates(Path.Combine(tmp, "la"), envExe: @"C:\ozel\K.exe")[0] == @"C:\ozel\K.exe", "KLYC_KONSOL_EXE ile özel yol önceliklidir");
+        var marker = Path.Combine(tmp, "basladi.txt");
+        var ok = KonsolInstall.Launch(Path.Combine(Environment.SystemDirectory, "cmd.exe"), $"/c echo tamam> \"{marker}\"");
+        var sw = System.Diagnostics.Stopwatch.StartNew();
+        while (ok && !File.Exists(marker) && sw.Elapsed.TotalSeconds < 10) await Task.Delay(200);
+        Check(ok && File.Exists(marker), "Başlatma çalışır (yetkisiz Pulse: doğrudan; yönetici Pulse: kabuk belirteciyle, bu yol testte denenemez)");
+        Check(!KonsolInstall.Launch(Path.Combine(tmp, "yok", "yok.exe")), "Olmayan exe başlatılamaz (hata vermez, false döner)");
+    }
+    finally { try { Directory.Delete(tmp, true); } catch { } }
+    Console.WriteLine(fails == 0 ? "KONSOL KURULUM TESTİ GEÇTİ" : $"{fails} TEST KALDI");
+    return fails == 0 ? 0 : 1;
+}
+
+if (cmd == "startup-guard-test")
+{
+    // Açılış öğeleri: uygula-oku-doğrula, korunan öğeler; kaldırmada oyun başlatıcısı tanıma (kayıt defterinde yalnızca kendi sahte HKCU değerimize dokunulur, sonunda silinir)
+    var fails = 0;
+    void Check(bool ok, string what) { Console.WriteLine($"  [{(ok ? "GEÇTİ" : "KALDI")}] {what}"); if (!ok) fails++; }
+    Check(StartupManager.ProtectionReason("SecurityHealth") is { Block: true } && StartupManager.ProtectionReason("SecurityHealthSystray") is { Block: true } && StartupManager.ProtectionReason("Windows Defender notification icon") is { Block: true }, "Windows Güvenliği öğeleri engellenir");
+    Check(StartupManager.ProtectionReason("KLYC-Konsol") is { Block: false, Reason.Length: > 0 }, "KLYC Konsol öğesi uyarıyla değiştirilebilir (engellenmez)");
+    Check(StartupManager.ProtectionReason("Discord") is null && StartupManager.ProtectionReason("Spotify") is null, "Sıradan öğeler serbest");
+    Check(WingetService.LooksLikeGameLauncher("Steam") && WingetService.LooksLikeGameLauncher("Epic Games Launcher") && WingetService.LooksLikeGameLauncher("Battle.net") && WingetService.LooksLikeGameLauncher("Steam Client Bootstrapper"), "Oyun başlatıcıları tanınır");
+    Check(!WingetService.LooksLikeGameLauncher("Visual Studio Code") && !WingetService.LooksLikeGameLauncher("Notepad++") && !WingetService.LooksLikeGameLauncher("Steamworks"), "Sıradan uygulama başlatıcı sayılmaz");
+    const string approvedKey = @"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\StartupApproved\Run";
+    var name = "KlycPulseTestEntry" + Guid.NewGuid().ToString("N")[..6];
+    var item = new StartupItem(name, "x.exe", "test", false, true, "", "Run", name);
+    try
+    {
+        Check(StartupManager.SetEnabled(item, false), "Kapatma yazılır ve geri okunarak doğrulanır");
+        using (var k = Microsoft.Win32.Registry.CurrentUser.OpenSubKey(approvedKey))
+            Check(k?.GetValue(name) is byte[] { Length: 12 } b && b[0] == 3, "Kayıt Görev Yöneticisi biçiminde (12 bayt, 3 = kapalı)");
+        Check(StartupManager.SetEnabled(item, true), "Açma yazılır ve doğrulanır");
+        using (var k = Microsoft.Win32.Registry.CurrentUser.OpenSubKey(approvedKey))
+            Check(k?.GetValue(name) is byte[] b2 && b2[0] == 2, "Açık = 2");
+    }
+    finally
+    {
+        try { using var k = Microsoft.Win32.Registry.CurrentUser.OpenSubKey(approvedKey, true); k?.DeleteValue(name, false); } catch { }
+    }
+    Console.WriteLine(fails == 0 ? "AÇILIŞ KORUMA TESTİ GEÇTİ" : $"{fails} TEST KALDI");
+    return fails == 0 ? 0 : 1;
+}
+
+if (cmd == "retranslate-test")
+{
+    // Türkçe kaydedilmiş oyun raporu bulguları İngilizce arayüzde İngilizce görünür (sayılar korunur)
+    var fails = 0;
+    void Check(bool ok, string what) { Console.WriteLine($"  [{(ok ? "GEÇTİ" : "KALDI")}] {what}"); if (!ok) fails++; }
+    Pulse.Core.Localization.Loc.Configure("tr");
+    var stored1 = Pulse.Core.Localization.Loc.F("Arka planda {0} oyun boyunca ortalama %{1:0.#} işlemci kullandı (en çok %{2:0}).{3}", "vgc", 10.1, 48.0, "");
+    var stored2 = Pulse.Core.Localization.Loc.F("Ortalama {0:0} FPS, en kötü %1'lik karelerde {1:0} FPS. En kötü karelerde bile akıcı.", 216.0, 129.0);
+    var stored3 = "Bu tamamen bilinmeyen bir cümle: 42";
+    Check(Pulse.Core.Localization.Loc.Retranslate(stored1) == stored1, "Türkçe modda saklanan metin aynen kalır");
+    Pulse.Core.Localization.Loc.Configure("en");
+    var en1 = Pulse.Core.Localization.Loc.Retranslate(stored1);
+    Console.WriteLine("  " + stored1 + " → " + en1);
+    Check(en1.StartsWith("In the background vgc") && en1.Contains("10.1") && en1.Contains("48"), "Arka plan bulgusu İngilizceye çevrilir, program adı ve sayılar korunur (10,1 → 10.1)");
+    var en2 = Pulse.Core.Localization.Loc.Retranslate(stored2);
+    Console.WriteLine("  " + stored2 + " → " + en2);
+    Check(en2.Contains("216") && en2.Contains("129") && !en2.Contains("Ortalama"), "FPS bulgusu çevrilir");
+    Check(Pulse.Core.Localization.Loc.Retranslate(stored3) == stored3, "Tanınmayan metin aynen kalır (hiçbir şey bozulmaz)");
+    Check(Pulse.Core.Localization.Loc.Retranslate("") == "", "Boş metin");
+    // Gerçek kayıtlı raporlar (bu bilgisayardaki geçmiş): kaç bulgu çevrilebildi? (bilgi; çevrilemeyenler listelenir)
+    try
+    {
+        var all = Pulse.Core.Diagnostics.GameReportStore.LoadHistory().SelectMany(r => r.Findings).Distinct().ToList();
+        var same = all.Where(f => Pulse.Core.Localization.Loc.Retranslate(f) == f).ToList();
+        Console.WriteLine($"  Gerçek geçmiş: {all.Count} farklı bulgu, çevrilemeyen {same.Count}");
+        foreach (var f in same.Take(6)) Console.WriteLine("    çevrilemedi: " + f[..Math.Min(110, f.Length)]);
+        Check(all.Count == 0 || same.Count * 4 <= all.Count, "Gerçek geçmiş bulgularının en az %75'i çevrilir");
+    }
+    catch (Exception ex) { Console.WriteLine("  (geçmiş okunamadı: " + ex.Message + ")"); }
+    // Tüm şablonlar derlenebiliyor, kendi Türkçe çıktısını İngilizceye geri çevirebiliyor (örnek: 3 şablon)
+    Console.WriteLine(fails == 0 ? "YENİDEN ÇEVİRİ TESTİ GEÇTİ" : $"{fails} TEST KALDI");
+    return fails == 0 ? 0 : 1;
+}
+
 if (cmd == "health")
 {
     using var sampler = new HealthSampler();

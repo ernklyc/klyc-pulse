@@ -1,3 +1,4 @@
+using Pulse.Core.Localization;
 using Pulse.Core.Monitoring;
 using Pulse.Core.Platform;
 
@@ -22,7 +23,7 @@ public static class HeatBenchmark
     /// <summary>Aşama planı: (sınır, ekran kartı da çalışsın mı). Ekran kartı yükü Edge'deki WebGL sayfasıdır; Edge yoksa o aşamalar atlanır.</summary>
     public static List<HeatBenchmarkPhase> RunPlan(IReadOnlyList<(int? Cap, bool Gpu)> plan, int restSec = 40, int loadSec = 80, IProgress<string>? progress = null, CancellationToken ct = default)
     {
-        var scheme = Powercfg.ActiveScheme() ?? throw new InvalidOperationException("Etkin güç planı okunamadı.");
+        var scheme = Powercfg.ActiveScheme() ?? throw new InvalidOperationException(Loc.T("Etkin güç planı okunamadı."));
         string[] keys = [Powercfg.BoostMode, Powercfg.MaxProcessorState, Powercfg.MaxFrequency, Powercfg.MaxFrequencyClass1];
         var saved = keys.ToDictionary(k => k, k => (Ac: Powercfg.GetAc(scheme, Powercfg.SubProcessor, k), Dc: Powercfg.GetDc(scheme, Powercfg.SubProcessor, k)));
         using var hub = new SensorHub();
@@ -37,21 +38,21 @@ public static class HeatBenchmark
             foreach (var (cap, gpu) in plan)
             {
                 if (ct.IsCancellationRequested) break;
-                var label = (cap is null ? "sınırsız" : $"{cap} MHz sınırı") + (gpu ? " + ekran kartı" : "");
+                var label = (cap is null ? Loc.T("sınırsız") : Loc.F("{0} MHz sınırı", cap)) + (gpu ? Loc.T(" + ekran kartı") : "");
                 Powercfg.SetFrequencyCap(scheme, cap ?? 0);
                 Powercfg.SetActive(scheme);
 
                 // Ekran kartı çalıştıktan sonra kasa daha uzun sıcak kalır: sonraki aşama aynı sıcaklıktan başlasın diye daha uzun dinlenilir
                 var rest = prevGpu ? restSec + 30 : restSec;
-                progress?.Report($"{label}: dinleniyor ({rest} sn)…");
+                progress?.Report(Loc.F("{0}: dinleniyor ({1} sn)…", label, rest));
                 Wait(rest, ct);
 
-                progress?.Report($"{label}: tam yük ({loadSec} sn)…");
+                progress?.Report(Loc.F("{0}: tam yük ({1} sn)…", label, loadSec));
                 GpuLoad? gpuLoad = null;
                 if (gpu)
                 {
                     try { gpuLoad = GpuLoad.Start(); } catch { gpuLoad = null; }
-                    if (gpuLoad is null) { progress?.Report($"{label}: ekran kartı yükü başlatılamadı (Edge yok?), aşama atlandı."); continue; }
+                    if (gpuLoad is null) { progress?.Report(Loc.F("{0}: ekran kartı yükü başlatılamadı (Edge yok?), aşama atlandı.", label)); continue; }
                 }
                 prevGpu = gpu;
                 using var cts = CancellationTokenSource.CreateLinkedTokenSource(ct);
@@ -102,18 +103,19 @@ public static class HeatBenchmark
     /// <summary>Sonucu sade dille özetler: sınır sıcaklığı kaç derece düşürdü, hız ne kadar kaybetti. Ekran kartı aşamaları ayrı anlatılır.</summary>
     public static string Summarize(IReadOnlyList<HeatBenchmarkPhase> phases)
     {
-        if (phases.Count == 0) return "Ölçüm yapılamadı.";
+        if (phases.Count == 0) return Loc.T("Ölçüm yapılamadı.");
         var cpuOnly = phases.Where(p => !p.WithGpu).ToList();
         var withGpu = phases.Where(p => p.WithGpu).ToList();
         var lines = new List<string>();
-        if (cpuOnly.Count > 0) lines.Add(SummarizeGroup(cpuOnly, withGpu.Count > 0 ? "Yalnız işlemci yükü: " : ""));
+        if (cpuOnly.Count > 0) lines.Add(SummarizeGroup(cpuOnly, withGpu.Count > 0 ? Loc.T("Yalnız işlemci yükü: ") : ""));
         if (withGpu.Count > 0)
         {
-            lines.Add(SummarizeGroup(withGpu, "İşlemci + ekran kartı (oyundaki gibi): "));
+            lines.Add(SummarizeGroup(withGpu, Loc.T("İşlemci + ekran kartı (oyundaki gibi): ")));
             var g0 = withGpu[0];
-            if (g0.GpuAvgTempC is { } gt) lines.Add($"Ekran kartı {gt:0} °C" + (g0.GpuMedianMhz is { } gm ? $", {gm:0} MHz" : "") + " çalıştı.");
+            if (g0.GpuAvgTempC is { } gt) lines.Add(Loc.F("Ekran kartı {0:0} °C", gt) + (g0.GpuMedianMhz is { } gm ? $", {gm:0} MHz" : "") + Loc.T(" çalıştı."));
             if (cpuOnly.Count > 0 && cpuOnly[0].AvgTempC is { } a && g0.AvgTempC is { } b)
-                lines.Add($"Ekran kartı da çalışınca işlemci sınırsızken {(b - a >= 0 ? $"{b - a:0.#} °C daha sıcak" : $"{a - b:0.#} °C daha serin")} ({a:0} → {b:0} °C); oyunda gerçek ısı bu ikinci değere yakındır.");
+                lines.Add(Loc.F("Ekran kartı da çalışınca işlemci sınırsızken {0} ({1:0} → {2:0} °C); oyunda gerçek ısı bu ikinci değere yakındır.",
+                    b - a >= 0 ? Loc.F("{0:0.#} °C daha sıcak", b - a) : Loc.F("{0:0.#} °C daha serin", a - b), a, b));
         }
         return string.Join(" ", lines);
     }
@@ -123,9 +125,9 @@ public static class HeatBenchmark
         var baseline = phases[0];
         var parts = phases.Select(p =>
         {
-            var name = p.CapMhz is null ? "Sınırsız" : $"{p.CapMhz} MHz sınırı";
-            var temp = p.AvgTempC is { } t ? $"{t:0} °C (en yüksek {p.MaxTempC:0})" : "sıcaklık okunamadı";
-            return $"{name}: hız {p.MedianMhz:0} MHz, ısı {temp}";
+            var name = p.CapMhz is null ? Loc.T("Sınırsız") : Loc.F("{0} MHz sınırı", p.CapMhz);
+            var temp = p.AvgTempC is { } t ? Loc.F("{0:0} °C (en yüksek {1:0})", t, p.MaxTempC) : Loc.T("sıcaklık okunamadı");
+            return Loc.F("{0}: hız {1:0} MHz, ısı {2}", name, p.MedianMhz, temp);
         }).ToList();
         var lines = new List<string> { prefix + string.Join(" | ", parts) + "." };
         foreach (var p in phases.Skip(1))
@@ -133,7 +135,7 @@ public static class HeatBenchmark
             if (baseline.AvgTempC is { } b && p.AvgTempC is { } t && baseline.MedianMhz > 0)
             {
                 var speed = (1 - p.MedianMhz / baseline.MedianMhz) * 100;
-                lines.Add($"{p.CapMhz} MHz sınırı: ısı {b - t:0.#} °C {(b - t >= 0 ? "düştü" : "arttı")}, hız %{speed:0} azaldı.");
+                lines.Add(Loc.F("{0} MHz sınırı: ısı {1:0.#} °C {2}, hız %{3:0} azaldı.", p.CapMhz, b - t, b - t >= 0 ? Loc.T("düştü") : Loc.T("arttı"), speed));
             }
         }
         return string.Join(" ", lines);

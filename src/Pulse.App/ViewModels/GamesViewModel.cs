@@ -219,7 +219,8 @@ public partial class GamesViewModel : ObservableObject, IDisposable
         if (r is null) return;
         ReportTitle = r.Title;
         ReportBrush = (System.Windows.Media.Brush)System.Windows.Application.Current.FindResource(r.Severity switch { 2 => "BadBrush", 1 => "WarnBrush", _ => "GoodBrush" });
-        foreach (var f in r.Findings) ReportLines.Add(f);
+        // Rapor eski bir dilde kaydedilmiş olabilir (ör. Türkçe): şimdiki dilde göster
+        foreach (var f in r.Findings) ReportLines.Add(Loc.Retranslate(f));
     }
 
     public ObservableCollection<GameProfileVm> Games { get; } = new();

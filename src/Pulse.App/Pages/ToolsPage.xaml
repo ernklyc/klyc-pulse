@@ -27,6 +27,29 @@
             </Border>
             <TextBlock Style="{StaticResource PulseMuted}" Text="{Binding Note}" Margin="0,0,0,8" TextWrapping="Wrap" FontWeight="Medium" />
 
+            <Border Style="{StaticResource PulseCard}" Padding="16,12" Margin="0,0,0,12">
+                <Grid>
+                    <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+                    <StackPanel Margin="0,0,16,0">
+                        <TextBlock Text="KLYC Konsol" FontFamily="{StaticResource DisplayFont}" FontSize="22" Foreground="{StaticResource InkBrush}" />
+                        <TextBlock Style="{StaticResource PulseMuted}" TextWrapping="Wrap"
+                                   Text="Kardeş proje: controller (kol) ile bilgisayarı konsol gibi kullanma arayüzü. İkisi birlikte çalışır: Konsol'dan başlattığın oyunu Pulse önceden bilir, güç planında savaşmazlar." />
+                        <TextBlock Text="{Binding KonsolState}" Style="{StaticResource PulseMuted}" FontWeight="SemiBold" Margin="0,6,0,0" TextWrapping="Wrap" />
+                        <Grid Margin="0,8,0,0" Visibility="{Binding KonsolInstalled, Converter={StaticResource BoolToVis}}">
+                            <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+                            <TextBlock Style="{StaticResource PulseBody}" Text="Pulse açılırken Konsol da açılsın (kol takılı değilse gizli bekler)" VerticalAlignment="Center" TextWrapping="Wrap" />
+                            <ui:ToggleSwitch Grid.Column="1" IsChecked="{Binding StartKonsolWithPulse}" VerticalAlignment="Center" />
+                        </Grid>
+                    </StackPanel>
+                    <StackPanel Grid.Column="1" VerticalAlignment="Top">
+                        <Button Content="Aç" Style="{StaticResource PulsePrimaryButton}" Command="{Binding OpenKonsolCommand}" HorizontalAlignment="Right"
+                                Visibility="{Binding KonsolInstalled, Converter={StaticResource BoolToVis}}" />
+                        <Button Content="İndir" Style="{StaticResource PulsePrimaryButton}" Command="{Binding GetKonsolCommand}" HorizontalAlignment="Right"
+                                Visibility="{Binding KonsolMissing, Converter={StaticResource BoolToVis}}" />
+                    </StackPanel>
+                </Grid>
+            </Border>
+
             <ItemsControl ItemsSource="{Binding Tools}">
                 <ItemsControl.ItemTemplate>
                     <DataTemplate>

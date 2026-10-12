@@ -207,3 +207,8 @@ Paketi hazırla	Prepare package
 GitHub'da sorun aç	Open an issue on GitHub
 Bir sorun mu var?	Having a problem?
 Sürüm, donanım modeli ve son günlükleri tek zipte masaüstüne toplar. Kullanıcı adın, bilgisayar adın ve klasör yolların temizlenir; hiçbir şey kendiliğinden gönderilmez.	Collects the version, hardware model and recent logs into one zip on your desktop. Your user name, computer name and folder paths are removed; nothing is sent automatically.
+Aç	Open
+İndir	Download
+Kardeş proje: controller (kol) ile bilgisayarı konsol gibi kullanma arayüzü. İkisi birlikte çalışır: Konsol'dan başlattığın oyunu Pulse önceden bilir, güç planında savaşmazlar.	Sister project: a controller-first interface to use the PC like a console. They work together: Pulse knows in advance which game you launch from Konsol, and they do not fight over the power plan.
+Pulse açılırken Konsol da açılsın (kol takılı değilse gizli bekler)	Start Konsol when Pulse starts (waits hidden if no controller is connected)
+KLYC Konsol	KLYC Konsol

@@ -28,7 +28,7 @@ public static class HealthAnalyzer
                 Loc.T("Şişme belirtisi (alt kapakta kabarma, tuş takımı ya da dokunmatik yüzeyin yükselmesi) görürsen kullanmayı bırak ve servise götür. Uyurken ya da evde yokken prizde bırakma.")));
         else if (b.Volts is < 6.0 || (b.RemainingMwh == 0 && b.FullChargeMwh is null or 0))
             f.Add(new(FindingLevel.Bad, Loc.T("Pil sorunlu görünüyor"),
-                $"Voltaj {b.Volts:N2} V ve kalan kapasite {b.RemainingMwh ?? 0} mWh. Pil derin boşalmış ya da bozulmuş olabilir. " +
+                Loc.F("Voltaj {0:N2} V ve kalan kapasite {1} mWh. Pil derin boşalmış ya da bozulmuş olabilir; yazılımla düzelmez, pilin değişmesi gerekir. ", b.Volts, b.RemainingMwh ?? 0) +
                 Loc.T("Alt kapağın kabarması, tuş takımı veya dokunmatik yüzeyin yükselmesi gibi şişme belirtisi görürsen kullanmayı bırak ve servise götür. Bu bir güvenlik konusudur.")));
         else if (b.WearPercent is > 40)
             f.Add(new(FindingLevel.Warning, Loc.T("Pil aşınmış"), Loc.F("Kapasite tasarımın %{0:N0}'ine düşmüş. Pil değişimi düşünülebilir.", 100 - b.WearPercent)));
@@ -71,7 +71,7 @@ public static class HealthAnalyzer
                 if (!d.Healthy) f.Add(new(FindingLevel.Bad, Loc.F("Disk sağlığı: {0}", d.HealthText), Loc.F("{0}. Önemli dosyalarını yedekle. {1}", d.Name, extra)));
                 else if (d.WearPercent is > 80) f.Add(new(FindingLevel.Warning, Loc.T("SSD aşınmış"), Loc.F("{0}: %{1} aşınma. Yedeğini güncel tut, yenisini planla.", d.Name, d.WearPercent)));
                 else if (d.Errors is > 0) f.Add(new(FindingLevel.Warning, Loc.T("Diskte okuma/yazma hatası var"), Loc.F("{0}: {1} hata kaydı. Yedek al, durumu izle.", d.Name, d.Errors)));
-                else f.Add(new(FindingLevel.Good, Loc.T("Disk sağlıklı"), $"{d.Name}" + (extra.Length > 0 ? $": {extra}." : ".")));
+                else f.Add(new(FindingLevel.Good, Loc.T("Disk sağlıklı"), $"{d.Name}" + (extra.Length > 0 ? $": {extra}." : ".") + (d.Note.Length > 0 ? " " + d.Note : "")));
             }
         }
         catch { }

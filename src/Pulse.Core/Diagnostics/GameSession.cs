@@ -208,7 +208,7 @@ public sealed class GameSessionRecorder
         // 5) FPS ve takılma
         if (fpsAvg is { } f)
         {
-            var line = $"Ortalama {f:0} FPS" + (lowAvg is { } l ? Loc.F(", en kötü %1'lik karelerde {0:0} FPS.", l) : ".");
+            var line = Loc.F("Ortalama {0:0} FPS", f) + (lowAvg is { } l ? Loc.F(", en kötü %1'lik karelerde {0:0} FPS.", l) : ".");
             // 1% düşük 60 FPS'in üstündeyse oyun akıcıdır (ortalamadan uzak olsa bile); yalnızca gerçekten düşükse "takılma" denir.
             if (lowAvg is { } low && low < f * 0.6 && low < 60)
             {

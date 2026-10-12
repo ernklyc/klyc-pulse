@@ -267,8 +267,36 @@ public partial class ToolsViewModel : ObservableObject
     [RelayCommand]
     private async Task RefreshAsync()
     {
+        RefreshKonsol();
         foreach (var t in Tools) await Task.Run(t.Refresh);
     }
+
+    // ---- KLYC Konsol kartı --------------------------------------------------------------
+    [ObservableProperty] private string _konsolState = "";
+    [ObservableProperty] private bool _konsolInstalled;
+    [ObservableProperty] private bool _konsolMissing = true;
+    [ObservableProperty] private bool _startKonsolWithPulse = AppServices.Settings.Current.StartKonsolWithPulse;
+    partial void OnStartKonsolWithPulseChanged(bool value) { AppServices.Settings.Current.StartKonsolWithPulse = value; AppServices.Settings.Save(); }
+
+    private void RefreshKonsol()
+    {
+        var (installed, running) = KonsolInstall.State();
+        KonsolInstalled = installed; KonsolMissing = !installed;
+        KonsolState = !installed ? Loc.T("Kurulu değil. Controller (kol) ile bilgisayarı konsol gibi kullanmak için ücretsiz KLYC Konsol'u indirebilirsin.")
+            : running ? Loc.T("Kurulu ve çalışıyor.") : Loc.T("Kurulu, şu an kapalı.");
+    }
+
+    [RelayCommand]
+    private void OpenKonsol()
+    {
+        if (KonsolInstall.FindExe() is not { } exe) { RefreshKonsol(); return; }
+        Note = KonsolInstall.IsRunning() ? Loc.T("KLYC Konsol zaten açık (Ctrl+Alt+K ile öne getirebilirsin).")
+            : KonsolInstall.Launch(exe) ? Loc.T("KLYC Konsol açıldı.") : Loc.T("KLYC Konsol açılamadı (ayrıntı günlükte).");
+        RefreshKonsol();
+    }
+
+    [RelayCommand]
+    private void GetKonsol() => Process.Start(new ProcessStartInfo(KonsolInstall.ReleasesUrl) { UseShellExecute = true });
 
     [RelayCommand]
     private async Task Leave(ToolVm? tool)

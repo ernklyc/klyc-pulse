@@ -26,6 +26,11 @@ public static class WingetService
     /// </summary>
     public static bool IsGameLauncher(string id) => GameLauncherIds.Contains(id);
 
+    /// <summary>Kurulu program adından (kimlik yok) oyun başlatıcısı mı? Kaldırma uyarısı için.</summary>
+    public static bool LooksLikeGameLauncher(string displayName) =>
+        new[] { "Epic Games Launcher", "Steam", "Rockstar Games Launcher", "EA app", "Origin", "Ubisoft Connect", "Uplay", "GOG GALAXY", "Battle.net", "Playnite", "Amazon Games" }
+            .Any(n => displayName.Equals(n, StringComparison.OrdinalIgnoreCase) || displayName.StartsWith(n + " ", StringComparison.OrdinalIgnoreCase));
+
     private static readonly HashSet<string> GameLauncherIds = new(StringComparer.OrdinalIgnoreCase)
     {
         "EpicGames.EpicGamesLauncher", "Valve.Steam", "RockstarGames.Launcher", "ElectronicArts.EADesktop",
