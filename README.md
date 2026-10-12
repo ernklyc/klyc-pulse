@@ -111,7 +111,7 @@ Her Windows 10 (2004+) / 11 x64 bilgisayarda çalışır; **donanıma özel adı
 [KLYC Konsol](https://github.com/ernklyc/klyc-konsol), controller (kol) ile bilgisayarı konsol gibi kullanmanı sağlayan tam ekran arayüzdür. İkisi birbirinden bağımsız çalışır; ikisi de kuruluysa birbirini tanır:
 
 - Konsol'dan bir oyun başlatınca Pulse oyunu **önceden bilir**: oyun penceresi açılmadan profilini/modunu uygular, standart klasörlerin dışındaki oyunları da bulur.
-- **Güç planı çakışmaz:** Pulse çalışıyorsa güç planını yalnızca Pulse yönetir, Konsol dokunmaz.
+- **Güç planı çakışmaz:** "Oyun açılınca modu kendiliğinden değiştir" açıksa güç planını Pulse yönetir ve Konsol dokunmaz; kapalıysa Konsol yönetir ve Pulse'ın mod koruyucusu o sırada beklemeye alınır.
 - Pulse'ın son oyun raporu Konsol'da oyunun detay sayfasında görünür.
 
 Haberleşme, kullanıcı profilindeki iki küçük JSON dosyasıyla olur (ağ yok, hesap yok, yoklama yok; ayrıntı: [docs/MIMARI.md](docs/MIMARI.md)). Konsol kurulu değilse Pulse hiçbir şey yapmaz; istersen Ayarlar → "KLYC Konsol ile birlikte çalış"tan kapatabilirsin.

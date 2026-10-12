@@ -33,7 +33,7 @@ Dosya tabanlı, olay tabanlı iki kanal; ikisi de kullanıcı profilinde, UTF-8,
 
 - **Kod:** `Pulse.Core/Companion/KonsolLink.cs` (saf mantık: okuma, yazma, yollar; testlerde `KLYC_KONSOL_DIR` / `KLYC_PULSE_DIR`), `Pulse.App/KonsolLinkService.cs` (`FileSystemWatcher`, zamanlayıcılar, mod koruyucu bekletme), `Pulse.Core/Automation/AutoModeService.cs` (`NotifyGameLaunching/Playing/KonsolIdle`).
 - **Oyun ipucu:** `launching` → profil hemen uygulanır (otomatik oyun modu açıksa); süreç 180 sn içinde gelmezse geri alınır. `playing` → yalnızca algılamaya yardım eder. Konsol `launcher/desktop/background` olunca ipucu silinir. Süreç denetimi her durumda karar vericidir; ipuçları yalnızca ipucudur.
-- **Güç planı sahipliği:** `powerPlanManagedBy: "konsol"` ve oyun sürerken mod koruyucu `Pause()` ile bekletilir (12 saat sonra kendiliğinden bırakılır). `"pulse"` ise Konsol plana hiç dokunmaz.
+- **Güç planı sahipliği:** `powerPlanManagedBy: "konsol"` ve oyun sürerken mod koruyucu `Pause()` ile bekletilir (12 saat sonra kendiliğinden bırakılır). `"pulse"` ise Konsol plana hiç dokunmaz. Konsol "Pulse yönetir" kararını yalnızca Pulse çalışıyorsa **ve** feed'deki `autoGameMode` açıksa verir (Pulse'ın otomatik oyun modu varsayılan kapalıdır; kapalıyken Pulse oyunda plana dokunmaz, Konsol da çekilirse oyun hızlı plana hiç geçmezdi).
 - **Bilerek yapılmayanlar:** Konsol'dan komut (mod değiştirme) kanalı yok: Pulse yönetici yetkisiyle kullanıcının yazabildiği bir klasörden komut alırdı, kazancı güvenlik yüzeyine değmez. `feed.acceptsCommands` hep `false`.
 - Tasarım belgesi ve Konsol tarafı: [KLYC-Konsol/docs/PULSE-ENTEGRASYON.md](https://github.com/ernklyc/klyc-konsol/blob/main/docs/PULSE-ENTEGRASYON.md).
 

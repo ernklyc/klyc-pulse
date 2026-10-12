@@ -382,6 +382,37 @@ if (cmd == "konsol-link-test")
     return fails == 0 ? 0 : 1;
 }
 
+if (cmd == "procwin-test")
+{
+    // Süreç listesi pencere bilgisini tek geçişte toplar: .NET'in süreç başına MainWindowHandle sonucuyla aynı mı, ve daha hızlı mı?
+    var fails = 0;
+    void Check(bool ok, string what) { Console.WriteLine($"  [{(ok ? "GEÇTİ" : "KALDI")}] {what}"); if (!ok) fails++; }
+    var ins = new Pulse.Core.Processes.ProcessInspector();
+    ins.Sample();
+    var groups = ins.Sample();
+    var mismatch = 0; var withWindow = 0;
+    foreach (var g in groups)
+    {
+        var expect = false;
+        foreach (var pid in g.Pids) { try { using var pr = System.Diagnostics.Process.GetProcessById(pid); if (pr.MainWindowHandle != IntPtr.Zero) { expect = true; break; } } catch { } }
+        if (expect) withWindow++;
+        if (expect != g.HasWindow) mismatch++;
+    }
+    Console.WriteLine($"  {groups.Count} grup, {withWindow} tanesi pencereli, uyuşmayan {mismatch}");
+    Check(groups.Count > 10 && withWindow > 0, "Süreçler ve pencereliler bulundu");
+    Check(mismatch <= 2, "Pencere bilgisi .NET'in MainWindowHandle sonucuyla aynı (en çok 2 anlık fark: süreç tam o sırada açılıp kapanmış olabilir)");
+    var sw = System.Diagnostics.Stopwatch.StartNew();
+    for (var i = 0; i < 5; i++) ins.Sample();
+    var perSample = sw.Elapsed.TotalMilliseconds / 5;
+    sw.Restart();
+    foreach (var pr in System.Diagnostics.Process.GetProcesses()) { try { _ = pr.MainWindowHandle; _ = pr.MainWindowTitle; } catch { } pr.Dispose(); }
+    var oldWay = sw.Elapsed.TotalMilliseconds;
+    Console.WriteLine($"  Bir ölçüm: {perSample:0} ms (eski yöntemin yalnızca pencere kısmı: {oldWay:0} ms)");
+    Check(perSample < 1500, "Bir süreç ölçümü 1,5 sn'den kısa");
+    Console.WriteLine(fails == 0 ? "SÜREÇ PENCERE TESTİ GEÇTİ" : $"{fails} TEST KALDI");
+    return fails == 0 ? 0 : 1;
+}
+
 if (cmd == "health")
 {
     using var sampler = new HealthSampler();

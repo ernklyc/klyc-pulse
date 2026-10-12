@@ -39,8 +39,9 @@ public sealed class ProcessInspector
     };
 
     private readonly Dictionary<int, (TimeSpan Cpu, DateTime At)> _last = new();
-    // MainModule okumak pahalı; bir sürecin yolu ömrü boyunca değişmez, bu yüzden (pid, başlangıç zamanı) ile önbelleğe alınır.
-    private readonly Dictionary<(int, long), string?> _paths = new();
+    // MainModule okumak pahalı; bir sürecin yolu ömrü boyunca değişmez, bu yüzden pid ile önbelleğe alınır
+    // (süreç listeden düşünce kayıt silinir; iki ölçüm arasında aynı pid'in başka programa geçmesi pratikte yok sayılır).
+    private readonly Dictionary<int, string?> _paths = new();
     private readonly int _cores = Environment.ProcessorCount;
 
     public IReadOnlyList<ProcGroup> Sample()
@@ -48,6 +49,7 @@ public sealed class ProcessInspector
         var now = DateTime.UtcNow;
         var perProc = new List<(Process P, string Name, string? Path, double Cpu, long Mem, string Title, bool Window)>();
         var seen = new HashSet<int>();
+        var windows = TopWindows.Snapshot();     // tüm pencereler tek seferde (süreç başına MainWindowHandle/Title her çağrıda tüm pencereleri gezer: yüzlerce süreçte pahalı)
 
         foreach (var p in Process.GetProcesses())
         {
@@ -67,21 +69,14 @@ public sealed class ProcessInspector
                 }
                 catch { /* korumalı süreç: CPU okunamaz */ }
 
-                string? path = null;
-                try
-                {
-                    var key = (p.Id, p.StartTime.Ticks);
-                    if (!_paths.TryGetValue(key, out path)) { try { path = p.MainModule?.FileName; } catch { path = null; } _paths[key] = path; }
-                }
-                catch { }
-                var title = "";
-                try { title = p.MainWindowTitle; } catch { }
-                perProc.Add((p, p.ProcessName, path, cpu, p.WorkingSet64, title, p.MainWindowHandle != IntPtr.Zero));
+                if (!_paths.TryGetValue(p.Id, out var path)) { try { path = p.MainModule?.FileName; } catch { path = null; } _paths[p.Id] = path; }
+                var hasWindow = windows.TryGetValue(p.Id, out var title);
+                perProc.Add((p, p.ProcessName, path, cpu, p.WorkingSet64, title ?? "", hasWindow));
             }
             catch { p.Dispose(); }
         }
         foreach (var gone in _last.Keys.Where(k => !seen.Contains(k)).ToList()) _last.Remove(gone);
-        foreach (var gone in _paths.Keys.Where(k => !seen.Contains(k.Item1)).ToList()) _paths.Remove(gone);
+        foreach (var gone in _paths.Keys.Where(k => !seen.Contains(k)).ToList()) _paths.Remove(gone);
 
         var groups = perProc
             .GroupBy(x => x.Name, StringComparer.OrdinalIgnoreCase)
@@ -229,4 +224,42 @@ public sealed class ProcessInspector
     [DllImport("kernel32.dll")] private static extern bool CloseHandle(IntPtr h);
     [DllImport("kernel32.dll", SetLastError = true)] private static extern bool SetProcessInformation(IntPtr h, int cls, ref PowerThrottlingState info, int size);
     [DllImport("kernel32.dll", SetLastError = true)] private static extern bool GetProcessInformation(IntPtr h, int cls, ref PowerThrottlingState info, int size);
+}
+
+/// <summary>
+/// Üst düzey pencereleri tek geçişte toplar: süreç kimliği → ana pencerenin başlığı. .NET'in MainWindowHandle kuralıyla aynıdır
+/// (sahibi olmayan, görünür ilk üst düzey pencere), ama her süreç için ayrı ayrı tüm pencereleri gezmez.
+/// </summary>
+internal static class TopWindows
+{
+    private delegate bool EnumProc(IntPtr hWnd, IntPtr lParam);
+    [DllImport("user32.dll")] private static extern bool EnumWindows(EnumProc cb, IntPtr lParam);
+    [DllImport("user32.dll")] private static extern bool IsWindowVisible(IntPtr hWnd);
+    [DllImport("user32.dll")] private static extern IntPtr GetWindow(IntPtr hWnd, uint cmd);
+    [DllImport("user32.dll")] private static extern uint GetWindowThreadProcessId(IntPtr hWnd, out uint pid);
+    [DllImport("user32.dll", CharSet = CharSet.Unicode)] private static extern int GetWindowText(IntPtr hWnd, System.Text.StringBuilder text, int max);
+    [DllImport("user32.dll")] private static extern int GetWindowTextLength(IntPtr hWnd);
+
+    private const uint GW_OWNER = 4;
+
+    public static Dictionary<int, string> Snapshot()
+    {
+        var map = new Dictionary<int, string>();
+        EnumWindows((h, _) =>
+        {
+            try
+            {
+                if (GetWindow(h, GW_OWNER) != IntPtr.Zero || !IsWindowVisible(h)) return true;
+                GetWindowThreadProcessId(h, out var pid);
+                if (pid == 0 || map.ContainsKey((int)pid)) return true;
+                var len = GetWindowTextLength(h);
+                var sb = new System.Text.StringBuilder(len + 1);
+                if (len > 0) GetWindowText(h, sb, sb.Capacity);
+                map[(int)pid] = sb.ToString();
+            }
+            catch { }
+            return true;
+        }, IntPtr.Zero);
+        return map;
+    }
 }

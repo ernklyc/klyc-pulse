@@ -112,7 +112,7 @@ Vendor modules are optional: if the hardware is missing the step is skipped and 
 [KLYC Konsol](https://github.com/ernklyc/klyc-konsol) is a full-screen, controller-first launcher that lets you use the PC like a console. The two work independently; when both are installed they recognise each other:
 
 - When you launch a game from Konsol, Pulse **knows in advance**: it applies the game's profile/mode before the window opens and also finds games outside the standard folders.
-- **No power-plan fights:** when Pulse is running, only Pulse manages the power plan; Konsol leaves it alone.
+- **No power-plan fights:** with "Switch mode automatically when a game starts" on, Pulse manages the power plan and Konsol leaves it alone; with it off, Konsol manages it and Pulse's mode keeper waits during the game.
 - Pulse's last game report shows up on the game's detail page in Konsol.
 
 They talk through two small JSON files in your user profile (no network, no account, no polling; details: [docs/MIMARI.md](docs/MIMARI.md)). If Konsol is not installed Pulse does nothing; you can switch it off in Settings → "Work together with KLYC Konsol".

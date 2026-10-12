@@ -8,7 +8,8 @@ Biçim [Keep a Changelog](https://keepachangelog.com/tr/) esaslıdır; sürümle
 - **KLYC Konsol ile birlikte çalışma** (kardeş proje, isteğe bağlı): Konsol kuruluysa Pulse onun `status.json` dosyasını (şema 1 ve 2) olay tabanlı izler, yoklama yapmaz.
   - Konsol bir oyunu başlatırken Pulse oyun profilini **oyun penceresi açılmadan** uygular; süreç 180 sn içinde görünmezse uygulanan modu geri alır.
   - Konsol'un söylediği kurulum klasöründeki süreç, klasör kuralına (`\steamapps\common\`, `\Epic Games\`…) uymasa da oyun sayılır ve profile eklenir.
-  - Konsol güç planını yönetiyorsa mod koruyucu o oyun boyunca bekler (çakışma biter); Konsol kapanırsa/oyun bitince yeniden çalışır.
+  - Konsol güç planını yönetiyorsa (Pulse'ın otomatik oyun modu kapalıyken ya da Pulse yokken) mod koruyucu o oyun boyunca bekler (çakışma biter); oyun bitince yeniden çalışır. Otomatik oyun modu açıkken plan Pulse'ta kalır.
+  - Konsol oyunları: oyun sürerken güncelleme (winget) yapılmaz, oyun bitince yapılır (oyunu takıltmasın); süreç listesinde pencere bilgisi tek geçişte toplanır.
   - Pulse, Konsol'a `konsol-feed.json` özeti yazar (çalışıyor işareti, mod, son oyun raporu); Konsol yoksa hiçbir şey yazılmaz, oyun sırasında da yazılmaz.
   - Ayarlar → "KLYC Konsol ile birlikte çalış" (varsayılan açık, kapatılabilir) ve durum satırı. Komut kutusu (Konsol'dan mod değiştirme) bilerek yapılmadı.
 - Test: `konsol-link-test` (ayrıştırma, bayat/bozuk dosya, atomik yazım, oyun ipuçları; sahte saat ve sahte mod anahtarı ile donanıma dokunmaz); CI'da.

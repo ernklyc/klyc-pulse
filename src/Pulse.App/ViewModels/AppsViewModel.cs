@@ -245,6 +245,8 @@ public partial class AppsViewModel : ObservableObject
     private async Task UpdateOne(UpdateVm? u)
     {
         if (u is null || u.IsBusy) return;
+        // Oyun sürerken kurulum yapılmaz: winget yükleyicileri diski/işlemciyi yorar, oyunu takıltabilir; oyun bitince güncellenir
+        if (AppServices.Auto.DetectedGame is { } running) { u.State = Loc.F("Oyun açık ({0}): oyun bitince güncelle.", running); return; }
         if (u.IsLauncher && System.Windows.MessageBox.Show(
                 Loc.F("“{0}” oyun başlatıcısıdır.\n\nGüncelleme programı kaldırıp yeniden kurabilir; başlatıcı birkaç dakika kaybolur, oyun dosyaların silinmez. Açıksa önce kapat.\n\nGüncellensin mi?", u.Name),
                 Loc.T("Oyun başlatıcısı"), System.Windows.MessageBoxButton.YesNo, System.Windows.MessageBoxImage.Question, System.Windows.MessageBoxResult.No) != System.Windows.MessageBoxResult.Yes)
@@ -273,6 +275,7 @@ public partial class AppsViewModel : ObservableObject
     private async Task UpdateAll()
     {
         if (IsBusy) return;
+        if (AppServices.Auto.DetectedGame is { } running) { UpdatesNote = Loc.F("Oyun açık ({0}): güncellemeler oyun bitince yapılır, oyunu takıltmasın.", running); return; }
         IsBusy = true;
         // Oyun başlatıcıları toplu güncellemeye girmez (kaldırıp yeniden kurabilir): tek tek, onayla güncellenir
         var pending = Updates.Where(x => !x.IsDone && !x.IsLauncher).ToList();

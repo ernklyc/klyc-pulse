@@ -998,3 +998,5 @@ KLYC Konsol bulunamadı.	KLYC Konsol not found.
 oyun: {0}	game: {0}
 uzun süredir çalışmadı	not run for a long time
 Konsol bulundu · v{0} · {1}	Konsol found · v{0} · {1}
+Oyun açık ({0}): oyun bitince güncelle.	Game running ({0}): update after the game.
+Oyun açık ({0}): güncellemeler oyun bitince yapılır, oyunu takıltmasın.	Game running ({0}): updates wait until the game ends so they do not cause stutter.

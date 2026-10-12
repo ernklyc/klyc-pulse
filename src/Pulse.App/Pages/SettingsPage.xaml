@@ -120,7 +120,7 @@
                     <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
                     <StackPanel Margin="0,0,20,0">
                         <TextBlock Style="{StaticResource SettingTitle}" Text="KLYC Konsol ile birlikte çalış" />
-                        <TextBlock Style="{StaticResource PulseMuted}" TextWrapping="Wrap" Text="Kardeş proje KLYC Konsol kuruluysa Konsol'dan başlattığın oyunu Pulse daha önceden bilir (oyun penceresi açılmadan modu uygular, standart klasöre uymayan oyunları da bulur) ve oyun sırasında güç planı için Konsol'la savaşmaz. Konsol kurulu değilse hiçbir şey yapmaz." />
+                        <TextBlock Style="{StaticResource PulseMuted}" TextWrapping="Wrap" Text="Kardeş proje KLYC Konsol kuruluysa Konsol'dan başlattığın oyunu Pulse daha önceden bilir (&quot;Oyun açılınca modu kendiliğinden değiştir&quot; açıksa oyun penceresi açılmadan modu uygular; standart klasöre uymayan oyunları da bulur). Güç planını o ayar açıksa Pulse, kapalıysa Konsol yönetir; ikisi birbiriyle savaşmaz. Konsol kurulu değilse hiçbir şey yapmaz." />
                         <TextBlock Style="{StaticResource PulseMuted}" Text="{Binding KonsolText}" FontWeight="Medium" Margin="0,4,0,0" />
                     </StackPanel>
                     <ui:ToggleSwitch Grid.Column="1" IsChecked="{Binding LinkWithKonsol}" VerticalAlignment="Center" />
