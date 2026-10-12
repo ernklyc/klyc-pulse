@@ -64,9 +64,9 @@ Projeyi beğendiysen: [☕ Bir kahve ısmarla](https://buymeacoffee.com/13tpsxlc
 
 | Dosya | Boyut | Ne zaman |
 |---|---|---|
-| `KLYC-Pulse-Setup-v1.9.3.exe` | ~80 MB | **Önerilen.** Çift tıkla kur: Başlat menüsü ve masaüstü kısayolu, "Uygulamalar"dan kaldırma. Hiçbir şey ayrıca kurmak gerekmez, yönetici izni istemez |
-| `KLYC-Pulse-v1.9.3-win-x64.zip` | ~11 MB (zip) | [.NET 8 Masaüstü Çalışma Zamanı](https://dotnet.microsoft.com/download/dotnet/8.0) kuruluysa |
-| `KLYC-Pulse-v1.9.3-win-x64-self-contained.zip` | ~68 MB (zip) | Hiçbir şey kurmak istemiyorsanız (her şey içinde) |
+| `KLYC-Pulse-Setup-v1.10.0.exe` | ~80 MB | **Önerilen.** Çift tıkla kur: Başlat menüsü ve masaüstü kısayolu, "Uygulamalar"dan kaldırma. Hiçbir şey ayrıca kurmak gerekmez, yönetici izni istemez |
+| `KLYC-Pulse-v1.10.0-win-x64.zip` | ~11 MB (zip) | [.NET 8 Masaüstü Çalışma Zamanı](https://dotnet.microsoft.com/download/dotnet/8.0) kuruluysa |
+| `KLYC-Pulse-v1.10.0-win-x64-self-contained.zip` | ~68 MB (zip) | Hiçbir şey kurmak istemiyorsanız (her şey içinde) |
 
 **Kurulum dosyasıyla:** çalıştırın, bitince Başlat menüsünden "KLYC-Pulse"u açın (uygulama kendisi yönetici izni ister). Kaldırırsanız ayarlarınız ve geçmişiniz (`%LOCALAPPDATA%\Pulse`) silinmez; yeniden kurunca kaldığınız yerden devam edersiniz. Silmek isterseniz o klasörü elle silin.
 
@@ -80,7 +80,7 @@ Projeyi beğendiysen: [☕ Bir kahve ısmarla](https://buymeacoffee.com/13tpsxlc
 
 ```powershell
 # özet kontrolü
-Get-FileHash .\KLYC-Pulse-v1.9.3-win-x64.zip -Algorithm SHA256
+Get-FileHash .\KLYC-Pulse-v1.10.0-win-x64.zip -Algorithm SHA256
 ```
 
 ## İlk kullanım

@@ -2,7 +2,7 @@
 
 Biçim [Keep a Changelog](https://keepachangelog.com/tr/) esaslıdır; sürümleme [SemVer](https://semver.org/lang/tr/).
 
-## [Yayınlanmamış]
+## [1.10.0] — 2026-10-12
 
 ### Eklenenler
 - **KLYC Konsol ile birlikte çalışma** (kardeş proje, isteğe bağlı): Konsol kuruluysa Pulse onun `status.json` dosyasını (şema 1 ve 2) olay tabanlı izler, yoklama yapmaz.
