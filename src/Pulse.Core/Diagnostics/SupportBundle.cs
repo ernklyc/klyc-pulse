@@ -41,7 +41,7 @@ public static class SupportBundle
     {
         $"AutoGameMode={s.AutoGameMode}", $"AutoTuneGames={s.AutoTuneGames}", $"CoolingFirst={s.CoolingFirst}", $"AutoQuietOnBattery={s.AutoQuietOnBattery}",
         $"CloseConflictingApps={s.CloseConflictingApps}", $"AutoClean={s.AutoClean}", $"ThermalGuard={s.ThermalGuard}", $"KeepMode={s.KeepMode}",
-        $"Hotkeys={s.Hotkeys}", $"LinkWithKonsol={s.LinkWithKonsol}", $"HeatTarget={s.HeatTarget?.ToString() ?? "kapalı"}", $"Language={s.Language}",
+        $"Hotkeys={s.Hotkeys}", $"LinkWithKonsol={s.LinkWithKonsol}", $"AllowKonsolCommands={s.AllowKonsolCommands}", $"HeatTarget={s.HeatTarget?.ToString() ?? "kapalı"}", $"Language={s.Language}",
         $"CheckUpdates={s.CheckUpdates}", $"GameProfiles={s.GameProfiles.Count}",
     });
 

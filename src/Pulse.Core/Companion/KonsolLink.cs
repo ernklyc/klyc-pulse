@@ -8,7 +8,7 @@ namespace Pulse.Core.Companion;
 public sealed record KonsolGameInfo(string? Id, string Title, string? Store, string? InstallDir, string? Target, long? StartedAt);
 
 /// <summary>KLYC Konsol'un durumu (`%AppData%\KLYC-Konsol\status.json`). Eksik alan = null; bilinmeyen alanlar yok sayılır.</summary>
-public sealed record KonsolStatus(int Schema, string State, long UpdatedAt, string? Version, int? Pid, KonsolGameInfo? Game, string? PowerPlanManagedBy)
+public sealed record KonsolStatus(int Schema, string State, long UpdatedAt, string? Version, int? Pid, KonsolGameInfo? Game, string? PowerPlanManagedBy, bool WantsLive = false)
 {
     /// <summary>Konsol bir oyunu başlatıyor ya da oyun sürüyor (bu sırada Konsol kapalı olabilir; durum "son bilinen"dir).</summary>
     public bool InGame => State is "launching" or "playing";
@@ -30,7 +30,14 @@ public sealed record PulseFeedReport(string Game, long StartedAt, double Minutes
 
 public sealed record PulseFeedMode(string? Key, bool Applying);
 
-public sealed record PulseFeed(int Schema, long UpdatedAt, string PulseVersion, bool Running, PulseFeedMode Mode, bool AutoGameMode, bool AcceptsCommands, PulseFeedReport? LastReport);
+/// <summary>Konsol üst çubuğundaki chip için canlı değerler (yalnızca Konsol `wantsLive` isterse ve açıkken doldurulur).</summary>
+public sealed record PulseFeedLive(double? CpuTemp, double? GpuTemp, double? CpuLoad, double? GpuLoad, long At);
+
+/// <summary>Konsol'da gösterilecek mod listesi (yalnızca komutlar kabul ediliyorsa).</summary>
+public sealed record PulseFeedModeInfo(string Key, string Title);
+
+public sealed record PulseFeed(int Schema, long UpdatedAt, string PulseVersion, bool Running, PulseFeedMode Mode, bool AutoGameMode, bool AcceptsCommands, PulseFeedReport? LastReport,
+    string? ModeTitle = null, List<PulseFeedModeInfo>? Modes = null, PulseFeedLive? Live = null, PulseFeedCommand? LastCommand = null);
 
 /// <summary>
 /// KLYC Konsol ile dosya tabanlı haberleşme: saf mantık (okuma, yazma, yollar). Dosyalar kullanıcı profilindedir, yoklama yoktur.
@@ -110,7 +117,8 @@ public static class KonsolLink
                     game = new KonsolGameInfo(Str(root, "gameId"), g.GetString()!, null, null, null, Long(root, "since"));
                 }
             }
-            return new KonsolStatus(schema, state!, updated, Str(root, "version"), Int(root, "pid"), game, Str(root, "powerPlanManagedBy"));
+            var wantsLive = root.TryGetProperty("wantsLive", out var wl) && wl.ValueKind == JsonValueKind.True;
+            return new KonsolStatus(schema, state!, updated, Str(root, "version"), Int(root, "pid"), game, Str(root, "powerPlanManagedBy"), wantsLive);
         }
         catch (JsonException) { return null; }
     }
@@ -141,8 +149,12 @@ public static class KonsolLink
         r.Game, new DateTimeOffset(r.Start.ToUniversalTime()).ToUnixTimeSeconds(), Math.Round(r.Minutes, 1), r.AvgFps is { } f ? Math.Round(f) : null,
         r.CpuTempMax is { } c ? Math.Round(c) : null, r.GpuTempMax, r.Bottleneck, r.Severity, r.Findings.Take(3).ToList());
 
-    public static PulseFeed BuildFeed(string pulseVersion, bool running, string? modeKey, bool applying, bool autoGameMode, GameSessionReport? last, long? now = null) =>
-        new(FeedSchema, now ?? UnixNow(), pulseVersion, running, new PulseFeedMode(modeKey, applying), autoGameMode, AcceptsCommands: false, ToFeedReport(last));
+    public static PulseFeed BuildFeed(string pulseVersion, bool running, string? modeKey, bool applying, bool autoGameMode, GameSessionReport? last, long? now = null,
+        bool acceptsCommands = false, PulseFeedLive? live = null, PulseFeedCommand? lastCommand = null) =>
+        new(FeedSchema, now ?? UnixNow(), pulseVersion, running, new PulseFeedMode(modeKey, applying), autoGameMode, acceptsCommands, ToFeedReport(last),
+            modeKey is null ? null : Pulse.Core.Modes.Modes.Get(modeKey) is { } d ? Pulse.Core.Localization.Loc.T(d.Title) : modeKey,
+            acceptsCommands ? Pulse.Core.Modes.Modes.All.Select(m => new PulseFeedModeInfo(m.Key, Pulse.Core.Localization.Loc.T(m.Title))).ToList() : null,
+            live, lastCommand);
 
     private static readonly JsonSerializerOptions FeedJson = new() { PropertyNamingPolicy = JsonNamingPolicy.CamelCase, WriteIndented = true };
 

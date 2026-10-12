@@ -65,7 +65,17 @@ public sealed class GpuLoad : IDisposable
         try { if (_proc is { HasExited: false }) { _proc.CloseMainWindow(); Thread.Sleep(1500); } } catch { }
         foreach (var p in FindEdgeProcesses()) { try { p.Kill(); } catch { } }
         if (_addedPref) RemoveEdgeGpuPreference(_edge);
-        try { Directory.Delete(_temp, true); } catch { }
+        // Edge'in yardımcı süreçleri (GPU, kilitli profil dosyaları) birkaç yüz ms içinde kapanır: klasör silinene kadar yeniden dene
+        for (var i = 0; i < 20; i++)
+        {
+            try { Directory.Delete(_temp, true); break; }
+            catch (DirectoryNotFoundException) { break; }
+            catch
+            {
+                Thread.Sleep(300);
+                foreach (var p in FindEdgeProcesses()) { try { p.Kill(); } catch { } }
+            }
+        }
         _proc = null;
     }
 

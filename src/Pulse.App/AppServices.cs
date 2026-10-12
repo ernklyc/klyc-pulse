@@ -35,7 +35,7 @@ public static class AppServices
     private static ModeKeeperService? _keeper;
     public static ModeKeeperService Keeper => _keeper ??= new ModeKeeperService();
     public static CompanionService Companion { get; } = new(Settings);
-    public static KonsolLinkService Konsol { get; } = new(Settings, Auto, Modes, GameReport, () => Keeper.Pause());
+    public static KonsolLinkService Konsol { get; } = new(Settings, Auto, Modes, GameReport, () => Keeper.Pause(), () => Sensors);
 
     private static HotkeyService? _hotkeys;
 

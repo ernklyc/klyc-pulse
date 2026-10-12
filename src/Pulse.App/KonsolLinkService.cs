@@ -4,6 +4,8 @@ using Pulse.Core.Companion;
 using Pulse.Core.Diagnostics;
 using Pulse.Core.Localization;
 using Pulse.Core.Modes;
+using Pulse.Core.Monitoring;
+using Pulse.Core.Optimize;
 using Pulse.Core.Settings;
 
 namespace Pulse.App;
@@ -32,15 +34,29 @@ public sealed class KonsolLinkService : IDisposable
     private readonly object _lock = new();
     private readonly string _version = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version?.ToString(3) ?? "?";
 
-    private FileSystemWatcher? _watcher;
-    private Timer? _debounce, _heartbeat, _dirProbe, _holdExpire;
+    private FileSystemWatcher? _watcher, _cmdWatcher;
+    private Timer? _debounce, _heartbeat, _dirProbe, _holdExpire, _cmdDebounce;
     private KonsolStatus? _status;
     private IDisposable? _hold;
     private bool _started, _konsolSeen;
+    private readonly Func<SensorService>? _sensors;
+    private IDisposable? _sensorSub;
+    private readonly KonsolCommandRunner _commands;
+    private PulseFeedCommand? _lastCommand;
 
-    public KonsolLinkService(SettingsStore settings, AutoModeService auto, ModeController modes, GameReportService report, Func<IDisposable> holdKeeper)
+    public KonsolLinkService(SettingsStore settings, AutoModeService auto, ModeController modes, GameReportService report, Func<IDisposable> holdKeeper, Func<SensorService>? sensors = null)
     {
-        _settings = settings; _auto = auto; _modes = modes; _report = report; _holdKeeper = holdKeeper;
+        _settings = settings; _auto = auto; _modes = modes; _report = report; _holdKeeper = holdKeeper; _sensors = sensors;
+        _commands = new KonsolCommandRunner(modes, BoostAsync,
+            allowed: () => _settings.Current.LinkWithKonsol && _settings.Current.AllowKonsolCommands,
+            konsolOpen: () => { KonsolStatus? st; lock (_lock) st = _status; return st is { IsOpen: true } && KonsolLink.IsProcessAlive(st.Pid, KonsolProcessName); });
+    }
+
+    /// <summary>Konsol'dan gelen "Hızlandır": arayüzdeki ile aynı işlem (onay penceresi yok; kullanıcı Konsol'da bilerek seçti).</summary>
+    private async Task<string> BoostAsync()
+    {
+        var r = await new Optimizer(_modes).RunAsync();
+        return Loc.F("Hızlandır tamam: {0} temizlendi, {1} bellek rahatladı.", Optimizer.Format(r.CleanedBytes), Optimizer.Format(Math.Max(0, r.RamGained)));
     }
 
     /// <summary>Ayarlar sayfasındaki durum satırı.</summary>
@@ -81,7 +97,7 @@ public sealed class KonsolLinkService : IDisposable
     /// <summary>Ayar değişince çağrılır: açıksa dosyayı yeniden okur, kapalıysa ipuçlarını bırakır.</summary>
     public void OnSettingChanged()
     {
-        if (_settings.Current.LinkWithKonsol) Attach();
+        if (_settings.Current.LinkWithKonsol) { Attach(); WriteFeed(duringGame: false); }   // komut kabul bilgisi (AllowKonsolCommands) hemen Konsol'a yazılsın
         else
         {
             lock (_lock)
@@ -120,7 +136,38 @@ public sealed class KonsolLinkService : IDisposable
             }
             catch (Exception ex) { Journal.Write("Konsol dosya izleyici kurulamadı: " + ex.Message); }
         }
+        if (_cmdWatcher is null)
+        {
+            try
+            {
+                _cmdWatcher = new FileSystemWatcher(dir, Path.GetFileName(KonsolCommands.CommandPath)) { NotifyFilter = NotifyFilters.LastWrite | NotifyFilters.FileName | NotifyFilters.Size, EnableRaisingEvents = true };
+                _cmdWatcher.Created += (_, _) => ScheduleCommand();
+                _cmdWatcher.Changed += (_, _) => ScheduleCommand();
+                _cmdWatcher.Renamed += (_, _) => ScheduleCommand();
+            }
+            catch (Exception ex) { Journal.Write("Konsol komut izleyicisi kurulamadı: " + ex.Message); }
+        }
         Schedule();
+    }
+
+    /// <summary>Komut dosyası yazımı bitsin diye kısa bekle; sonra komutu işle (ayar kapalıysa komut reddedilir ve Konsol'a nedeni bildirilir).</summary>
+    private void ScheduleCommand()
+    {
+        lock (_lock) { (_cmdDebounce ??= new Timer(_ => _ = RunCommandAsync())).Change(TimeSpan.FromMilliseconds(150), Timeout.InfiniteTimeSpan); }
+    }
+
+    private async Task RunCommandAsync()
+    {
+        try
+        {
+            if (!_settings.Current.LinkWithKonsol) { try { File.Delete(KonsolCommands.CommandPath); } catch { } return; }
+            var result = await _commands.ProcessAsync();
+            if (result is null) return;
+            lock (_lock) _lastCommand = result;
+            WriteFeed(duringGame: false);   // sonuç Konsol'a hemen ulaşsın
+            Changed?.Invoke();
+        }
+        catch (Exception ex) { Journal.Write("Konsol komutu işlenemedi: " + ex.Message); }
     }
 
     /// <summary>Yazım bitsin diye kısa bekleyip (art arda olayları birleştirerek) oku.</summary>
@@ -199,9 +246,30 @@ public sealed class KonsolLinkService : IDisposable
 
     // ---- Özet yazma ----------------------------------------------------------
 
-    private void StartHeartbeat() => _heartbeat ??= new Timer(_ => Beat(), null, Heartbeat, Heartbeat);
+    private void StartHeartbeat() { _heartbeat ??= new Timer(_ => Beat(), null, Heartbeat, Heartbeat); SyncLive(); }
 
-    private void StopHeartbeat() { _heartbeat?.Dispose(); _heartbeat = null; }
+    private void StopHeartbeat() { _heartbeat?.Dispose(); _heartbeat = null; SyncLive(); }
+
+    /// <summary>Canlı değerler (ısı/yük) yalnızca Konsol açıkken ve Konsol isterken (`wantsLive`) okunur; aksi halde sensör aboneliği yoktur (sıfır yük).</summary>
+    private void SyncLive()
+    {
+        bool want;
+        lock (_lock) want = _heartbeat is not null && _sensors is not null && _settings.Current.LinkWithKonsol && _status is { WantsLive: true, IsOpen: true };
+        if (want && _sensorSub is null) { try { _sensorSub = _sensors!().Subscribe(wantFps: false); } catch (Exception ex) { Journal.Write("Konsol için sensör açılamadı: " + ex.Message); } }
+        else if (!want && _sensorSub is not null) { try { _sensorSub.Dispose(); } catch { } _sensorSub = null; }
+    }
+
+    private PulseFeedLive? Live()
+    {
+        try
+        {
+            if (_sensorSub is null || _sensors is null) return null;
+            var s = _sensors().Latest;
+            if (s is null || DateTime.Now - s.Time > TimeSpan.FromSeconds(15)) return null;
+            return new PulseFeedLive(s.CpuTempC, s.Gpu?.TempC, s.CpuPercent, s.Gpu?.UtilPercent ?? s.GpuEnginePercent, KonsolLink.UnixNow());
+        }
+        catch { return null; }
+    }
 
     private void Beat()
     {
@@ -211,8 +279,14 @@ public sealed class KonsolLinkService : IDisposable
         KonsolLink.WriteFeed(Feed(running: true));
     }
 
-    private PulseFeed Feed(bool running) =>
-        KonsolLink.BuildFeed(_version, running, _modes.CurrentKey, _modes.IsBusy, _settings.Current.AutoGameMode, _report.Last ?? LastStoredReport());
+    private PulseFeed Feed(bool running)
+    {
+        PulseFeedCommand? cmd; lock (_lock) cmd = _lastCommand;
+        if (cmd is not null && KonsolLink.UnixNow() - cmd.At > 600) cmd = null;   // eski sonuç Konsol'da tekrar tekrar görünmesin
+        var accepts = _settings.Current.LinkWithKonsol && _settings.Current.AllowKonsolCommands;
+        return KonsolLink.BuildFeed(_version, running, _modes.CurrentKey, _modes.IsBusy, _settings.Current.AutoGameMode, _report.Last ?? LastStoredReport(),
+            acceptsCommands: accepts, live: running ? Live() : null, lastCommand: cmd);
+    }
 
     private static GameSessionReport? LastStoredReport()
     {
@@ -244,6 +318,8 @@ public sealed class KonsolLinkService : IDisposable
             ReleaseHold(); StopHeartbeat();
             _debounce?.Dispose(); _dirProbe?.Dispose();
             _watcher?.Dispose(); _watcher = null;
+            _cmdWatcher?.Dispose(); _cmdWatcher = null; _cmdDebounce?.Dispose();
+            try { _sensorSub?.Dispose(); } catch { } _sensorSub = null;
         }
         try { if (_konsolSeen && _settings.Current.LinkWithKonsol) KonsolLink.WriteFeed(Feed(running: false)); } catch { }
     }

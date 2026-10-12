@@ -176,6 +176,12 @@ public partial class SettingsViewModel : ObservableObject, IDisposable
         if (!_loading) AppServices.Konsol.OnSettingChanged();
         KonsolText = AppServices.Konsol.StatusText;
     }
+    [ObservableProperty] private bool _allowKonsolCommands = AppServices.Settings.Current.AllowKonsolCommands;
+    partial void OnAllowKonsolCommandsChanged(bool value)
+    {
+        Save(s => s.AllowKonsolCommands = value);
+        if (!_loading) AppServices.Konsol.OnSettingChanged();   // Konsol'a "komut kabul ediyorum" bilgisi hemen yazılsın
+    }
     [ObservableProperty] private bool _thermalGuard = AppServices.Settings.Current.ThermalGuard;
     public ObservableCollection<ChoiceVm> HeatChoices { get; } = new();
     [ObservableProperty] private string _heatText = "";

@@ -2,6 +2,20 @@
 
 Biçim [Keep a Changelog](https://keepachangelog.com/tr/) esaslıdır; sürümleme [SemVer](https://semver.org/lang/tr/).
 
+## [1.11.0] — 2026-10-12
+
+### Eklenenler
+- **Konsol'dan mod değiştirme ve Hızlandır (Pulse ↔ Konsol "Birlikte"):** Ayarlar → "Konsol'dan mod değiştirmeye izin ver" (varsayılan **KAPALI**). Açıkken KLYC Konsol'un Ayarlar → PULSE satırlarından Oyun/Günlük/Sessiz/Boşta modu seçilir ve Hızlandır çalıştırılır; sonuç Konsol'da bildirilir. Kanal bilerek dardır (yalnızca bu iki eylem; program çalıştıran hiçbir komut yoktur) ve her komut sahip, boyut, bağlantı noktası, yaş (20 sn), kimlik tekrarı, hız sınırı ve izin listesi denetiminden geçer; ayrıntı: `docs/MIMARI.md`. Test: `konsol-cmd-test` (46 denetim; junction ve yabancı sahip dahil), CI'da.
+- **Konsol üst çubuğu için canlı değerler:** Konsol isterse (ve yalnızca Konsol ekrandayken) özete işlemci/ekran kartı ısısı ve yükü yazılır; Konsol gizlenince ya da oyun başlayınca sensör aboneliği bırakılır.
+- **Sorun bildir:** Ayarlar'dan tek tuşla kişisel veri içermeyen tanı paketi (günlük, ayar bayrakları, sürüm; kullanıcı adı/bilgisayar adı/yol temizlenir) masaüstüne yazılır; kendiliğinden hiçbir yere gönderilmez.
+- **Araçlar → KLYC Konsol kartı:** Konsol kuruluysa durumu, "Pulse ile birlikte başlat" ve Konsol'u aç; kurulu değilse indirme bağlantısı.
+- **Haftalık özet** (Sağlık → "Bu hafta": oyun süresi, ortalama FPS, en sıcak oyun, yapılan temizlik), **açılış süresi analizi** (Uygulamalar → hangi başlangıç öğesi açılışı ne kadar uzatıyor), **oyun başına FPS sınırı önerisi** (Oyunlar).
+- **Disk sağlığı nedenleri:** "Dikkat/Sorun" denildiğinde SMART'taki hangi değerin neden uyardığı yazılır. Açılış öğesi kapatma artık geri okunarak doğrulanır; korunan öğeler için neden gösterilir. Kaldırma/güncelleme uyarıları iyileştirildi.
+- **Isı denemesi:** tam deneme (sınırsız, 3200 ve 2700 MHz sınırı, işlemci + ekran kartı) uçtan uca doğrulandı: hız sınırı gerçekten uygulanıyor, ayarlar eski haline dönüyor; metinler çevrildi, eski oyun raporlarının metni dile göre yeniden çevrilir.
+
+### Düzeltilenler
+- Isı denemesi sonunda Edge'in yardımcı süreçleri profil klasörünü kilitli tutarsa geçici yük klasörü (`pulse-gputune`) geride kalabiliyordu: silinene kadar yeniden denenir (gerçek denemede doğrulandı).
+
 ## [1.10.1] — 2026-10-12
 
 ### Düzeltilenler

@@ -203,6 +203,131 @@ if (cmd == "diskscan-test")
     return fails == 0 ? 0 : 1;
 }
 
+if (cmd == "konsol-cmd-test")
+{
+    // Konsol → Pulse komut kanalı: doğrulama, dosya güvenliği, yürütme (sahte mod anahtarı; donanıma ve gerçek ayara dokunmaz).
+    var fails = 0;
+    void Check(bool ok, string what) { Console.WriteLine($"  [{(ok ? "GEÇTİ" : "KALDI")}] {what}"); if (!ok) fails++; }
+    var root = Path.Combine(Path.GetTempPath(), "pulse-cmd-test-" + Guid.NewGuid().ToString("N")[..6]);
+    var konsolDir = Path.Combine(root, "konsol"); Directory.CreateDirectory(konsolDir);
+    Environment.SetEnvironmentVariable("KLYC_KONSOL_DIR", konsolDir);
+    Environment.SetEnvironmentVariable("KLYC_PULSE_DIR", Path.Combine(root, "pulse"));
+    long now = 1800000000;
+    string Cmd(string id = "abcdef12-0001", string action = "mode", string? mode = "oyun", long? at = null, int schema = 1) =>
+        KonsolCommands.Serialize(new KonsolCommand(id, action, mode, at ?? now)).Replace("\"schema\":1", $"\"schema\":{schema}");
+    try
+    {
+        // ---- Doğrulama (izin listesi) ----
+        Check(KonsolCommands.CommandPath == Path.Combine(konsolDir, "pulse-command.json"), "Komut dosyası yolu ortam değişkenine uyar");
+        Check(KonsolCommands.Parse(Cmd(), now).Command is { Action: "mode", Mode: "oyun", Id: "abcdef12-0001" }, "Geçerli mod komutu kabul edilir");
+        Check(KonsolCommands.Parse(Cmd(action: "boost", mode: null), now).Command is { Action: "boost", Mode: null }, "Geçerli Hızlandır komutu kabul edilir");
+        Check(Pulse.Core.Modes.Modes.All.All(m => KonsolCommands.Parse(Cmd(id: "ok-" + m.Key + "-12345", mode: m.Key), now).Ok), "Pulse'ın tüm modları (oyun, günlük, sessiz, boşta) kabul edilir");
+        Check(KonsolCommands.Parse(Cmd(action: "Mode", mode: "OYUN"), now).Ok, "Büyük/küçük harf fark etmez");
+        foreach (var (name, json, why) in new (string, string, string)[]
+        {
+            ("bozuk JSON", "{yarım", "json"), ("boş", "", "boyut"), ("dizi", "[1]", "biçim"),
+            ("bilinmeyen eylem (kapat)", Cmd(action: "shutdown", mode: null), "eylem"), ("bilinmeyen eylem (çalıştır)", Cmd(action: "exec", mode: null), "eylem"), ("eylem yok", "{\"schema\":1,\"id\":\"abcdef12-0002\",\"at\":1800000000}", "eylem"),
+            ("bilinmeyen mod", Cmd(mode: "turbo"), "mod"), ("mod yok", Cmd(mode: null), "mod"), ("yol benzeri mod", Cmd(mode: "..\\oyun"), "mod"),
+            ("kısa kimlik", Cmd(id: "abc"), "kimlik"), ("kimlikte tehlikeli karakter", Cmd(id: "abcdef12;calc"), "kimlik"), ("çok uzun kimlik", Cmd(id: new string('a', 80)), "kimlik"),
+            ("yanlış şema", Cmd(schema: 7), "şema"), ("çok eski", Cmd(at: now - 120), "yaş"), ("gelecekten", Cmd(at: now + 60), "yaş"), ("zaman yok", "{\"schema\":1,\"id\":\"abcdef12-0003\",\"action\":\"boost\"}", "yaş"),
+            ("çok büyük", Cmd() + new string(' ', 2000), "boyut"),
+        })
+        {
+            var c = KonsolCommands.Parse(json, now);
+            Check(!c.Ok && c.Rejected == why, $"Reddedilir: {name} → {c.Rejected}");
+        }
+        Check(KonsolCommands.Parse(Cmd(id: "tekrar-0001"), now, new[] { "tekrar-0001" }).Rejected == "tekrar", "Aynı kimlik ikinci kez reddedilir (tekrar saldırısı)");
+        Check(KonsolCommands.Parse(Cmd(at: now - 19), now).Ok && KonsolCommands.Parse(Cmd(at: now + 3), now).Ok, "Yaş sınırı içinde (20 sn) ve küçük saat farkı kabul edilir");
+
+        // ---- Dosya güvenliği ----
+        var path = KonsolCommands.CommandPath;
+        Check(KonsolCommands.CheckFile(path) == "yok", "Dosya yoksa 'yok'");
+        File.WriteAllText(path, Cmd());
+        Check(KonsolCommands.CheckFile(path) is null, "Bu kullanıcının oluşturduğu küçük dosya güvenilir");
+        File.WriteAllText(path, new string('x', 5000));
+        Check(KonsolCommands.CheckFile(path) == "boyut", "Çok büyük dosya reddedilir");
+        File.Delete(path);
+        // Klasör bağlantısı (junction): komut dosyası başka bir yere yönlendirilmiş klasörde ise reddedilir
+        var real = Path.Combine(root, "gercek"); Directory.CreateDirectory(real);
+        var junction = Path.Combine(root, "baglanti");
+        var mk = System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo("cmd.exe", $"/c mklink /J \"{junction}\" \"{real}\"") { CreateNoWindow = true, UseShellExecute = false, RedirectStandardOutput = true });
+        mk!.WaitForExit();
+        if (Directory.Exists(junction))
+        {
+            File.WriteAllText(Path.Combine(real, "pulse-command.json"), Cmd());
+            Check(KonsolCommands.CheckFile(Path.Combine(junction, "pulse-command.json")) == "klasör bağlantı noktası", "Bağlantı (junction) üzerinden gelen dosya reddedilir");
+        }
+        else Check(true, "(junction oluşturulamadı: bu ortamda atlandı)");
+        Check(!KonsolCommands.IsTrustedOwner(null) && !KonsolCommands.IsTrustedOwner(new System.Security.Principal.SecurityIdentifier("S-1-5-21-1-2-3-1001")) && KonsolCommands.IsTrustedOwner(new System.Security.Principal.SecurityIdentifier(System.Security.Principal.WellKnownSidType.BuiltinAdministratorsSid, null)) && KonsolCommands.IsTrustedOwner(System.Security.Principal.WindowsIdentity.GetCurrent().User), "Sahip denetimi: ben/Yöneticiler/SYSTEM güvenilir, yabancı kullanıcı değil");
+
+        // ---- Yürütme (sahte mod anahtarı) ----
+        var sw = new FakeSwitch("gunluk");
+        var allowed = true; var open = true; var boosts = 0;
+        var runner = new KonsolCommandRunner(sw, () => { boosts++; return Task.FromResult("Hızlandır tamam: 12 MB temizlendi."); }, () => allowed, () => open);
+        File.WriteAllText(path, Cmd(id: "run-mode-0001"));
+        var r1 = await runner.ProcessAsync(path, now);
+        Check(r1 is { Ok: true, Id: "run-mode-0001", Action: "mode" } && sw.Calls.SequenceEqual(new[] { "oyun" }), $"Mod komutu uygulanır ve sonuç döner: {r1?.Message}");
+        Check(!File.Exists(path), "Komut dosyası işlenince silinir");
+        await Task.Delay(2100);
+        File.WriteAllText(path, Cmd(id: "run-boost-0001", action: "boost", mode: null));
+        var r2 = await runner.ProcessAsync(path, now);
+        Check(r2 is { Ok: true, Action: "boost" } && boosts == 1 && r2.Message.Contains("Hızlandır"), $"Hızlandır komutu çalışır: {r2?.Message}");
+        File.WriteAllText(path, Cmd(id: "run-fast-0001", mode: "sessiz"));
+        var r4 = await runner.ProcessAsync(path, now);   // Hızlandır'ın hemen ardından
+        Check(r4 is { Ok: false } && sw.Calls.Count == 1, $"Çok sık komut hız sınırına takılır: {r4?.Message}");
+        await Task.Delay(2100);
+        File.WriteAllText(path, Cmd(id: "run-mode-0001"));
+        var r3 = await runner.ProcessAsync(path, now);
+        Check(r3 is { Ok: false } && sw.Calls.Count == 1, "Aynı kimlikli komut tekrar yürütülmez");
+        allowed = false;
+        File.WriteAllText(path, Cmd(id: "run-off-0001", mode: "sessiz"));
+        var r5 = await runner.ProcessAsync(path, now);
+        Check(r5 is { Ok: false } && sw.Calls.Count == 1 && !File.Exists(path), $"Ayar kapalıyken komut yürütülmez, dosya silinir, neden bildirilir: {r5?.Message}");
+        allowed = true; open = false;
+        await Task.Delay(2100);
+        File.WriteAllText(path, Cmd(id: "run-noko-0001", mode: "sessiz"));
+        var r6 = await runner.ProcessAsync(path, now);
+        Check(r6 is { Ok: false } && sw.Calls.Count == 1, $"Konsol açık değilken yürütülmez: {r6?.Message}");
+        open = true;
+        await Task.Delay(2100);
+        File.WriteAllText(path, Cmd(id: "run-old-00001", at: now - 300));
+        var r7 = await runner.ProcessAsync(path, now);
+        Check(r7 is { Ok: false } && sw.Calls.Count == 1, "Eski komut yürütülmez");
+        File.WriteAllText(path, "{\"schema\":1,\"id\":\"zzzzzzzz-1\",\"action\":\"mode\",\"mode\":\"oyun\",\"at\":1800000000,\"komut\":\"calc.exe\"}");
+        await Task.Delay(2100);
+        var r8 = await runner.ProcessAsync(path, now);
+        Check(r8 is { Ok: true } && sw.Calls.Count == 2, "Bilinmeyen ek alanlar yok sayılır (hiçbir şey çalıştırılmaz)");
+        Check(await runner.ProcessAsync(path, now) is null, "Dosya yoksa hiçbir şey olmaz");
+
+        // Mod uygulanamazsa (meşgul) dürüst hata
+        var busy = new BusySwitch();
+        var runner2 = new KonsolCommandRunner(busy, () => Task.FromResult(""), () => true, () => true);
+        File.WriteAllText(path, Cmd(id: "run-busy-0001"));
+        var r9 = await runner2.ProcessAsync(path, now);
+        Check(r9 is { Ok: false }, $"Mod uygulanamazsa Konsol'a başarısızlık bildirilir: {r9?.Message}");
+
+        // ---- Özet (feed): komutlar kapalı/açık, mod listesi, canlı değerler, son komut ----
+        var off = KonsolLink.BuildFeed("1.11.0", true, "oyun", false, true, null, now: now);
+        Check(!off.AcceptsCommands && off.Modes is null && off.ModeTitle == "Oyun" && off.Live is null && off.LastCommand is null, "Varsayılan özet: komut kabul etmiyor, mod listesi yok, mod adı var");
+        var on = KonsolLink.BuildFeed("1.11.0", true, "sessiz", false, true, null, now: now, acceptsCommands: true,
+            live: new PulseFeedLive(61.5, 55, 12, 3, now), lastCommand: new PulseFeedCommand("x1", "mode", true, "Sessiz modu uygulandı.", now));
+        var onJson = KonsolLink.Serialize(on);
+        using (var d = System.Text.Json.JsonDocument.Parse(onJson))
+        {
+            var e = d.RootElement;
+            Check(e.GetProperty("acceptsCommands").GetBoolean() && e.GetProperty("modes").GetArrayLength() == Pulse.Core.Modes.Modes.All.Count && e.GetProperty("modes")[0].GetProperty("key").GetString() == "oyun", "Komut açıkken mod listesi (anahtar+ad) yazılır");
+            Check(e.GetProperty("live").GetProperty("cpuTemp").GetDouble() == 61.5 && e.GetProperty("live").GetProperty("gpuTemp").GetDouble() == 55, "Canlı ısı değerleri yazılır");
+            Check(e.GetProperty("lastCommand").GetProperty("id").GetString() == "x1" && e.GetProperty("lastCommand").GetProperty("ok").GetBoolean() && e.GetProperty("modeTitle").GetString() == "Sessiz", "Son komut sonucu ve mod adı yazılır");
+        }
+        var wl = KonsolLink.ParseStatus("{\"schema\":2,\"updatedAt\":5,\"state\":\"launcher\",\"wantsLive\":true}");
+        Check(wl is { WantsLive: true } && KonsolLink.ParseStatus("{\"schema\":2,\"updatedAt\":5,\"state\":\"launcher\"}") is { WantsLive: false }, "Konsol'un 'canlı değer istiyorum' bayrağı okunur (yoksa kapalı)");
+        Check(new Pulse.Core.Settings.AppSettings().AllowKonsolCommands == false, "Komut kanalı varsayılan KAPALI");
+    }
+    finally { try { Directory.Delete(root, true); } catch { } Environment.SetEnvironmentVariable("KLYC_KONSOL_DIR", null); Environment.SetEnvironmentVariable("KLYC_PULSE_DIR", null); }
+    Console.WriteLine(fails == 0 ? "KONSOL KOMUT KANALI TESTİ GEÇTİ" : $"{fails} TEST KALDI");
+    return fails == 0 ? 0 : 1;
+}
+
 if (cmd == "konsol-link-test")
 {
     // KLYC Konsol bağlantısı: dosya okuma/yazma ve oyun ipuçları. Gerçek ayara, donanıma ya da kullanıcı verisine dokunmaz.
@@ -625,6 +750,43 @@ if (cmd == "weekly-test")
     Check(WeeklyReport.Describe(WeeklyReport.Build([], now)).Contains("yok"), "Hiç kayıt yoksa bunu söyler");
     Check(!WeeklyReport.Describe(WeeklyReport.Build([R("X", 1, 10, null, null, 0)], now)).Contains("FPS"), "Ölçülmeyen değer yazılmaz (FPS yok)");
     Console.WriteLine(fails == 0 ? "HAFTALIK ÖZET TESTİ GEÇTİ" : $"{fails} TEST KALDI");
+    return fails == 0 ? 0 : 1;
+}
+
+if (cmd == "heatbench-full")
+{
+    // Gerçek bilgisayarda TAM ısı denemesi (uygulamanın "Isı Denemesi" ile aynı plan, ~9 dk): işlemci tam yüklenir, ekran kartı için Edge'de WebGL penceresi açılır.
+    // Yönetici değilse sıcaklık okunamaz (hız yine ölçülür). Sonunda tüm güç ayarlarının ve geçici dosyaların eski haline döndüğü doğrulanır.
+    var fails = 0;
+    void Check(bool ok, string what) { Console.WriteLine($"  [{(ok ? "GEÇTİ" : "KALDI")}] {what}"); if (!ok) fails++; }
+    var scheme = Pulse.Core.Platform.Powercfg.ActiveScheme()!;
+    int? Q(string k) => Pulse.Core.Platform.Powercfg.GetAc(scheme, Pulse.Core.Platform.Powercfg.SubProcessor, k);
+    int?[] Snap() => [Q(Pulse.Core.Platform.Powercfg.BoostMode), Q(Pulse.Core.Platform.Powercfg.MaxProcessorState), Q(Pulse.Core.Platform.Powercfg.MaxFrequency), Q(Pulse.Core.Platform.Powercfg.MaxFrequencyClass1)];
+    var before = Snap();
+    var sw = System.Diagnostics.Stopwatch.StartNew();
+    var progress = new Progress<string>(m => Console.WriteLine($"  [{sw.Elapsed.TotalMinutes:0.0} dk] {m}"));
+    var first = Pulse.Core.Hardware.HeatBenchmark.RunPlan([(null, false)], 40, 80, progress);
+    var baseMhz = first.Count > 0 ? first[0].MedianMhz : 0;
+    Check(first.Count == 1 && baseMhz > 500, $"Yalnız işlemci aşaması ölçüldü (sürekli hız {baseMhz:0} MHz)");
+    int Round100(double v) => (int)(Math.Round(v / 100.0) * 100);
+    var caps = new List<int?> { null, Round100(baseMhz * 0.85), Round100(baseMhz * 0.70) };
+    var second = Pulse.Core.Hardware.HeatBenchmark.RunPlan(caps.Select(c => (c, true)).ToList(), 40, 80, progress);
+    var all = first.Concat(second).ToList();
+    Console.WriteLine("  " + Pulse.Core.Hardware.HeatBenchmark.Summarize(all));
+    Check(second.Count == 3, "Ekran kartlı üç aşama ölçüldü (sınırsız ve iki kademe)");
+    Check(second.Count == 3 && second[1].MedianMhz < second[0].MedianMhz && second[2].MedianMhz < second[1].MedianMhz, "Hız sınırı koydukça ölçülen hız düşüyor (sınır gerçekten uygulanıyor)");
+    Check(second.Count == 3 && second[1].CapMhz is { } c1 && Math.Abs(second[1].MedianMhz - c1) <= c1 * 0.12, "Sınırlı aşamanın hızı koyulan sınıra yakın (±%12)");
+    Check(second.Count == 3 && second.All(p => p.GpuMedianMhz is > 0), "Her ekran kartlı aşamada ekran kartı hızı okundu");
+    var hasTemps = all.All(p => p.AvgTempC is not null);
+    Console.WriteLine(hasTemps ? "  Sıcaklıklar okundu." : "  (Sıcaklık okunamadı: yönetici olmadan beklenen durum; ısı doğrulaması yapılamadı.)");
+    if (hasTemps) Check(second[2].AvgTempC <= second[0].AvgTempC + 1, "Sınır ısıyı artırmıyor (en düşük kademe ≤ sınırsız)");
+    System.Threading.Thread.Sleep(2500);
+    Check(Snap().SequenceEqual(before), "Güç ayarları (turbo, en yüksek durum, hız sınırları) eski haline döndü");
+    Check(Pulse.Core.Platform.Powercfg.ActiveScheme() == scheme, "Etkin güç planı aynı");
+    Check(!System.Diagnostics.Process.GetProcessesByName("msedge").Any(p => { try { return p.MainWindowTitle.StartsWith("F:") || p.MainWindowTitle.StartsWith("LOST"); } catch { return false; } }), "Ekran kartı yük penceresi kapandı");
+    Check(!Directory.Exists(Path.Combine(Path.GetTempPath(), "pulse-gputune")), "Geçici yük klasörü silindi");
+    Console.WriteLine($"  Toplam süre: {sw.Elapsed.TotalMinutes:0.0} dk");
+    Console.WriteLine(fails == 0 ? "TAM ISI DENEMESİ TESTİ GEÇTİ" : $"{fails} TEST KALDI");
     return fails == 0 ? 0 : 1;
 }
 
@@ -2651,4 +2813,11 @@ sealed class FakeSwitch(string start) : Pulse.Core.Modes.IModeSwitch
         var def = Pulse.Core.Modes.Modes.Get(key) ?? Pulse.Core.Modes.Modes.All[0];
         return Task.FromResult<Pulse.Core.Modes.ModeResult?>(new Pulse.Core.Modes.ModeResult(def, Array.Empty<Pulse.Core.Modes.StepResult>()));
     }
+}
+
+/// <summary>Mod uygulanamayan (başka işlem sürüyor) durumu taklit eder: ApplyAsync null döner.</summary>
+sealed class BusySwitch : Pulse.Core.Modes.IModeSwitch
+{
+    public string? CurrentKey => null;
+    public Task<Pulse.Core.Modes.ModeResult?> ApplyAsync(string key, Pulse.Core.Modes.ModeOverrides? overrides) => Task.FromResult<Pulse.Core.Modes.ModeResult?>(null);
 }

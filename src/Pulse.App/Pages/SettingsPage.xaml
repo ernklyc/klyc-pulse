@@ -126,6 +126,16 @@
                     <ui:ToggleSwitch Grid.Column="1" IsChecked="{Binding LinkWithKonsol}" VerticalAlignment="Center" />
                 </Grid>
             </Border>
+            <Border Style="{StaticResource PulseCard}" Padding="0" Margin="0,0,0,8">
+                <Grid Margin="14,11">
+                    <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+                    <StackPanel Margin="0,0,20,0">
+                        <TextBlock Style="{StaticResource SettingTitle}" Text="Konsol'dan mod değiştirmeye izin ver" />
+                        <TextBlock Style="{StaticResource PulseMuted}" TextWrapping="Wrap" Text="Kolla kullandığın KLYC Konsol'un Ayarlar'ından Pulse modunu (Oyun, Günlük, Sessiz, Boşta) seçebilir ve Hızlandır'ı çalıştırabilirsin. Yalnızca bu iki işlem kabul edilir; başka hiçbir komut yoktur. Varsayılan kapalıdır." />
+                    </StackPanel>
+                    <ui:ToggleSwitch Grid.Column="1" IsChecked="{Binding AllowKonsolCommands}" VerticalAlignment="Center" />
+                </Grid>
+            </Border>
             <Border Style="{StaticResource PulseCard}" Padding="0">
                 <StackPanel>
                     <Grid Margin="14,11">

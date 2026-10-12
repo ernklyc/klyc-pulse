@@ -56,6 +56,7 @@ public sealed class AppSettings
     public DateTime? LastWeeklyNotice { get; set; }            // haftalık özet bildirimi en son ne zaman gösterildi
     public bool StartKonsolWithPulse { get; set; } = false;   // Pulse açılırken (kurulu) KLYC Konsol da açılsın (varsayılan kapalı)
     public bool LinkWithKonsol { get; set; } = true;   // KLYC Konsol (kardeş proje) kuruluysa onunla çalış; yoksa hiçbir şey yapılmaz
+    public bool AllowKonsolCommands { get; set; } = false;   // KLYC Konsol Pulse'a mod/Hızlandır komutu gönderebilsin (varsayılan KAPALI: yetkili Pulse yalnızca kullanıcı isterse dış dosyadan komut alır)
     public bool KeepMode { get; set; } = true;       // başka bir program güç ayarını bozarsa geri düzelt
     public Dictionary<string, string>? HotkeyBindings { get; set; }   // eylem → "Ctrl+Alt+3"; yoksa varsayılanlar
     public int? GpuOcCore { get; set; }              // Oyun modunda uygulanacak ekran kartı çekirdek ofseti (MHz); null = fabrika

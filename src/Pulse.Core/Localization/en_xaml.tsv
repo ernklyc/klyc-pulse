@@ -213,3 +213,5 @@ Kardeş proje: controller (kol) ile bilgisayarı konsol gibi kullanma arayüzü.
 Pulse açılırken Konsol da açılsın (kol takılı değilse gizli bekler)	Start Konsol when Pulse starts (waits hidden if no controller is connected)
 KLYC Konsol	KLYC Konsol
 BU HAFTA	THIS WEEK
+Konsol'dan mod değiştirmeye izin ver	Allow changing the mode from Konsol
+Kolla kullandığın KLYC Konsol'un Ayarlar'ından Pulse modunu (Oyun, Günlük, Sessiz, Boşta) seçebilir ve Hızlandır'ı çalıştırabilirsin. Yalnızca bu iki işlem kabul edilir; başka hiçbir komut yoktur. Varsayılan kapalıdır.	From the settings of KLYC Konsol (the controller interface) you can pick the Pulse mode (Game, Daily, Quiet, Idle) and run Boost. Only these two actions are accepted; there are no other commands. Off by default.

@@ -1060,3 +1060,12 @@ hiçbir oturumda sorun görülmedi	no problems seen in any session
 {0} oturumda dikkat edilecek şey vardı	{0} sessions had something to look at
 son otomatik temizlik {0:d MMM}: {1:0} MB	last automatic cleanup {0:d MMM}: {1:0} MB
 Bu hafta: 	This week: 
+{0} modu uygulandı ({1} ayar doğrulanamadı).	{0} mode applied ({1} setting(s) could not be verified).
+{0} modu uygulandı.	{0} mode applied.
+Başka bir işlem sürüyor, sonra tekrar dene.	Another operation is running, try again later.
+Çok sık komut: biraz bekle.	Too many commands: wait a moment.
+Hızlandır tamam: {0} temizlendi, {1} bellek rahatladı.	Boost done: {0} cleaned, {1} of memory relieved.
+Komut reddedildi ({0}).	Command rejected ({0}).
+Komut uygulanamadı.	Command could not be applied.
+Konsol açık görünmüyor.	Konsol does not appear to be open.
+Pulse'ta "Konsol kumandası" kapalı: Pulse → Ayarlar'dan açılabilir.	"Konsol control" is off in Pulse: turn it on in Pulse → Settings.

@@ -113,6 +113,7 @@ Her Windows 10 (2004+) / 11 x64 bilgisayarda çalışır; **donanıma özel adı
 - Konsol'dan bir oyun başlatınca Pulse oyunu **önceden bilir**: oyun penceresi açılmadan profilini/modunu uygular, standart klasörlerin dışındaki oyunları da bulur.
 - **Güç planı çakışmaz:** "Oyun açılınca modu kendiliğinden değiştir" açıksa güç planını Pulse yönetir ve Konsol dokunmaz; kapalıysa Konsol yönetir ve Pulse'ın mod koruyucusu o sırada beklemeye alınır.
 - Pulse'ın son oyun raporu Konsol'da oyunun detay sayfasında görünür.
+- **Konsol'dan Pulse'ı yönet (isteğe bağlı, varsayılan KAPALI):** Ayarlar → "Konsol'dan mod değiştirmeye izin ver" açıksa, kolla kullandığın Konsol'un Ayarlar'ından Pulse modunu (Oyun/Günlük/Sessiz/Boşta) seçebilir ve Hızlandır'ı çalıştırabilirsin. Yalnızca bu iki işlem kabul edilir; her komut sahiplik, boyut, yaş, tekrar ve izin listesi denetiminden geçer. Konsol'un üst çubuğunda seçili mod ve (Konsol isterse) işlemci/ekran kartı ısın görünür.
 
 Haberleşme, kullanıcı profilindeki iki küçük JSON dosyasıyla olur (ağ yok, hesap yok, yoklama yok; ayrıntı: [docs/MIMARI.md](docs/MIMARI.md)). Konsol kurulu değilse Pulse hiçbir şey yapmaz; istersen Ayarlar → "KLYC Konsol ile birlikte çalış"tan kapatabilirsin.
 
