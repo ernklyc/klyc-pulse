@@ -245,7 +245,7 @@ if (cmd == "konsol-link-test")
         Check(KonsolLink.ReadStatus() is null, "Yarım yazılmış dosya sessizce 'veri yok'");
 
         Check(!KonsolLink.IsStale(st, TimeSpan.FromHours(24), now: st.UpdatedAt + 60) && KonsolLink.IsStale(st, TimeSpan.FromHours(24), now: st.UpdatedAt + 90000) && KonsolLink.IsStale(st, TimeSpan.FromHours(24), now: st.UpdatedAt - 3600), "Bayatlık: 24 saatten eski ya da gelecekteki zaman güvenilmez");
-        Check(!KonsolLink.IsProcessAlive(null) && !KonsolLink.IsProcessAlive(0) && KonsolLink.IsProcessAlive(Environment.ProcessId), "Süreç canlılığı (kendi sürecimiz canlı, olmayan değil)");
+        Check(!KonsolLink.IsProcessAlive(null) && !KonsolLink.IsProcessAlive(0) && KonsolLink.IsProcessAlive(Environment.ProcessId) && !KonsolLink.IsProcessAlive(Environment.ProcessId, "KlycKonsol") && KonsolLink.IsProcessAlive(Environment.ProcessId, System.Diagnostics.Process.GetCurrentProcess().ProcessName), "Süreç canlılığı (kendi sürecimiz canlı, olmayan değil; ad uyuşmazsa 'canlı' sayılmaz)");
 
         // ---- Özet yazma ----
         var report = new Pulse.Core.Diagnostics.GameSessionReport { Game = "Hades", Start = DateTime.Now.AddMinutes(-62), Minutes = 62.44, AvgFps = 118.4, CpuTempMax = 84.2, GpuTempMax = 71, Bottleneck = "gpu", Severity = 1,

@@ -21,6 +21,7 @@ public sealed class KonsolLinkService : IDisposable
 {
     private static readonly TimeSpan Debounce = TimeSpan.FromMilliseconds(150);
     private static readonly TimeSpan Heartbeat = TimeSpan.FromSeconds(8);     // Konsol 20 sn'den eski özeti "Pulse yok" sayar
+    private const string KonsolProcessName = "KlycKonsol";
     private static readonly TimeSpan GameStatusMaxAge = TimeSpan.FromHours(12);
 
     private readonly SettingsStore _settings;
@@ -163,7 +164,9 @@ public sealed class KonsolLinkService : IDisposable
         }
         _auto.NotifyKonsolIdle();
         ReleaseHold();
-        if (st is { IsOpen: true } && !KonsolLink.IsStale(st, TimeSpan.FromHours(24)))
+        // Konsol açıksa (süreci yaşıyorsa) kalp atışı sürer: Konsol saatlerce boşta kalıp dosyası eskise bile Pulse "var" sayılsın.
+        // Süreç ölüyse Beat kendini durdurur.
+        if (st is { IsOpen: true } && KonsolLink.IsProcessAlive(st.Pid, KonsolProcessName))
         {
             StartHeartbeat();
             KonsolLink.WriteFeed(Feed(running: true));        // Konsol yeni açıldı: "Pulse var" hemen anlaşılsın
@@ -202,7 +205,7 @@ public sealed class KonsolLinkService : IDisposable
     {
         KonsolStatus? st; lock (_lock) st = _status;
         // Konsol'un kendi süreci yoksa (kapatıldı/çöktü) kalp atışı gereksiz; özet bayatlar ve Konsol zaten açık değil
-        if (st is not { IsOpen: true } || !KonsolLink.IsProcessAlive(st.Pid)) { lock (_lock) StopHeartbeat(); return; }
+        if (st is not { IsOpen: true } || !KonsolLink.IsProcessAlive(st.Pid, KonsolProcessName)) { lock (_lock) StopHeartbeat(); return; }
         KonsolLink.WriteFeed(Feed(running: true));
     }
 

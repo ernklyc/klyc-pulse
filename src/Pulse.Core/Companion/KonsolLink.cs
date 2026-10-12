@@ -123,10 +123,15 @@ public static class KonsolLink
     }
 
     /// <summary>Konsol'un kendi süreci (durumu en son yazan) hâlâ yaşıyor mu? Oyun sırasında Konsol kapalıdır, o durumda doğrulama için kullanılmaz.</summary>
-    public static bool IsProcessAlive(int? pid)
+    /// <param name="expectedName">Verilirse süreç adı da denetlenir (kimlik başka bir programa geçmiş olabilir; uzun süre önce yazılmış bayat dosyada yanlış "canlı" çıkmasın).</param>
+    public static bool IsProcessAlive(int? pid, string? expectedName = null)
     {
         if (pid is not > 0) return false;
-        try { using var p = System.Diagnostics.Process.GetProcessById(pid.Value); return !p.HasExited; }
+        try
+        {
+            using var p = System.Diagnostics.Process.GetProcessById(pid.Value);
+            return !p.HasExited && (expectedName is null || string.Equals(p.ProcessName, expectedName, StringComparison.OrdinalIgnoreCase));
+        }
         catch { return false; }
     }
 
