@@ -138,6 +138,15 @@ public partial class SettingsViewModel : ObservableObject, IDisposable
     [ObservableProperty] private bool _autoClean;
     [ObservableProperty] private bool _keepMode = AppServices.Settings.Current.KeepMode;
     partial void OnKeepModeChanged(bool value) => Save(s => s.KeepMode = value);
+
+    [ObservableProperty] private bool _linkWithKonsol = AppServices.Settings.Current.LinkWithKonsol;
+    [ObservableProperty] private string _konsolText = AppServices.Konsol.StatusText;
+    partial void OnLinkWithKonsolChanged(bool value)
+    {
+        Save(s => s.LinkWithKonsol = value);
+        if (!_loading) AppServices.Konsol.OnSettingChanged();
+        KonsolText = AppServices.Konsol.StatusText;
+    }
     [ObservableProperty] private bool _thermalGuard = AppServices.Settings.Current.ThermalGuard;
     public ObservableCollection<ChoiceVm> HeatChoices { get; } = new();
     [ObservableProperty] private string _heatText = "";
@@ -201,6 +210,7 @@ public partial class SettingsViewModel : ObservableObject, IDisposable
         var running = ConflictService.Running();
         if (!ConflictsText.StartsWith(Loc.T("Kapatıldı:"), StringComparison.Ordinal))
             ConflictsText = running.Count > 0 ? Loc.F("Şu an çalışıyor: {0}", string.Join(", ", running)) : Loc.T("Çakışan uygulama çalışmıyor.");
+        KonsolText = AppServices.Konsol.StatusText;
         GameText = AppServices.Auto.DetectedGame is { } g ? Loc.F("Algılanan oyun: {0}", g) : Loc.T("Şu an çalışan oyun algılanmadı.");
     }
 

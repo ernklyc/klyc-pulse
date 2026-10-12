@@ -35,6 +35,7 @@ public static class AppServices
     private static ModeKeeperService? _keeper;
     public static ModeKeeperService Keeper => _keeper ??= new ModeKeeperService();
     public static CompanionService Companion { get; } = new(Settings);
+    public static KonsolLinkService Konsol { get; } = new(Settings, Auto, Modes, GameReport, () => Keeper.Pause());
 
     private static HotkeyService? _hotkeys;
 
@@ -43,6 +44,7 @@ public static class AppServices
 
     public static void Shutdown()
     {
+        Konsol.Dispose();
         _keeper?.Dispose();
         // Güvenlik: Pulse kapanırken ekran kartı hızlandırması fabrika hızına döner (kalıcı kalmasın).
         try { if (Pulse.Core.Hardware.GpuOverclock.Read() is { } oc && (oc.CoreMhz != 0 || oc.MemMhz != 0)) Pulse.Core.Hardware.GpuOverclock.Reset(); } catch { }

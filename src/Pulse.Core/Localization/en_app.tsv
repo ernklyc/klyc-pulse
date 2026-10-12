@@ -993,3 +993,8 @@ Güncellendi (sürüm doğrulanamadı)	Updated (version could not be verified)
 Hata: {0}	Error: {0}
 Bir işlem sürüyor; bitince “Yenile”ye bas.	Another operation is running; press “Refresh” when it finishes.
 {0} modu uygulanamadı	{0} mode could not be applied
+Kapalı.	Off.
+KLYC Konsol bulunamadı.	KLYC Konsol not found.
+oyun: {0}	game: {0}
+uzun süredir çalışmadı	not run for a long time
+Konsol bulundu · v{0} · {1}	Konsol found · v{0} · {1}

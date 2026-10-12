@@ -114,6 +114,7 @@ public partial class App : Application
         AppServices.Cooling.Configure(AppServices.Settings.Current.CoolingFirst);
         AppServices.Update.Start();
         AppServices.Heat.Configure(AppServices.Settings.Current.HeatTarget);
+        AppServices.Konsol.Start();       // KLYC Konsol kuruluysa: oyun ipuçları ve güç planı sahipliği (yoksa hiçbir şey yapmaz)
         // Önceki oturumdan (çökme vb.) kalmış frekans sınırı varsa ve sıcaklık sınırı kapalıysa temizle; sessizce yavaş kalmasın.
         if (AppServices.Settings.Current.HeatTarget is null) _ = Task.Run(() => HeatTargetService.ClearStaleFrequencyCap());
         // Oyun raporu: oyun açılınca kayıt başlar, kapanınca küçük bir bilgi yazısı çıkar.

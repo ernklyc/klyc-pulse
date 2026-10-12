@@ -6,11 +6,18 @@ namespace Pulse.Core.Modes;
 /// <summary>Bir modun ekran ayarlarını geçici olarak değiştirir (null = modun kendi değeri).</summary>
 public sealed record ModeOverrides(int? RefreshHz, int? Brightness, int? CpuMaxMhz = null);
 
+/// <summary>Otomatik mod servisinin ihtiyaç duyduğu küçük yüzey (testlerde donanıma dokunmayan sahte ile değiştirilebilsin diye).</summary>
+public interface IModeSwitch
+{
+    string? CurrentKey { get; }
+    Task<ModeResult?> ApplyAsync(string key, ModeOverrides? overrides);
+}
+
 /// <summary>
 /// Mod uygulamanın tek giriş noktası: ana ekran, tepsi menüsü ve otomatik mod aynı denetleyiciyi kullanır.
 /// Aynı anda tek işlem yürür.
 /// </summary>
-public sealed class ModeController : IDisposable
+public sealed class ModeController : IDisposable, IModeSwitch
 {
     private readonly ModeEngine _engine = new();
     private readonly SemaphoreSlim _gate = new(1, 1);

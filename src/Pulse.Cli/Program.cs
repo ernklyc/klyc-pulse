@@ -1,3 +1,5 @@
+using Pulse.Core.Companion;
+using Pulse.Core.Settings;
 using Pulse.Core.Apps;
 using Pulse.Core.Automation;
 using Pulse.Core.Cleanup;
@@ -197,6 +199,172 @@ if (cmd == "diskscan-test")
     Check(real.Select(r => r.Path).Distinct(StringComparer.OrdinalIgnoreCase).Count() == real.Count, "Gerçek taramada aynı klasör iki kez çıkmaz");
     try { Directory.Delete(tmp, true); } catch { }
     Console.WriteLine(fails == 0 ? "DİSK ANALİZİ TESTİ GEÇTİ" : $"{fails} TEST KALDI");
+    return fails == 0 ? 0 : 1;
+}
+
+if (cmd == "konsol-link-test")
+{
+    // KLYC Konsol bağlantısı: dosya okuma/yazma ve oyun ipuçları. Gerçek ayara, donanıma ya da kullanıcı verisine dokunmaz.
+    var fails = 0;
+    void Check(bool ok, string what) { Console.WriteLine($"  [{(ok ? "GEÇTİ" : "KALDI")}] {what}"); if (!ok) fails++; }
+    var root = Path.Combine(Path.GetTempPath(), "pulse-konsol-test-" + Guid.NewGuid().ToString("N")[..6]);
+    var konsolDir = Path.Combine(root, "konsol"); var pulseDir = Path.Combine(root, "pulse");
+    Directory.CreateDirectory(konsolDir);
+    Environment.SetEnvironmentVariable("KLYC_KONSOL_DIR", konsolDir);
+    Environment.SetEnvironmentVariable("KLYC_PULSE_DIR", pulseDir);
+    try
+    {
+        // ---- Durum okuma ----
+        Check(KonsolLink.StatusPath == Path.Combine(konsolDir, "status.json") && KonsolLink.FeedPath == Path.Combine(pulseDir, "konsol-feed.json"), "Yollar ortam değişkenlerine uyar (gerçek veriye dokunulmaz)");
+        Check(KonsolLink.ReadStatus() is null, "Dosya yoksa 'Konsol yok' (hata vermez)");
+
+        var v2 = "{\"schema\":2,\"updatedAt\":1791796212,\"version\":\"0.8.0\",\"pid\":14660,\"state\":\"launching\",\"game\":{\"id\":\"steam:1145360\",\"title\":\"Hades\",\"store\":\"steam\",\"installDir\":\"C:\\\\Games\\\\Hades\",\"target\":\"steam://rungameid/1145360\",\"startedAt\":1791796200},\"powerPlanManagedBy\":\"konsol\",\"guard\":true,\"yeniAlan\":{\"x\":1}}";
+        var st = KonsolLink.ParseStatus(v2);
+        Check(st is { Schema: 2, State: "launching", UpdatedAt: 1791796212, Pid: 14660 } && st.Game is { Title: "Hades", Store: "steam", InstallDir: "C:\\Games\\Hades" }, "Şema 2 okunur, bilinmeyen alan yok sayılır");
+        Check(st!.InGame && !st.IsOpen && st.KonsolOwnsPowerPlan, "Başlatılıyor + güç planı Konsol'da: oyun durumu ve plan sahipliği");
+        Check(st.ToHint() is { Title: "Hades", InstallDir: "C:\\Games\\Hades" }, "Oyun durumunda ipucu üretilir");
+
+        var v1 = "{\"state\":\"playing\",\"game\":\"Hades\",\"gameId\":\"steam:1145360\",\"since\":1791796212,\"pid\":14660,\"version\":\"0.7.0\"}";
+        var st1 = KonsolLink.ParseStatus(v1, fileTime: 1791796300);
+        Check(st1 is { Schema: 1, State: "playing", UpdatedAt: 1791796300 } && st1.Game is { Title: "Hades", Id: "steam:1145360", StartedAt: 1791796212 }, "Eski şema 1 de okunur (güncelleme zamanı dosya zamanından)");
+        Check(st1!.ToHint() is { InstallDir: null } && !st1.KonsolOwnsPowerPlan, "Şema 1: klasör yok (ipucu yine üretilir), güç planı sahibi bilinmiyor");
+
+        var idle = KonsolLink.ParseStatus("{\"schema\":2,\"updatedAt\":5,\"state\":\"launcher\",\"game\":null}");
+        Check(idle is { IsOpen: true, InGame: false, Game: null } && idle.ToHint() is null, "Kütüphane durumunda oyun yok, ipucu yok");
+        Check(KonsolLink.ParseStatus("{bozuk") is null && KonsolLink.ParseStatus("") is null && KonsolLink.ParseStatus("[1,2]") is null && KonsolLink.ParseStatus("{\"schema\":2}") is null, "Bozuk, boş, dizi ve durumsuz dosya 'veri yok' sayılır");
+        var odd = KonsolLink.ParseStatus("{\"state\":\"playing\",\"game\":{\"title\":5},\"pid\":\"x\",\"updatedAt\":\"dün\"}", 77);
+        Check(odd is { Pid: null, UpdatedAt: 77, Game: null }, "Yanlış türdeki alanlar hata değil, 'yok' sayılır");
+
+        File.WriteAllText(KonsolLink.StatusPath, v2);
+        Check(KonsolLink.ReadStatus() is { State: "launching" }, "Dosyadan okunur");
+        File.WriteAllText(KonsolLink.StatusPath, "{yarım");
+        Check(KonsolLink.ReadStatus() is null, "Yarım yazılmış dosya sessizce 'veri yok'");
+
+        Check(!KonsolLink.IsStale(st, TimeSpan.FromHours(24), now: st.UpdatedAt + 60) && KonsolLink.IsStale(st, TimeSpan.FromHours(24), now: st.UpdatedAt + 90000) && KonsolLink.IsStale(st, TimeSpan.FromHours(24), now: st.UpdatedAt - 3600), "Bayatlık: 24 saatten eski ya da gelecekteki zaman güvenilmez");
+        Check(!KonsolLink.IsProcessAlive(null) && !KonsolLink.IsProcessAlive(0) && KonsolLink.IsProcessAlive(Environment.ProcessId), "Süreç canlılığı (kendi sürecimiz canlı, olmayan değil)");
+
+        // ---- Özet yazma ----
+        var report = new Pulse.Core.Diagnostics.GameSessionReport { Game = "Hades", Start = DateTime.Now.AddMinutes(-62), Minutes = 62.44, AvgFps = 118.4, CpuTempMax = 84.2, GpuTempMax = 71, Bottleneck = "gpu", Severity = 1,
+            Findings = ["bir", "iki", "üç", "dört"] };
+        var feed = KonsolLink.BuildFeed("1.10.0", true, "oyun", false, true, report, now: 1791796300);
+        Check(KonsolLink.WriteFeed(feed), "Özet yazılır (klasör yoksa oluşturulur)");
+        var json = File.ReadAllText(KonsolLink.FeedPath);
+        using (var doc = System.Text.Json.JsonDocument.Parse(json))
+        {
+            var r = doc.RootElement;
+            Check(r.GetProperty("schema").GetInt32() == 1 && r.GetProperty("running").GetBoolean() && r.GetProperty("updatedAt").GetInt64() == 1791796300 && r.GetProperty("mode").GetProperty("key").GetString() == "oyun", "Özet alanları (şema, çalışıyor, zaman, mod) doğru ve camelCase");
+            var lr = r.GetProperty("lastReport");
+            Check(lr.GetProperty("game").GetString() == "Hades" && lr.GetProperty("minutes").GetDouble() == 62.4 && lr.GetProperty("avgFps").GetDouble() == 118 && lr.GetProperty("severity").GetInt32() == 1 && lr.GetProperty("findings").GetArrayLength() == 3, "Son rapor özetlenir (en çok 3 bulgu)");
+            Check(!r.GetProperty("acceptsCommands").GetBoolean(), "Komutlar kapalı bildirilir");
+        }
+        Check(Directory.GetFiles(pulseDir, "*.tmp").Length == 0, "Geçici dosya kalmaz");
+        Check(KonsolLink.WriteFeed(KonsolLink.BuildFeed("1.10.0", false, null, false, false, null)) && File.ReadAllText(KonsolLink.FeedPath).Contains("\"running\": false"), "Üzerine yazılır; kapanırken running=false");
+
+        // Atomiklik: yazıcı sürekli yazarken okuyucu hiç yarım dosya görmemeli
+        var stop = false; var bad = 0; var reads = 0;
+        var reader = Task.Run(() =>
+        {
+            while (!Volatile.Read(ref stop))
+            {
+                try { using var d = System.Text.Json.JsonDocument.Parse(File.ReadAllText(KonsolLink.FeedPath)); reads++; }
+                catch (IOException) { /* o an taşınıyor olabilir */ }
+                catch (System.Text.Json.JsonException) { bad++; }
+            }
+        });
+        for (var i = 0; i < 300; i++) KonsolLink.WriteFeed(KonsolLink.BuildFeed("1.10.0", true, "oyun", false, true, report, now: 1000 + i));
+        Volatile.Write(ref stop, true); await reader;
+        Check(bad == 0 && reads > 0, $"300 yazım sırasında okuyucu hiç yarım dosya görmedi ({reads} okuma)");
+
+        // ---- Oyun ipuçları (sahte mod anahtarı, sahte süreç bulucu, sahte saat: donanıma dokunmaz) ----
+        var hintDir = @"D:\Oyunlar\Hades";            // klasör kuralına (steamapps\common, Epic Games...) uymayan yer
+        var gamePath = @"D:\Oyunlar\Hades\Hades.exe";
+        var now = DateTime.UtcNow;
+        Pulse.Core.Automation.GameDetector.DetectedGame? running = null;
+        bool? knownSeen = null;
+        var sw = new FakeSwitch("gunluk");
+        AutoModeService NewAuto(SettingsStore ss, bool autoMode = true)
+        {
+            ss.Current.AutoGameMode = autoMode;
+            return new AutoModeService(sw, ss, Timeout.InfiniteTimeSpan, known => { if (running is { } g) knownSeen = known?.Invoke(g.Path, Path.GetFileNameWithoutExtension(g.Path).ToLowerInvariant()); return knownSeen == true || known is null ? running : null; }, () => now, tune: false);
+        }
+        SettingsStore NewSettings() => SettingsStore.Load(Path.Combine(root, "ayar-" + Guid.NewGuid().ToString("N")[..6] + ".json"));
+        var hint = new KonsolGameHint("Hades", hintDir, "steam");
+
+        var s1 = NewSettings(); var auto = NewAuto(s1);
+        var started = new List<string>(); auto.GameStarted += started.Add;
+        await auto.NotifyGameLaunching(hint);
+        Check(sw.Calls.SequenceEqual(new[] { "oyun" }) && sw.CurrentKey == "oyun", "'Başlatılıyor' ipucunda Oyun modu süreç görünmeden uygulanır");
+
+        now = now.AddSeconds(30); await auto.TickOnceAsync();
+        Check(sw.CurrentKey == "oyun" && sw.Calls.Count == 1, "Süreç henüz yokken (bekleme süresi içinde) mod geri alınmaz");
+
+        running = new Pulse.Core.Automation.GameDetector.DetectedGame("Hades", gamePath, 4242);
+        now = now.AddSeconds(10); await auto.TickOnceAsync();
+        Check(knownSeen == true && started.SequenceEqual(new[] { "Hades" }), "Klasör kuralına uymayan oyun, Konsol'un bildirdiği klasör sayesinde algılanır");
+        Check(sw.Calls.Count == 1, "Aynı oyun için ikinci kez mod uygulanmaz (tek oturum)");
+
+        running = null; now = now.AddSeconds(5); await auto.TickOnceAsync();
+        Check(sw.CurrentKey == "gunluk" && sw.Calls.SequenceEqual(new[] { "oyun", "gunluk" }), "Süreç kapanınca önceki moda (Günlük) dönülür");
+
+        // Süreç hiç gelmezse bekleme süresi sonunda geri alınır
+        sw.Reset("gunluk"); knownSeen = null;
+        var s2 = NewSettings(); var auto2 = NewAuto(s2);
+        await auto2.NotifyGameLaunching(hint);
+        now = now.AddSeconds(100); await auto2.TickOnceAsync();
+        Check(sw.CurrentKey == "oyun", "100 sn sonra hâlâ bekleniyor");
+        now = now.AddSeconds(100); await auto2.TickOnceAsync();
+        Check(sw.CurrentKey == "gunluk", "180 sn içinde süreç gelmeyince uygulanan mod geri alınır");
+
+        // Otomatik mod kapalıysa mod uygulanmaz ama algılamaya yardım eder
+        sw.Reset("gunluk"); knownSeen = null;
+        var s3 = NewSettings(); var auto3 = NewAuto(s3, autoMode: false);
+        await auto3.NotifyGameLaunching(hint);
+        running = new Pulse.Core.Automation.GameDetector.DetectedGame("Hades", gamePath, 1);
+        var started3 = new List<string>(); auto3.GameStarted += started3.Add;
+        await auto3.TickOnceAsync();
+        Check(sw.Calls.Count == 0 && started3.Count == 1 && knownSeen == true, "Otomatik oyun modu kapalıyken mod değişmez; oyun yine de algılanır");
+        running = null;
+
+        // Kullanıcı bu oyun için otomatik geçişi kapatmışsa dokunulmaz
+        sw.Reset("gunluk");
+        var s4 = NewSettings(); s4.Current.GameProfiles.Add(new GameProfile { ExeName = "hades", DisplayName = "Hades", ExePath = gamePath, Enabled = false });
+        var auto4 = NewAuto(s4);
+        await auto4.NotifyGameLaunching(hint);
+        Check(sw.Calls.Count == 0, "Profilde otomatik geçiş kapalıysa ipucu mod uygulamaz");
+
+        // Profil ada/klasöre göre bulunur ve kendi modu kullanılır
+        sw.Reset("gunluk");
+        var s5 = NewSettings(); s5.Current.GameProfiles.Add(new GameProfile { ExeName = "hades", DisplayName = "H A D E S", ModeKey = "sessiz", ExePath = gamePath });
+        var auto5 = NewAuto(s5);
+        await auto5.NotifyGameLaunching(hint);
+        Check(sw.Calls.SequenceEqual(new[] { "sessiz" }), "Oyunun profili (ad/klasör eşleşmesi) kendi modunu uygular");
+
+        // Oyun sürüyor ipucu mod uygulamaz; Konsol boşa çıkınca ipucu silinir
+        sw.Reset("gunluk"); knownSeen = null;
+        var s6 = NewSettings(); var auto6 = NewAuto(s6);
+        auto6.NotifyGamePlaying(hint);
+        Check(sw.Calls.Count == 0, "'Oyun sürüyor' ipucu tek başına mod uygulamaz");
+        running = new Pulse.Core.Automation.GameDetector.DetectedGame("Hades", gamePath, 2);
+        await auto6.TickOnceAsync();
+        Check(knownSeen == true, "Pulse oyundan sonra açılsa da klasör ipucuyla oyunu bulur");
+        Check(s6.FindProfile("Hades") is { ExePath: not null }, "Bulunan oyun profile eklenir (sonra Konsol olmadan da tanınır)");
+        running = null;
+
+        var auto7 = NewAuto(NewSettings());           // temiz ayar: öğrenilmiş profil yok
+        auto7.NotifyGamePlaying(hint); auto7.NotifyKonsolIdle();
+        knownSeen = null; running = new Pulse.Core.Automation.GameDetector.DetectedGame("Hades", gamePath, 3);
+        await auto7.TickOnceAsync();
+        Check(knownSeen == false, "Konsol kütüphaneye dönünce klasör ipucu geçersiz olur (kural dışı program oyun sayılmaz)");
+        running = null;
+
+    }
+    finally
+    {
+        Environment.SetEnvironmentVariable("KLYC_KONSOL_DIR", null);
+        Environment.SetEnvironmentVariable("KLYC_PULSE_DIR", null);
+        try { Directory.Delete(root, true); } catch { }
+    }
+    Console.WriteLine(fails == 0 ? "KONSOL BAĞLANTISI TESTİ GEÇTİ" : $"{fails} TEST KALDI");
     return fails == 0 ? 0 : 1;
 }
 
@@ -2199,4 +2367,20 @@ file sealed class FakeHandler(System.Net.HttpStatusCode? status, string body) : 
 {
     protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken) =>
         status is null ? throw new HttpRequestException("bağlantı yok") : Task.FromResult(new HttpResponseMessage(status.Value) { Content = new StringContent(body) });
+}
+
+
+/// <summary>Testler için: donanıma dokunmayan sahte mod anahtarı; hangi modların istendiğini kaydeder.</summary>
+sealed class FakeSwitch(string start) : Pulse.Core.Modes.IModeSwitch
+{
+    public string? CurrentKey { get; private set; } = start;
+    public List<string> Calls { get; } = new();
+    public void Reset(string key) { CurrentKey = key; Calls.Clear(); }
+
+    public Task<Pulse.Core.Modes.ModeResult?> ApplyAsync(string key, Pulse.Core.Modes.ModeOverrides? overrides)
+    {
+        Calls.Add(key); CurrentKey = key;
+        var def = Pulse.Core.Modes.Modes.Get(key) ?? Pulse.Core.Modes.Modes.All[0];
+        return Task.FromResult<Pulse.Core.Modes.ModeResult?>(new Pulse.Core.Modes.ModeResult(def, Array.Empty<Pulse.Core.Modes.StepResult>()));
+    }
 }
