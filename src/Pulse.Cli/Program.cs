@@ -235,6 +235,10 @@ if (cmd == "konsol-link-test")
         var odd = KonsolLink.ParseStatus("{\"state\":\"playing\",\"game\":{\"title\":5},\"pid\":\"x\",\"updatedAt\":\"dün\"}", 77);
         Check(odd is { Pid: null, UpdatedAt: 77, Game: null }, "Yanlış türdeki alanlar hata değil, 'yok' sayılır");
 
+        // Konsol'un gerçekten ürettiği dosya (KLYC-Konsol PulseLink.BuildStatus çıktısı, 0.8.0): iki proje aynı şemayı konuşuyor mu
+        var real = KonsolLink.ParseStatus("{\"schema\":2,\"updatedAt\":1791796212,\"version\":\"0.8.0\",\"pid\":14660,\"state\":\"launching\",\"game\":{\"id\":\"steam:1145360\",\"title\":\"Hades\",\"store\":\"steam\",\"installDir\":\"D:\\\\Oyunlar\\\\Hades\",\"target\":\"steam://rungameid/1145360\",\"startedAt\":1791796212},\"gameId\":\"steam:1145360\",\"since\":1791796212,\"powerPlanManagedBy\":\"pulse\",\"guard\":true,\"controllerConnected\":true}");
+        Check(real is { Schema: 2, State: "launching", PowerPlanManagedBy: "pulse", Pid: 14660 } && real.Game is { Title: "Hades", Id: "steam:1145360", Store: "steam", InstallDir: "D:\\Oyunlar\\Hades", StartedAt: 1791796212 } && real.ToHint() is not null && !real.KonsolOwnsPowerPlan, "Konsol'un gerçek çıktısı Pulse'ta doğru okunur");
+
         File.WriteAllText(KonsolLink.StatusPath, v2);
         Check(KonsolLink.ReadStatus() is { State: "launching" }, "Dosyadan okunur");
         File.WriteAllText(KonsolLink.StatusPath, "{yarım");
@@ -256,6 +260,16 @@ if (cmd == "konsol-link-test")
             var lr = r.GetProperty("lastReport");
             Check(lr.GetProperty("game").GetString() == "Hades" && lr.GetProperty("minutes").GetDouble() == 62.4 && lr.GetProperty("avgFps").GetDouble() == 118 && lr.GetProperty("severity").GetInt32() == 1 && lr.GetProperty("findings").GetArrayLength() == 3, "Son rapor özetlenir (en çok 3 bulgu)");
             Check(!r.GetProperty("acceptsCommands").GetBoolean(), "Komutlar kapalı bildirilir");
+        }
+        using (var doc2 = System.Text.Json.JsonDocument.Parse(File.ReadAllText(KonsolLink.FeedPath)))
+        {
+            // Konsol'un (PulseLink.ParseFeed) beklediği alan adları: biri değişirse iki proje birbirini anlamaz
+            var rr = doc2.RootElement;
+            var topKeys = new[] { "schema", "updatedAt", "pulseVersion", "running", "mode", "autoGameMode", "acceptsCommands", "lastReport" };
+            var lr2 = rr.GetProperty("lastReport");
+            var repKeys = new[] { "game", "startedAt", "minutes", "avgFps", "cpuTempMax", "gpuTempMax", "bottleneck", "severity", "findings" };
+            var modeEl = rr.GetProperty("mode");
+            Check(topKeys.All(n => rr.TryGetProperty(n, out _)) && repKeys.All(n => lr2.TryGetProperty(n, out _)) && modeEl.TryGetProperty("key", out _) && modeEl.TryGetProperty("applying", out _), "Özet alan adları Konsol'un beklediğiyle aynı");
         }
         Check(Directory.GetFiles(pulseDir, "*.tmp").Length == 0, "Geçici dosya kalmaz");
         Check(KonsolLink.WriteFeed(KonsolLink.BuildFeed("1.10.0", false, null, false, false, null)) && File.ReadAllText(KonsolLink.FeedPath).Contains("\"running\": false"), "Üzerine yazılır; kapanırken running=false");
