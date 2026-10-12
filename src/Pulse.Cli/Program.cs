@@ -289,6 +289,11 @@ if (cmd == "konsol-link-test")
         Volatile.Write(ref stop, true); await reader;
         Check(bad == 0 && reads > 0, $"300 yazım sırasında okuyucu hiç yarım dosya görmedi ({reads} okuma)");
 
+        // ---- KLYC Konsol süreçleri korumalı: "Açık uygulamaları kapat" / süreç listesi onları kapatamaz ----
+        Check(Pulse.Core.Processes.ProcessInspector.Protection("KlycKonsol", null, true, false) is (true, { Length: > 0 })
+              && Pulse.Core.Processes.ProcessInspector.Protection("KlycGuard", null, false, false).Item1
+              && !Pulse.Core.Processes.ProcessInspector.Protection("SomeRandomApp", null, true, false).Item1, "KlycKonsol ve KlycGuard korumalı (kapatılamaz), sıradan uygulama değil");
+
         // ---- Oyun ipuçları (sahte mod anahtarı, sahte süreç bulucu, sahte saat: donanıma dokunmaz) ----
         var hintDir = @"D:\Oyunlar\Hades";            // klasör kuralına (steamapps\common, Epic Games...) uymayan yer
         var gamePath = @"D:\Oyunlar\Hades\Hades.exe";
@@ -535,6 +540,11 @@ if (cmd == "hotkey-test")
     Check(map["mode:oyun"] is { VirtualKey: 0x47 }, "Kayıtlı atama varsayılanın önüne geçer");
     Check(map["kbd:cycle"] is null, "Boş atama = atanmamış");
     Check(map["mode:gunluk"] is { VirtualKey: 0x32 }, "Kayıtsız eylem varsayılanı alır");
+    // KLYC Konsol Ctrl+Alt+K'yı genel kısayol olarak kullanır: Pulse'ın hiçbir eylemi (varsayılan ya da eski kayıtlı atama) o tuşu almamalı
+    var def2 = Pulse.Core.Settings.HotkeyActions.Resolve(null);
+    var old = Pulse.Core.Settings.HotkeyActions.Resolve(new Dictionary<string, string> { ["kbd:cycle"] = "Ctrl+Alt+K" });
+    Check(def2.Values.All(b => b is not { VirtualKey: 0x4B }), "Varsayılan kısayollarda Ctrl+Alt+K yok (KLYC Konsol'un kısayolu)");
+    Check(old["kbd:cycle"] is { VirtualKey: 0x42 }, "Eski kayıtlı Ctrl+Alt+K ataması yeni varsayılana (Ctrl+Alt+B) taşınır");
     Console.WriteLine(fails == 0 ? "KISAYOL TESTİ GEÇTİ" : $"{fails} TEST KALDI");
     return fails == 0 ? 0 : 1;
 }

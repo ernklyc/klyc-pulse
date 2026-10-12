@@ -35,7 +35,7 @@ public sealed class ProcessInspector
         "StartMenuExperienceHost", "SearchHost", "SearchIndexer", "TextInputHost", "audiodg", "WUDFHost", "spoolsv", "taskhostw",
         "conhost", "dllhost", "wlanext", "SecurityHealthService", "SecurityHealthSystray", "MsMpEng", "NisSrv", "MpDefenderCoreService",
         "vgc", "vgtray", "EasyAntiCheat", "EasyAntiCheat_EOS", "BEService", "KLYC-Pulse", "NVDisplay.Container", "nvcontainer",
-        "ApplicationFrameHost", "LockApp", "backgroundTaskHost", "smartscreen", "WmiPrvSE", "msdtc", "Secure System",
+        "KlycKonsol", "KlycGuard", "ApplicationFrameHost", "LockApp", "backgroundTaskHost", "smartscreen", "WmiPrvSE", "msdtc", "Secure System",
     };
 
     private readonly Dictionary<int, (TimeSpan Cpu, DateTime At)> _last = new();
@@ -105,6 +105,7 @@ public sealed class ProcessInspector
             var why = name.ToLowerInvariant() switch
             {
                 "klyc-pulse" => Loc.T("KLYC-Pulse'ın kendisi"),
+                "klyckonsol" or "klycguard" => Loc.T("KLYC Konsol (kol arayüzü)"),
                 "vgc" or "vgtray" => "Riot Vanguard (Valorant anti-hile)",
                 "easyanticheat" or "easyanticheat_eos" or "beservice" => Loc.T("Oyun anti-hile koruması"),
                 "msmpeng" or "nissrv" or "securityhealthservice" or "securityhealthsystray" or "mpdefendercoreservice" => Loc.T("Windows güvenliği"),

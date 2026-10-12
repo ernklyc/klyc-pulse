@@ -80,7 +80,7 @@ public static class HotkeyActions
         ("mode:sessiz", Loc.T("Sessiz mod"), "Ctrl+Alt+3"),
         ("mode:bosta", Loc.T("Boşta modu"), "Ctrl+Alt+4"),
         ("mode:next", Loc.T("Sonraki mod (Oyun, Günlük, Sessiz sırayla)"), ""),
-        ("kbd:cycle", Loc.T("Klavye ışığı seviyesi"), "Ctrl+Alt+K"),
+        ("kbd:cycle", Loc.T("Klavye ışığı seviyesi"), "Ctrl+Alt+B"),   // Ctrl+Alt+K, KLYC Konsol'un genel aç/gizle kısayoludur (ikisi aynı tuşu alamaz)
         ("overlay:toggle", Loc.T("Oyun üstü gösterge"), "Ctrl+Alt+O"),
     ];
 
@@ -91,6 +91,8 @@ public static class HotkeyActions
         foreach (var (id, _, def) in All)
         {
             var text = saved is not null && saved.TryGetValue(id, out var s) ? s : def;
+            // Eski varsayılan Ctrl+Alt+K, KLYC Konsol'un kısayoluyla çakışıyordu (ilk açılan alır, öteki sessizce kaybeder): yeni varsayılana taşı
+            if (id == "kbd:cycle" && string.Equals(text?.Replace(" ", ""), "Ctrl+Alt+K", StringComparison.OrdinalIgnoreCase)) text = def;
             map[id] = HotkeyBinding.Parse(text);
         }
         return map;

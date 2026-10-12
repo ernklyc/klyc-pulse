@@ -2,6 +2,12 @@
 
 Biçim [Keep a Changelog](https://keepachangelog.com/tr/) esaslıdır; sürümleme [SemVer](https://semver.org/lang/tr/).
 
+## [1.10.1] — 2026-10-12
+
+### Düzeltilenler
+- **KLYC Konsol ile kısayol çakışması:** Klavye ışığı eylemi varsayılan olarak Ctrl+Alt+K'yı kullanıyordu; bu, Konsol'un genel aç/gizle kısayoludur (Windows ile ikisi birden açılınca ilk açılan tuşu alır, öteki sessizce kaybederdi). Varsayılan Ctrl+Alt+B oldu; eski varsayılan kayıtlı atamalar da otomatik taşınır.
+- **KLYC Konsol süreçleri korumalı:** "Açık uygulamaları kapat" ve Süreçler sayfası KlycKonsol ve KlycGuard'ı artık kapatamaz (kol arayüzünü yanlışlıkla kapatmak, kolla kullanılan bir bilgisayarı kilitlenmiş gibi bırakırdı).
+
 ## [1.10.0] — 2026-10-12
 
 ### Eklenenler
