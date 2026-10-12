@@ -202,3 +202,8 @@ Geri	Back
 Turu atla	Skip the tour
 KLYC Konsol ile birlikte çalış	Work together with KLYC Konsol
 Kardeş proje KLYC Konsol kuruluysa Konsol'dan başlattığın oyunu Pulse daha önceden bilir ("Oyun açılınca modu kendiliğinden değiştir" açıksa oyun penceresi açılmadan modu uygular; standart klasöre uymayan oyunları da bulur). Güç planını o ayar açıksa Pulse, kapalıysa Konsol yönetir; ikisi birbiriyle savaşmaz. Konsol kurulu değilse hiçbir şey yapmaz.	If the sister project KLYC Konsol is installed, Pulse knows in advance which game you launched from Konsol (with "Switch mode automatically when a game starts" on, it applies the mode before the game window opens; it also finds games outside the standard folders). Pulse manages the power plan when that setting is on, Konsol when it is off; they never fight. If Konsol is not installed it does nothing.
+SORUN BİLDİR	REPORT A PROBLEM
+Paketi hazırla	Prepare package
+GitHub'da sorun aç	Open an issue on GitHub
+Bir sorun mu var?	Having a problem?
+Sürüm, donanım modeli ve son günlükleri tek zipte masaüstüne toplar. Kullanıcı adın, bilgisayar adın ve klasör yolların temizlenir; hiçbir şey kendiliğinden gönderilmez.	Collects the version, hardware model and recent logs into one zip on your desktop. Your user name, computer name and folder paths are removed; nothing is sent automatically.

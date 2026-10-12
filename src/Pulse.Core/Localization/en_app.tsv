@@ -1001,3 +1001,5 @@ Konsol bulundu · v{0} · {1}	Konsol found · v{0} · {1}
 Oyun açık ({0}): oyun bitince güncelle.	Game running ({0}): update after the game.
 Oyun açık ({0}): güncellemeler oyun bitince yapılır, oyunu takıltmasın.	Game running ({0}): updates wait until the game ends so they do not cause stutter.
 KLYC Konsol (kol arayüzü)	KLYC Konsol (controller interface)
+Paket hazırlanıyor…	Preparing the package…
+Masaüstüne yazıldı: {0}. İçinde kişisel veri yok; sorun açarken ekleyebilirsin (kendiliğinden gönderilmez).	Written to the desktop: {0}. It contains no personal data; you can attach it when opening an issue (nothing is sent automatically).

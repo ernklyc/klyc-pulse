@@ -152,6 +152,8 @@ public sealed class KonsolLinkService : IDisposable
 
     private void Apply(KonsolStatus? st)
     {
+        Journal.Write(st is null ? "KLYC Konsol durumu: dosya yok/okunamadı (Konsol kapalı ya da kurulu değil)"
+            : $"KLYC Konsol durumu: {st.State}" + (st.Game is null ? "" : $" ({st.Game.Title}, klasör {(string.IsNullOrEmpty(st.Game.InstallDir) ? "yok" : "var")})") + $", güç planı: {st.PowerPlanManagedBy ?? "bilinmiyor"}, sürüm {st.Version ?? "?"}");
         // Oyun durumu eskiyse (ör. Konsol oyun sırasında çöktü, kimse güncellemedi) güvenilmez: ipucu verme, mod koruyucuyu bırak
         var hint = st is not null && !KonsolLink.IsStale(st, GameStatusMaxAge) ? st.ToHint() : null;
         if (hint is not null)

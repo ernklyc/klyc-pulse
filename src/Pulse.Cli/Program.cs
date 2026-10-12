@@ -418,6 +418,43 @@ if (cmd == "procwin-test")
     return fails == 0 ? 0 : 1;
 }
 
+if (cmd == "support-test")
+{
+    // "Sorun bildir" paketi: kişisel veri temizlenir, ayarlardan yalnızca bayraklar, günlük/rapor zipe girer
+    var fails = 0;
+    void Check(bool ok, string what) { Console.WriteLine($"  [{(ok ? "GEÇTİ" : "KALDI")}] {what}"); if (!ok) fails++; }
+    var user = Environment.UserName; var machine = Environment.MachineName; var profile = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
+    var dirty = $@"Hata: {profile}\AppData\Local\Pulse\x.json. Kullanıcı {user}, makine {machine}. JSON: {profile.Replace(@"\", @"\\")}\\Pulse";
+    var clean = Pulse.Core.Diagnostics.SupportBundle.Sanitize(dirty, user, machine, profile);
+    Check(!clean.Contains(user, StringComparison.OrdinalIgnoreCase) || user.Length < 3, "Kullanıcı adı temizlenir");
+    Check(machine.Length < 3 || !clean.Contains(machine, StringComparison.OrdinalIgnoreCase), "Bilgisayar adı temizlenir");
+    Check(clean.Contains("<kullanici>"), "Yerine genel ad yazılır");
+    Check(Pulse.Core.Diagnostics.SupportBundle.Sanitize("temiz metin", user, machine, profile) == "temiz metin", "Temiz metne dokunulmaz");
+    var st = new Pulse.Core.Settings.AppSettings(); st.GameProfiles.Add(new Pulse.Core.Settings.GameProfile { ExeName = "x", ExePath = @"C:\Users\biri\oyun.exe" });
+    var flags = Pulse.Core.Diagnostics.SupportBundle.DescribeFlags(st);
+    Check(flags.Contains("GameProfiles=1") && !flags.Contains("biri") && !flags.Contains("oyun.exe"), "Ayarlardan yalnızca bayrak/sayı gider (yol yok)");
+    var tmp = Path.Combine(Path.GetTempPath(), "pulse-support-test-" + Guid.NewGuid().ToString("N")[..6]);
+    var logs = Path.Combine(tmp, "logs"); Directory.CreateDirectory(logs);
+    File.WriteAllText(Path.Combine(logs, "2026-10-10.log"), $"[01:00:00] eski {user}");
+    File.WriteAllText(Path.Combine(logs, "2026-10-11.log"), $@"[01:00:00] yol {profile}\x kullanıcı {user}");
+    File.WriteAllText(Path.Combine(logs, "2026-10-12.log"), $"[01:00:00] bugün {machine}");
+    File.WriteAllText(Path.Combine(logs, "2026-10-09.log"), "çok eski gün");
+    File.WriteAllText(Path.Combine(tmp, "rapor.json"), $@"{{ ""Game"": ""X"", ""p"": ""{profile.Replace(@"\", @"\\")}"" }}");
+    try
+    {
+        var zipPath = Pulse.Core.Diagnostics.SupportBundle.Create("sürüm bilgisi", tmp, logs, Path.Combine(tmp, "rapor.json"), logDays: 3);
+        using var z = System.IO.Compression.ZipFile.OpenRead(zipPath);
+        var names = z.Entries.Select(e => e.FullName).ToList();
+        Check(names.Contains("info.txt") && names.Contains("last_game_report.json") && names.Count(n => n.StartsWith("logs/")) == 3, "Zipte bilgi, rapor ve en yeni 3 günlük var");
+        Check(!names.Contains("logs/2026-10-09.log"), "Eski günlükler girmez");
+        var allText = string.Concat(z.Entries.Select(e => { using var r = new StreamReader(e.Open()); return r.ReadToEnd(); }));
+        Check((user.Length < 3 || !allText.Contains(user, StringComparison.OrdinalIgnoreCase)) && (machine.Length < 3 || !allText.Contains(machine, StringComparison.OrdinalIgnoreCase)), "Zip içinde kullanıcı/bilgisayar adı yok");
+    }
+    finally { try { Directory.Delete(tmp, true); } catch { } }
+    Console.WriteLine(fails == 0 ? "SORUN BİLDİR TESTİ GEÇTİ" : $"{fails} TEST KALDI");
+    return fails == 0 ? 0 : 1;
+}
+
 if (cmd == "health")
 {
     using var sampler = new HealthSampler();

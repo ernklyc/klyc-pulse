@@ -139,6 +139,35 @@ public partial class SettingsViewModel : ObservableObject, IDisposable
     [ObservableProperty] private bool _keepMode = AppServices.Settings.Current.KeepMode;
     partial void OnKeepModeChanged(bool value) => Save(s => s.KeepMode = value);
 
+    [ObservableProperty] private string _supportText = "";
+
+    /// <summary>"Sorun bildir": kişisel veri içermeyen günlük paketini masaüstüne yazar ve klasörde gösterir. Hiçbir şey gönderilmez.</summary>
+    [RelayCommand]
+    private async Task ReportProblem()
+    {
+        SupportText = Loc.T("Paket hazırlanıyor…");
+        try
+        {
+            var path = await Task.Run(() =>
+            {
+                var hw = Pulse.Core.Diagnostics.SupportBundle.ReadHardware();
+                var dev = Pulse.Core.Platform.DeviceInfo.Current;
+                var konsol = AppServices.Konsol.StatusText;
+                var info = Pulse.Core.Diagnostics.SupportBundle.BuildInfo(System.Reflection.Assembly.GetExecutingAssembly().GetName().Version?.ToString(3) ?? "?", IsAdmin,
+                    System.Runtime.InteropServices.RuntimeInformation.OSDescription, $"{dev.Kind} {dev.Manufacturer} {dev.Model}".Trim(), hw.Cpu, hw.Gpus, hw.RamGb,
+                    System.Globalization.CultureInfo.CurrentUICulture.Name, konsol, Pulse.Core.Diagnostics.SupportBundle.DescribeFlags(AppServices.Settings.Current), DateTime.Now);
+                return Pulse.Core.Diagnostics.SupportBundle.Create(info);
+            });
+            Pulse.Core.Diagnostics.Journal.Write("Sorun bildir: paket hazırlandı " + System.IO.Path.GetFileName(path));
+            SupportText = Loc.F("Masaüstüne yazıldı: {0}. İçinde kişisel veri yok; sorun açarken ekleyebilirsin (kendiliğinden gönderilmez).", System.IO.Path.GetFileName(path));
+            try { System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo("explorer.exe", "/select,\"" + path + "\"") { UseShellExecute = true }); } catch { }
+        }
+        catch (Exception ex) { Pulse.Core.Diagnostics.Journal.Write("Sorun bildir hatası: " + ex); SupportText = Loc.F("Hata: {0}", ex.Message); }
+    }
+
+    [RelayCommand]
+    private void OpenIssuePage() => System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo("https://github.com/ernklyc/klyc-pulse/issues/new") { UseShellExecute = true });
+
     [ObservableProperty] private bool _linkWithKonsol = AppServices.Settings.Current.LinkWithKonsol;
     [ObservableProperty] private string _konsolText = AppServices.Konsol.StatusText;
     partial void OnLinkWithKonsolChanged(bool value)

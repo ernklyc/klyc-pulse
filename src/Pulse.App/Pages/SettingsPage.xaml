@@ -255,6 +255,21 @@
                 </StackPanel>
             </Border>
 
+            <TextBlock Style="{StaticResource PulseLabel}" Text="SORUN BİLDİR" Margin="0,18,0,8" />
+            <Border Style="{StaticResource PulseCard}" Padding="16,12">
+                <DockPanel>
+                    <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center">
+                        <Button Content="Paketi hazırla" Style="{StaticResource PulseGhostButton}" Command="{Binding ReportProblemCommand}" Margin="0,0,8,0" />
+                        <Button Content="GitHub'da sorun aç" Style="{StaticResource PulseGhostButton}" Command="{Binding OpenIssuePageCommand}" />
+                    </StackPanel>
+                    <StackPanel Margin="0,0,20,0">
+                        <TextBlock Style="{StaticResource PulseBody}" FontWeight="Medium" Text="Bir sorun mu var?" />
+                        <TextBlock Style="{StaticResource PulseMuted}" TextWrapping="Wrap"
+                                   Text="Sürüm, donanım modeli ve son günlükleri tek zipte masaüstüne toplar. Kullanıcı adın, bilgisayar adın ve klasör yolların temizlenir; hiçbir şey kendiliğinden gönderilmez." />
+                        <TextBlock Style="{StaticResource PulseMuted}" Text="{Binding SupportText}" FontWeight="Medium" Margin="0,4,0,0" TextWrapping="Wrap" />
+                    </StackPanel>
+                </DockPanel>
+            </Border>
             <TextBlock Style="{StaticResource PulseLabel}" Text="DESTEK" Margin="0,18,0,8" />
             <Border Style="{StaticResource PulseCard}" Padding="16,12">
                 <DockPanel>
