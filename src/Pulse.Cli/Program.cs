@@ -746,7 +746,7 @@ if (cmd == "weekly-test")
     var old = WeeklyReport.Build(hist, now, now.AddDays(-20), 999);
     Check(old.LastClean is null && old.LastCleanBytes == 0, "Eski temizlik haftalık özete girmez");
     var text = WeeklyReport.Describe(w);
-    Check(text.Contains("3 oyun oturumu") && text.Contains("3,5") && text.Contains("91") && text.Contains("50 MB"), "Metin özetin tüm parçalarını içerir");
+    Check(text.Contains("3 oyun oturumu") && text.Contains((3.5).ToString("0.#", System.Globalization.CultureInfo.CurrentCulture)) && text.Contains("91") && text.Contains("50 MB"), "Metin özetin tüm parçalarını içerir");
     Check(WeeklyReport.Describe(WeeklyReport.Build([], now)).Contains("yok"), "Hiç kayıt yoksa bunu söyler");
     Check(!WeeklyReport.Describe(WeeklyReport.Build([R("X", 1, 10, null, null, 0)], now)).Contains("FPS"), "Ölçülmeyen değer yazılmaz (FPS yok)");
     Console.WriteLine(fails == 0 ? "HAFTALIK ÖZET TESTİ GEÇTİ" : $"{fails} TEST KALDI");
