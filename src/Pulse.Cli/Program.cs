@@ -2491,6 +2491,46 @@ if (cmd == "sensors")
     return 0;
 }
 
+if (cmd == "boostbg-test")
+{
+    // Hızlandır'ın "Arka plan yükü" adımının saf mantığı: iki ölçüm farkından en çok işlemci kullananlar.
+    var fails = 0;
+    void Check(bool ok, string what) { Console.WriteLine($"  [{(ok ? "GEÇTİ" : "KALDI")}] {what}"); if (!ok) fails++; }
+    var a = new Dictionary<int, (string, double)> { [1] = ("sunshine", 10.0), [2] = ("chrome", 100.0), [3] = ("chrome", 50.0), [4] = ("kucuk", 1.0), [5] = ("oyun", 500.0), [6] = ("eski", 5.0) };
+    var b = new Dictionary<int, (string, double)> { [1] = ("sunshine", 10.4), [2] = ("chrome", 100.2), [3] = ("chrome", 50.3), [4] = ("kucuk", 1.001), [5] = ("oyun", 502.0), [7] = ("yeni", 1.0), [6] = ("baska", 99.0) };
+    var top = Pulse.Core.Optimize.BoostLoadProbe.Top(a, b, elapsedSeconds: 2.0, cores: 4, exclude: new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "oyun" });
+    // sunshine 0.4 sn/2 sn/4 çekirdek = %5; chrome (iki süreç) 0.5 sn → %6,25
+    Check(top.Count == 2 && top[0].Name == "chrome" && Math.Abs(top[0].CpuPercent - 6.25) < 0.01, $"Aynı adlı süreçler toplanır, en çok kullanan başta: {string.Join(", ", top.Select(t => t.Name + " %" + t.CpuPercent.ToString("0.##")))}");
+    Check(top.Any(t => t.Name == "sunshine" && Math.Abs(t.CpuPercent - 5.0) < 0.01), "Yüzde tüm işlemciye göre (çekirdek sayısına bölünür)");
+    Check(top.All(t => t.Name != "oyun"), "Hariç tutulan (oyun/sistem) listede yok");
+    Check(top.All(t => t.Name != "kucuk" && t.Name != "yeni" && t.Name != "baska"), "%1 altı, yeni başlayan ve kimliği başka ada geçen süreçler atlanır");
+    Check(Pulse.Core.Optimize.BoostLoadProbe.Top(a, b, 0, 4, new HashSet<string>()).Count == 0 && Pulse.Core.Optimize.BoostLoadProbe.Top(a, b, 2, 0, new HashSet<string>()).Count == 0, "Süre ya da çekirdek sayısı geçersizse boş (hata vermez)");
+    Check(Pulse.Core.Optimize.BoostLoadProbe.Describe(top).Contains("chrome") && Pulse.Core.Optimize.BoostLoadProbe.Describe(new List<Pulse.Core.Optimize.BoostLoadProbe.Entry>()).Contains("yok"), "Metin: yük varsa adları, yoksa 'yok' der");
+    Check(Pulse.Core.Optimize.BoostLoadProbe.Top(a, b, 2, 4, new HashSet<string>(), take: 1).Count == 1, "take sınırı uygulanır");
+    Console.WriteLine(fails == 0 ? "ARKA PLAN YÜKÜ TESTİ GEÇTİ" : $"{fails} TEST KALDI");
+    return fails == 0 ? 0 : 1;
+}
+
+if (cmd == "boost-probe")
+{
+    // Hızlandır'ın yeni ölçüm adımlarını SALT OKUNUR çalıştırır (hiçbir ayar değişmez, hiçbir şey temizlenmez/rahatlatılmaz): gerçek makinede ne gösterecek?
+    Console.WriteLine("  Windows oyun ayarları (okunan):");
+    foreach (var g in Pulse.Core.Optimize.WindowsGameSettings.Read()) Console.WriteLine($"    {g.Name}: {g.CurrentText}{(g.IsGood ? "" : "  <- düzeltilebilir")}");
+    Dictionary<int, (string Name, double CpuSeconds)> Sample()
+    {
+        var d = new Dictionary<int, (string, double)>();
+        foreach (var p in System.Diagnostics.Process.GetProcesses()) { try { if (p.SessionId != 0) d[p.Id] = (p.ProcessName, p.TotalProcessorTime.TotalSeconds); } catch { } finally { p.Dispose(); } }
+        return d;
+    }
+    var sw = System.Diagnostics.Stopwatch.StartNew(); var s1 = Sample(); await Task.Delay(3000); var s2 = Sample();
+    var top = Pulse.Core.Optimize.BoostLoadProbe.Top(s1, s2, sw.Elapsed.TotalSeconds, Environment.ProcessorCount, new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "System", "Idle", "dwm", "KLYC-Pulse" });
+    Console.WriteLine("  " + Pulse.Core.Optimize.BoostLoadProbe.Describe(top));
+    var info = Pulse.Core.Apps.BootAnalyzer.Read(out var err);
+    Console.WriteLine("  " + Pulse.Core.Apps.BootAnalyzer.Describe(info, err));
+    Console.WriteLine($"  RAM boş: {Pulse.Core.Optimize.Optimizer.Format(Pulse.Core.Optimize.Optimizer.AvailableRamBytes())} / {Pulse.Core.Optimize.Optimizer.Format(Pulse.Core.Optimize.Optimizer.TotalRamBytes())}");
+    return 0;
+}
+
 if (cmd == "optimize")
 {
     var settings = Pulse.Core.Settings.SettingsStore.Load(Path.Combine(Path.GetTempPath(), "pulse-opt-settings.json"));

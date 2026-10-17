@@ -82,7 +82,7 @@ public partial class HomeViewModel : ObservableObject, IDisposable
     {
         if (IsOptimizing) return;
         var ask = System.Windows.MessageBox.Show(
-            Loc.T("Şunlar yapılacak:\n\n• 2 günden eski zararsız geçici dosyalar silinir (belgelerine, oyunlarına, indirilenlerine dokunulmaz)\n• Arka plandaki büyük uygulamaların belleği rahatlatılır (hiçbir uygulama kapanmaz)\n• Seçili modun ayarları yeniden uygulanıp doğrulanır\n• Windows oyun ayarları ve açılış öğeleri denetlenir (değiştirilmez)\n\nİşlem bitince önce/sonra ölçümü gösterilir. Devam edilsin mi?"),
+            Loc.T("Şunlar yapılacak:\n\n• 2 günden eski zararsız geçici dosyalar silinir (belgelerine, oyunlarına, indirilenlerine dokunulmaz)\n• Arka plandaki büyük uygulamaların belleği rahatlatılır (hiçbir uygulama kapanmaz)\n• Seçili modun ayarları yeniden uygulanıp doğrulanır\n• Windows oyun ayarlarından yanlış olanlar düzeltilir (arka plan oyun kaydı kapatılır, Oyun Modu açılır; her yazma doğrulanır, eski değer günlüğe yazılır)\n• Arka plandaki işlemci yükü ve açılış süresi ölçülüp en çok yük bindirenler söylenir (hiçbir şey kapatılmaz); açılış öğeleri değiştirilmez\n\nİşlem bitince önce/sonra ölçümü gösterilir. Devam edilsin mi?"),
             Loc.T("Hızlandır"), System.Windows.MessageBoxButton.YesNo, System.Windows.MessageBoxImage.Question);
         if (ask != System.Windows.MessageBoxResult.Yes) return;
 
@@ -92,7 +92,7 @@ public partial class HomeViewModel : ObservableObject, IDisposable
         try
         {
             var progress = new Progress<string>(text => Op.Step(text));
-            var report = await new Core.Optimize.Optimizer(_controller).RunAsync(progress);
+            var report = await new Core.Optimize.Optimizer(_controller).RunAsync(progress, applyGameSettings: true);
 
             OptRows.Clear();
             foreach (var s in report.Steps) OptRows.Add(new OptRowVm(s.Name, s.Detail, s.Ok));

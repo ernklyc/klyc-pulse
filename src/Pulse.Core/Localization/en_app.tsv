@@ -14,7 +14,7 @@ CPU turbo kapalı	CPU turbo off
 Ekranın en yüksek Hz'i	Screen's max Hz
 Parlaklık %{0}	Brightness {0}%
 Uyku kapalı	Sleep off
-Şunlar yapılacak:\n\n• 2 günden eski zararsız geçici dosyalar silinir (belgelerine, oyunlarına, indirilenlerine dokunulmaz)\n• Arka plandaki büyük uygulamaların belleği rahatlatılır (hiçbir uygulama kapanmaz)\n• Seçili modun ayarları yeniden uygulanıp doğrulanır\n• Windows oyun ayarları ve açılış öğeleri denetlenir (değiştirilmez)\n\nİşlem bitince önce/sonra ölçümü gösterilir. Devam edilsin mi?	These will be done:\n\n• Harmless temporary files older than 2 days are deleted (your documents, games and downloads are not touched)\n• Memory of large background apps is eased (no app is closed)\n• The selected mode's settings are re-applied and verified\n• Windows game settings and startup items are checked (not changed)\n\nA before/after measurement is shown when it finishes. Continue?
+Şunlar yapılacak:\n\n• 2 günden eski zararsız geçici dosyalar silinir (belgelerine, oyunlarına, indirilenlerine dokunulmaz)\n• Arka plandaki büyük uygulamaların belleği rahatlatılır (hiçbir uygulama kapanmaz)\n• Seçili modun ayarları yeniden uygulanıp doğrulanır\n• Windows oyun ayarlarından yanlış olanlar düzeltilir (arka plan oyun kaydı kapatılır, Oyun Modu açılır; her yazma doğrulanır, eski değer günlüğe yazılır)\n• Arka plandaki işlemci yükü ve açılış süresi ölçülüp en çok yük bindirenler söylenir (hiçbir şey kapatılmaz); açılış öğeleri değiştirilmez\n\nİşlem bitince önce/sonra ölçümü gösterilir. Devam edilsin mi?	These will be done:\n\n• Harmless temporary files older than 2 days are deleted (your documents, games and downloads are not touched)\n• Memory of large background apps is eased (no app is closed)\n• The selected mode's settings are re-applied and verified\n• Wrong Windows game settings are fixed (background game recording is turned off, Game Mode is turned on; every write is verified and the old value is logged)\n• Background CPU load and boot time are measured and the heaviest users are named (nothing is closed); startup items are not changed\n\nA before/after measurement is shown when it finishes. Continue?
 TAMAM	OK
 DİKKAT	ATTENTION
 Yeni sürüm var: KLYC-Pulse {0} (şu an {1})	New version available: KLYC-Pulse {0} (currently {1})
@@ -1080,3 +1080,10 @@ Oyun açılınca otomatik mod: kapalı.	Automatic game mode: off.
 Temizlik tamam: {0} temizlendi.	Cleanup done: {0} cleaned.
  İstersen Ayarlar → Sıcaklık sınırı ile işlemciyi otomatik kısabilirsin.	 If you like, Settings → Heat limit can lower the CPU speed automatically.
 Desteklenen saat listesi şu an okunamadı (ekran kartı uykuda olabilir); sonraki mod değişiminde yeniden denenir.	The supported clock list could not be read right now (the graphics card may be asleep); it will be retried at the next mode change.
+Düzeltildi ve doğrulandı: {0}.	Fixed and verified: {0}.
+Bazılarının etkisi için yeniden başlatma gerekir.	Some of them need a restart to take effect.
+Düzeltilemedi (yönetici gerekebilir): {0}.	Could not fix (administrator may be needed): {0}.
+Arka plandaki işlemci yükü ölçülüyor…	Measuring background CPU load…
+Arka plan yükü	Background load
+Arka planda dikkat çekecek işlemci yükü yok.	No notable background CPU load.
+Arka planda en çok işlemci kullananlar: {0}. Gerekmiyorsa Süreçler sayfasından kapatabilirsin (Hızlandır bunları kapatmaz).	The biggest background CPU users: {0}. If you do not need them you can close them from the Processes page (Boost does not close them).

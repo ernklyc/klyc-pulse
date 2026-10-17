@@ -24,7 +24,7 @@ public sealed record OptimizeReport(OptSnapshot Before, OptSnapshot After, IRead
 /// </summary>
 public sealed class Optimizer
 {
-    public const int StepCount = 7;
+    public const int StepCount = 8;
 
     private readonly ModeController? _modes;
     private readonly CleanupEngine _engine = new();
@@ -39,7 +39,8 @@ public sealed class Optimizer
         return results.Sum(r => r.FreedBytes);
     }
 
-    public async Task<OptimizeReport> RunAsync(IProgress<string>? progress = null, CancellationToken ct = default)
+    /// <param name="applyGameSettings">true: Windows oyun ayarlarından yanlış olanlar düzeltilir (arayüzdeki Hızlandır, kullanıcı onayladıktan sonra). Konsol komutu bunu kullanmaz: yalnızca denetler.</param>
+    public async Task<OptimizeReport> RunAsync(IProgress<string>? progress = null, CancellationToken ct = default, bool applyGameSettings = false)
     {
         var steps = new List<OptStep>();
 
@@ -68,24 +69,63 @@ public sealed class Optimizer
         progress?.Report(Loc.T("Güç ve mod ayarları doğrulanıyor…"));
         steps.Add(await VerifyModeAsync());
 
-        // 4) Windows oyun ayarları
+        // 4) Windows oyun ayarları: istenirse güvenli olanlar düzeltilir (her yazma geri okunur, eski değer günlüğe yazılır)
         progress?.Report(Loc.T("Windows oyun ayarları denetleniyor…"));
         steps.Add(await Task.Run(() =>
         {
             var items = WindowsGameSettings.Read();
             var bad = items.Where(i => !i.IsGood).ToList();
-            return bad.Count == 0
-                ? new OptStep(Loc.T("Windows oyun ayarları"), true, "Hepsi uygun: " + string.Join(", ", items.Select(i => i.Name)))
-                : new OptStep(Loc.T("Windows oyun ayarları"), false, Loc.T("Düzeltilebilir: ") + string.Join(", ", bad.Select(i => i.Name)));
+            if (bad.Count == 0) return new OptStep(Loc.T("Windows oyun ayarları"), true, "Hepsi uygun: " + string.Join(", ", items.Select(i => i.Name)));
+            if (!applyGameSettings) return new OptStep(Loc.T("Windows oyun ayarları"), false, Loc.T("Düzeltilebilir: ") + string.Join(", ", bad.Select(i => i.Name)));
+            var admin = CleanupEngine.IsAdmin;
+            var fixedOk = new List<string>(); var notFixed = new List<string>(); var reboot = false;
+            foreach (var s in bad)
+            {
+                var (ok, _) = WindowsGameSettings.Fix(s, admin);
+                if (ok) { fixedOk.Add(s.Name); reboot |= s.NeedsReboot; } else notFixed.Add(s.Name);
+            }
+            var text = (fixedOk.Count > 0 ? Loc.F("Düzeltildi ve doğrulandı: {0}.", string.Join(", ", fixedOk)) : "")
+                + (reboot ? " " + Loc.T("Bazılarının etkisi için yeniden başlatma gerekir.") : "")
+                + (notFixed.Count > 0 ? " " + Loc.F("Düzeltilemedi (yönetici gerekebilir): {0}.", string.Join(", ", notFixed)) : "");
+            return new OptStep(Loc.T("Windows oyun ayarları"), notFixed.Count == 0, text.Trim());
         }, ct));
 
-        // 5) Açılış öğeleri
+        // 5) Arka plan yükü: 2 sn örnekle, en çok işlemci kullananları söyle (hiçbir şey kapatılmaz)
+        progress?.Report(Loc.T("Arka plandaki işlemci yükü ölçülüyor…"));
+        steps.Add(await Task.Run(() =>
+        {
+            try
+            {
+                var fg = ForegroundProcessId();
+                Dictionary<int, (string Name, double CpuSeconds)> Sample()
+                {
+                    var d = new Dictionary<int, (string, double)>();
+                    foreach (var p in Process.GetProcesses())
+                    {
+                        try { if (p.SessionId != 0 && p.Id != Environment.ProcessId) d[p.Id] = (p.ProcessName, p.TotalProcessorTime.TotalSeconds); } catch { }
+                        finally { p.Dispose(); }
+                    }
+                    return d;
+                }
+                var sw = Stopwatch.StartNew();
+                var a = Sample(); Thread.Sleep(2000); var b = Sample();
+                var exclude = new HashSet<string>(NeverTrim, StringComparer.OrdinalIgnoreCase) { "KlycKonsol", "KlycGuard", "KlycShell" };
+                try { using var f = Process.GetProcessById(fg); exclude.Add(f.ProcessName); } catch { }   // şu an kullandığın uygulama yük sayılmaz
+                var top = BoostLoadProbe.Top(a, b, sw.Elapsed.TotalSeconds, Environment.ProcessorCount, exclude);
+                return new OptStep(Loc.T("Arka plan yükü"), true, BoostLoadProbe.Describe(top));
+            }
+            catch (Exception ex) { return new OptStep(Loc.T("Arka plan yükü"), true, ex.Message); }
+        }, ct));
+
+        // 6) Açılış öğeleri (+ Windows'un ölçtüğü açılış süresi ve en çok geciktirenler; ölçüm yoksa nedeni söylenir)
         progress?.Report(Loc.T("Açılışta başlayan uygulamalar taranıyor…"));
         steps.Add(await Task.Run(() =>
         {
             var enabled = StartupManager.List().Where(s => s.Enabled).ToList();
+            string boot;
+            try { var info = BootAnalyzer.Read(out var err); boot = " " + BootAnalyzer.Describe(info, err); } catch { boot = ""; }
             return new OptStep(Loc.T("Açılış öğeleri"), true,
-                Loc.F("{0} uygulama Windows ile başlıyor. Gereksiz olanları Uygulamalar > Başlangıç'tan kapatabilirsin.", enabled.Count));
+                Loc.F("{0} uygulama Windows ile başlıyor. Gereksiz olanları Uygulamalar > Başlangıç'tan kapatabilirsin.", enabled.Count) + boot);
         }, ct));
 
         progress?.Report(Loc.T("Sonra ölçüm alınıyor…"));
