@@ -306,6 +306,37 @@ if (cmd == "konsol-cmd-test")
         var r9 = await runner2.ProcessAsync(path, now);
         Check(r9 is { Ok: false }, $"Mod uygulanamazsa Konsol'a başarısızlık bildirilir: {r9?.Message}");
 
+        // ---- Ek eylemler: clean / autogame / fan / heat (dar değer listeleri) ----
+        string CmdV(string action, string? value, string id = "extra-0001") => "{\"schema\":1,\"id\":\"" + id + "\",\"action\":\"" + action + "\"" + (value is null ? "" : ",\"value\":\"" + value + "\"") + ",\"at\":" + now + "}";
+        Check(KonsolCommands.Parse(CmdV("autogame", "on"), now).Command is { Action: "autogame", Value: "on" } && KonsolCommands.Parse(CmdV("fan", "OFF"), now).Command is { Value: "off" }, "autogame/fan: on/off kabul edilir");
+        Check(KonsolCommands.Parse(CmdV("heat", "80"), now).Command is { Action: "heat", Value: "80" } && KonsolCommands.Parse(CmdV("heat", "0"), now).Ok && KonsolCommands.Parse(CmdV("clean", null), now).Ok, "heat 0/75/80/85/90 ve clean kabul edilir");
+        foreach (var (n2, j2) in new[] { ("heat 200", CmdV("heat", "200")), ("heat 40", CmdV("heat", "40")), ("heat harf", CmdV("heat", "sicak")), ("heat değersiz", CmdV("heat", null)), ("autogame belirsiz", CmdV("autogame", "belki")), ("fan değersiz", CmdV("fan", null)), ("heat enjeksiyon", CmdV("heat", "80;calc")) })
+            Check(KonsolCommands.Parse(j2, now).Rejected == "değer", $"Reddedilir: {n2}");
+        Check(KonsolCommands.Parse(KonsolCommands.Serialize(new KonsolCommand("rt-00000001", "heat", null, now, "85")), now).Command is { Value: "85" }, "Value serileştirme turu");
+        var calls = new List<string>();
+        var runner3 = new KonsolCommandRunner(new FakeSwitch("gunluk"), () => Task.FromResult("b"), () => true, () => true, new KonsolExtraActions
+        {
+            Clean = () => { calls.Add("clean"); return Task.FromResult("temiz"); },
+            AutoGame = on => { calls.Add("autogame:" + on); return "ag"; },
+            Fan = on => { calls.Add("fan:" + on); return Task.FromResult("fan"); },
+            Heat = t => { calls.Add("heat:" + t); return "ht"; },
+        });
+        var seq = new[] { ("clean", (string?)null), ("autogame", "on"), ("fan", "off"), ("heat", "80") };
+        var okAll = true; var ix = 0;
+        foreach (var (a, v) in seq)
+        {
+            await Task.Delay(2100);
+            File.WriteAllText(path, CmdV(a, v, "ex-run-" + (ix++) + "-0001"));
+            var rr = await runner3.ProcessAsync(path, now);
+            okAll &= rr is { Ok: true };
+        }
+        Check(okAll && calls.SequenceEqual(new[] { "clean", "autogame:True", "fan:False", "heat:80" }), $"Ek eylemler doğru temsilciyi doğru değerle çağırır: {string.Join(",", calls)}");
+        var runner4 = new KonsolCommandRunner(new FakeSwitch("gunluk"), () => Task.FromResult("b"), () => true, () => true);
+        File.WriteAllText(path, CmdV("heat", "80", "ex-none-0001"));
+        Check(await runner4.ProcessAsync(path, now) is { Ok: false }, "Temsilci yoksa (eski kurulum) dürüstçe başarısız");
+        File.WriteAllText(path, CmdV("heat", "250", "peek-id-0001"));
+        Check(await runner3.ProcessAsync(path, now) is { Ok: false, Id: "peek-id-0001" }, "Reddedilen komutun sonucu kendi kimliğiyle döner (Konsol gerçek nedeni görür)");
+
         // ---- Özet (feed): komutlar kapalı/açık, mod listesi, canlı değerler, son komut ----
         var off = KonsolLink.BuildFeed("1.11.0", true, "oyun", false, true, null, now: now);
         Check(!off.AcceptsCommands && off.Modes is null && off.ModeTitle == "Oyun" && off.Live is null && off.LastCommand is null, "Varsayılan özet: komut kabul etmiyor, mod listesi yok, mod adı var");

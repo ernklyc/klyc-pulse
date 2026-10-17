@@ -9,7 +9,8 @@ namespace Pulse.Core.Companion;
 
 /// <summary>KLYC Konsol'un Pulse'a gönderdiği tek komut (`%AppData%\KLYC-Konsol\pulse-command.json`).</summary>
 /// <param name="Action">"mode" (Mode alanındaki modu uygula) ya da "boost" (Hızlandır)</param>
-public sealed record KonsolCommand(string Id, string Action, string? Mode, long At);
+/// <param name="Value">Yalnızca bazı eylemlerde: "autogame"/"fan" için "on"/"off"; "heat" için "0" (kapalı), "75", "80", "85" ya da "90".</param>
+public sealed record KonsolCommand(string Id, string Action, string? Mode, long At, string? Value = null);
 
 public sealed record KonsolCommandCheck(KonsolCommand? Command, string? Rejected)
 {
@@ -29,7 +30,9 @@ public static class KonsolCommands
 {
     public const int MaxBytes = 1024;
     public static readonly TimeSpan MaxAge = TimeSpan.FromSeconds(20);
-    public static readonly string[] Actions = { "mode", "boost" };
+    /// <summary>mode: mod uygula · boost: Hızlandır · clean: zararsız temizlik · autogame: oyun açılınca otomatik mod · fan: fan desteği · heat: ısı hedefi.</summary>
+    public static readonly string[] Actions = { "mode", "boost", "clean", "autogame", "fan", "heat" };
+    public static readonly string[] HeatValues = { "0", "75", "80", "85", "90" };
 
     public static string CommandPath => Path.Combine(KonsolLink.KonsolDir, "pulse-command.json");
 
@@ -58,7 +61,18 @@ public static class KonsolCommands
                 mode = Str(r, "mode")?.Trim().ToLowerInvariant();
                 if (mode is null || Modes.Modes.Get(mode) is null) return Reject("mod");
             }
-            return new KonsolCommandCheck(new KonsolCommand(id, action, mode, at), null);
+            string? value = null;
+            if (action is "autogame" or "fan")
+            {
+                value = Str(r, "value")?.Trim().ToLowerInvariant();
+                if (value is not ("on" or "off")) return Reject("değer");
+            }
+            else if (action == "heat")
+            {
+                value = Str(r, "value")?.Trim();
+                if (value is null || Array.IndexOf(HeatValues, value) < 0) return Reject("değer");
+            }
+            return new KonsolCommandCheck(new KonsolCommand(id, action, mode, at, value), null);
         }
         catch (JsonException) { return Reject("json"); }
 
@@ -66,6 +80,19 @@ public static class KonsolCommands
     }
 
     private static string? Str(JsonElement e, string n) => e.TryGetProperty(n, out var v) && v.ValueKind == JsonValueKind.String ? v.GetString() : null;
+
+    /// <summary>Reddedilen komutun kimliğini (kurallara uyuyorsa) bulur: Konsol sonucu kendi kimliğiyle bekler; "yanıt yok" yerine gerçek ret nedeni görünsün.</summary>
+    public static string? TryPeekId(string? json)
+    {
+        try
+        {
+            if (string.IsNullOrWhiteSpace(json) || json.Length > MaxBytes) return null;
+            using var doc = JsonDocument.Parse(json);
+            var id = doc.RootElement.ValueKind == JsonValueKind.Object ? Str(doc.RootElement, "id") : null;
+            return id is not null && id.Length is >= 8 and <= 64 && id.All(c => char.IsAsciiLetterOrDigit(c) || c == '-') ? id : null;
+        }
+        catch { return null; }
+    }
 
     /// <summary>Dosya güvenli mi: yoksa/yönlendirme/çok büyük/başkasına ait ise gerekçe döner; uygunsa null.</summary>
     public static string? CheckFile(string path)
@@ -94,7 +121,7 @@ public static class KonsolCommands
     }
 
     /// <summary>Komut dosyasını atomik yazar (testler ve Konsol'un kendi yazımı için örnek biçim).</summary>
-    public static string Serialize(KonsolCommand c) => JsonSerializer.Serialize(new { schema = 1, id = c.Id, action = c.Action, mode = c.Mode, at = c.At });
+    public static string Serialize(KonsolCommand c) => JsonSerializer.Serialize(new { schema = 1, id = c.Id, action = c.Action, mode = c.Mode, value = c.Value, at = c.At });
 }
 
 /// <summary>
@@ -113,9 +140,11 @@ public sealed class KonsolCommandRunner
     private DateTime _lastRun = DateTime.MinValue;
     private int _busy;
 
-    public KonsolCommandRunner(IModeSwitch modes, Func<Task<string>> boost, Func<bool> allowed, Func<bool> konsolOpen)
+    private readonly KonsolExtraActions _extra;
+
+    public KonsolCommandRunner(IModeSwitch modes, Func<Task<string>> boost, Func<bool> allowed, Func<bool> konsolOpen, KonsolExtraActions? extra = null)
     {
-        _modes = modes; _boost = boost; _allowed = allowed; _konsolOpen = konsolOpen;
+        _modes = modes; _boost = boost; _allowed = allowed; _konsolOpen = konsolOpen; _extra = extra ?? new KonsolExtraActions();
     }
 
     /// <summary>Komut dosyasını işler; dosya yoksa null. Dosya her durumda silinir.</summary>
@@ -134,7 +163,7 @@ public sealed class KonsolCommandRunner
             if (bad is not null) return Fail("?", "?", Loc.F("Komut reddedildi ({0}).", bad), t, bad);
 
             var check = KonsolCommands.Parse(json!, t, _seen);
-            if (!check.Ok) return Fail("?", "?", Loc.F("Komut reddedildi ({0}).", check.Rejected), t, check.Rejected!);
+            if (!check.Ok) return Fail(KonsolCommands.TryPeekId(json) ?? "?", "?", Loc.F("Komut reddedildi ({0}).", check.Rejected), t, check.Rejected!);
             var c = check.Command!;
             Remember(c.Id);
 
@@ -154,8 +183,30 @@ public sealed class KonsolCommandRunner
                     Journal.Write($"Konsol komutu: {def.Key} modu uygulandı ({failed} doğrulanamayan adım).");
                     return new PulseFeedCommand(c.Id, c.Action, true, failed == 0 ? Loc.F("{0} modu uygulandı.", Loc.T(def.Title)) : Loc.F("{0} modu uygulandı ({1} ayar doğrulanamadı).", Loc.T(def.Title), failed), KonsolLink.UnixNow());
                 }
-                var summary = await _boost();
-                Journal.Write("Konsol komutu: Hızlandır çalıştı: " + summary);
+                string summary;
+                switch (c.Action)
+                {
+                    case "clean":
+                        if (_extra.Clean is null) return Fail(c.Id, c.Action, Loc.T("Bu işlem bu sürümde yok."), t, "yok");
+                        summary = await _extra.Clean();
+                        break;
+                    case "autogame":
+                        if (_extra.AutoGame is null) return Fail(c.Id, c.Action, Loc.T("Bu işlem bu sürümde yok."), t, "yok");
+                        summary = _extra.AutoGame(c.Value == "on");
+                        break;
+                    case "fan":
+                        if (_extra.Fan is null) return Fail(c.Id, c.Action, Loc.T("Bu işlem bu sürümde yok."), t, "yok");
+                        summary = await _extra.Fan(c.Value == "on");
+                        break;
+                    case "heat":
+                        if (_extra.Heat is null) return Fail(c.Id, c.Action, Loc.T("Bu işlem bu sürümde yok."), t, "yok");
+                        summary = _extra.Heat(int.Parse(c.Value!));
+                        break;
+                    default:
+                        summary = await _boost();
+                        break;
+                }
+                Journal.Write($"Konsol komutu: {c.Action} çalıştı: {summary}");
                 return new PulseFeedCommand(c.Id, c.Action, true, summary, KonsolLink.UnixNow());
             }
             catch (Exception ex)
@@ -176,4 +227,13 @@ public sealed class KonsolCommandRunner
     private void Remember(string id) { _seen.Enqueue(id); while (_seen.Count > 64) _seen.Dequeue(); }
 
     private static void TryDelete(string path) { try { File.Delete(path); } catch { } }
+}
+
+/// <summary>Hızlandır dışındaki Konsol eylemlerinin uygulayıcıları (App tarafı doldurur; testlerde sahteleri verilir). Hepsi dar ve geri alınabilir ayarlardır.</summary>
+public sealed class KonsolExtraActions
+{
+    public Func<Task<string>>? Clean { get; init; }
+    public Func<bool, string>? AutoGame { get; init; }
+    public Func<bool, Task<string>>? Fan { get; init; }
+    public Func<int, string>? Heat { get; init; }
 }

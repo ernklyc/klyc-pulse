@@ -31,6 +31,14 @@ public sealed class Optimizer
 
     public Optimizer(ModeController? modes = null) => _modes = modes;
 
+    /// <summary>Yalnızca zararsız geçici dosya temizliği (Hızlandır'ın 1. adımı). Temizlenen bayt sayısını döner.</summary>
+    public async Task<long> CleanSafeAsync(CancellationToken ct = default)
+    {
+        var categories = CleanupCatalog.Build().Where(c => c.AutoSafe).ToList();
+        var results = await _engine.CleanAsync(categories, ct: ct);
+        return results.Sum(r => r.FreedBytes);
+    }
+
     public async Task<OptimizeReport> RunAsync(IProgress<string>? progress = null, CancellationToken ct = default)
     {
         var steps = new List<OptStep>();

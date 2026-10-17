@@ -49,7 +49,14 @@ public sealed class KonsolLinkService : IDisposable
         _settings = settings; _auto = auto; _modes = modes; _report = report; _holdKeeper = holdKeeper; _sensors = sensors;
         _commands = new KonsolCommandRunner(modes, BoostAsync,
             allowed: () => _settings.Current.LinkWithKonsol && _settings.Current.AllowKonsolCommands,
-            konsolOpen: () => { KonsolStatus? st; lock (_lock) st = _status; return st is { IsOpen: true } && KonsolLink.IsProcessAlive(st.Pid, KonsolProcessName); });
+            konsolOpen: () => { KonsolStatus? st; lock (_lock) st = _status; return st is { IsOpen: true } && KonsolLink.IsProcessAlive(st.Pid, KonsolProcessName); },
+            extra: new KonsolExtraActions
+            {
+                Clean = async () => Loc.F("Temizlik tamam: {0} temizlendi.", Optimizer.Format(await new Optimizer(_modes).CleanSafeAsync())),
+                AutoGame = on => { _settings.Current.AutoGameMode = on; _settings.Save(); return on ? Loc.T("Oyun açılınca otomatik mod: açık.") : Loc.T("Oyun açılınca otomatik mod: kapalı."); },
+                Fan = async on => (await _modes.SetFanBoostAsync(on)) is { } r ? (on ? Loc.T("Fan desteği açıldı.") : Loc.T("Fan desteği kapatıldı.")) : Loc.T("Fan desteği şu an değiştirilemedi (başka bir işlem sürüyor ya da mod seçilmemiş)."),
+                Heat = t => { int? target = t == 0 ? null : t; _settings.Current.HeatTarget = target; _settings.Save(); AppServices.Heat.Configure(target); return target is null ? Loc.T("Isı hedefi kapatıldı.") : Loc.F("Isı hedefi {0} °C.", target); },
+            });
     }
 
     /// <summary>Konsol'dan gelen "Hızlandır": arayüzdeki ile aynı işlem (onay penceresi yok; kullanıcı Konsol'da bilerek seçti).</summary>
@@ -285,7 +292,7 @@ public sealed class KonsolLinkService : IDisposable
         if (cmd is not null && KonsolLink.UnixNow() - cmd.At > 600) cmd = null;   // eski sonuç Konsol'da tekrar tekrar görünmesin
         var accepts = _settings.Current.LinkWithKonsol && _settings.Current.AllowKonsolCommands;
         return KonsolLink.BuildFeed(_version, running, _modes.CurrentKey, _modes.IsBusy, _settings.Current.AutoGameMode, _report.Last ?? LastStoredReport(),
-            acceptsCommands: accepts, live: running ? Live() : null, lastCommand: cmd);
+            acceptsCommands: accepts, live: running ? Live() : null, lastCommand: cmd, heatTarget: _settings.Current.HeatTarget);
     }
 
     private static GameSessionReport? LastStoredReport()

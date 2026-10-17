@@ -2,10 +2,16 @@
 
 Biçim [Keep a Changelog](https://keepachangelog.com/tr/) esaslıdır; sürümleme [SemVer](https://semver.org/lang/tr/).
 
+## [1.12.0] — 2026-10-18
+
+### Eklenenler
+- **Konsol'dan daha fazlasını yönet (izin açıksa):** mod ve Hızlandır'a ek olarak **Temizlik** (zararsız geçici dosyalar), **oyun açılınca otomatik mod** (aç/kapat), **ısı hedefi** (Kapalı / 75 / 80 / 85 / 90 °C) ve **fan desteği** (aç/kapat). Her eylemin değer listesi dardır (`on`/`off`, sabit sıcaklık listesi); başka değer ya da eylem reddedilir. Reddedilen komutun sonucu artık kendi kimliğiyle Konsol'a döner (gerçek ret nedeni görünür, "yanıt yok" değil). Özete `heatTarget` eklendi. `konsol-cmd-test` 46 → 59 denetim.
+- Not: bu ayar KAPALI başlar (Ayarlar → "Konsol'dan mod değiştirmeye izin ver").
+
 ## [1.11.0] — 2026-10-12
 
 ### Eklenenler
-- **Konsol'dan mod değiştirme ve Hızlandır (Pulse ↔ Konsol "Birlikte"):** Ayarlar → "Konsol'dan mod değiştirmeye izin ver" (varsayılan **KAPALI**). Açıkken KLYC Konsol'un Ayarlar → PULSE satırlarından Oyun/Günlük/Sessiz/Boşta modu seçilir ve Hızlandır çalıştırılır; sonuç Konsol'da bildirilir. Kanal bilerek dardır (yalnızca bu iki eylem; program çalıştıran hiçbir komut yoktur) ve her komut sahip, boyut, bağlantı noktası, yaş (20 sn), kimlik tekrarı, hız sınırı ve izin listesi denetiminden geçer; ayrıntı: `docs/MIMARI.md`. Test: `konsol-cmd-test` (46 denetim; junction ve yabancı sahip dahil), CI'da.
+- **Konsol'dan mod değiştirme ve Hızlandır (Pulse ↔ Konsol "Birlikte"):** Ayarlar → "Konsol'dan mod değiştirmeye izin ver" (varsayılan **KAPALI**). Açıkken KLYC Konsol'un Ayarlar → PULSE satırlarından Oyun/Günlük/Sessiz/Boşta modu seçilir ve Hızlandır çalıştırılır; sonuç Konsol'da bildirilir. Kanal bilerek dardır (yalnızca bu iki eylem; program çalıştıran hiçbir komut yoktur) ve her komut sahip, boyut, bağlantı noktası, yaş (20 sn), kimlik tekrarı, hız sınırı ve izin listesi denetiminden geçer; ayrıntı: `docs/MIMARI.md`. Test: `konsol-cmd-test` (59 denetim; junction ve yabancı sahip dahil), CI'da.
 - **Konsol üst çubuğu için canlı değerler:** Konsol isterse (ve yalnızca Konsol ekrandayken) özete işlemci/ekran kartı ısısı ve yükü yazılır; Konsol gizlenince ya da oyun başlayınca sensör aboneliği bırakılır.
 - **Sorun bildir:** Ayarlar'dan tek tuşla kişisel veri içermeyen tanı paketi (günlük, ayar bayrakları, sürüm; kullanıcı adı/bilgisayar adı/yol temizlenir) masaüstüne yazılır; kendiliğinden hiçbir yere gönderilmez.
 - **Araçlar → KLYC Konsol kartı:** Konsol kuruluysa durumu, "Pulse ile birlikte başlat" ve Konsol'u aç; kurulu değilse indirme bağlantısı.

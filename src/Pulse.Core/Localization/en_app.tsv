@@ -1069,3 +1069,12 @@ Komut reddedildi ({0}).	Command rejected ({0}).
 Komut uygulanamadı.	Command could not be applied.
 Konsol açık görünmüyor.	Konsol does not appear to be open.
 Pulse'ta "Konsol kumandası" kapalı: Pulse → Ayarlar'dan açılabilir.	"Konsol control" is off in Pulse: turn it on in Pulse → Settings.
+Bu işlem bu sürümde yok.	This action is not available in this version.
+Fan desteği açıldı.	Fan assist turned on.
+Fan desteği kapatıldı.	Fan assist turned off.
+Fan desteği şu an değiştirilemedi (başka bir işlem sürüyor ya da mod seçilmemiş).	Fan assist could not be changed right now (another operation is running or no mode is selected).
+Isı hedefi {0} °C.	Heat target {0} °C.
+Isı hedefi kapatıldı.	Heat target turned off.
+Oyun açılınca otomatik mod: açık.	Automatic game mode: on.
+Oyun açılınca otomatik mod: kapalı.	Automatic game mode: off.
+Temizlik tamam: {0} temizlendi.	Cleanup done: {0} cleaned.

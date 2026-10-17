@@ -37,7 +37,7 @@ public sealed record PulseFeedLive(double? CpuTemp, double? GpuTemp, double? Cpu
 public sealed record PulseFeedModeInfo(string Key, string Title);
 
 public sealed record PulseFeed(int Schema, long UpdatedAt, string PulseVersion, bool Running, PulseFeedMode Mode, bool AutoGameMode, bool AcceptsCommands, PulseFeedReport? LastReport,
-    string? ModeTitle = null, List<PulseFeedModeInfo>? Modes = null, PulseFeedLive? Live = null, PulseFeedCommand? LastCommand = null);
+    string? ModeTitle = null, List<PulseFeedModeInfo>? Modes = null, PulseFeedLive? Live = null, PulseFeedCommand? LastCommand = null, int? HeatTarget = null);
 
 /// <summary>
 /// KLYC Konsol ile dosya tabanlı haberleşme: saf mantık (okuma, yazma, yollar). Dosyalar kullanıcı profilindedir, yoklama yoktur.
@@ -150,11 +150,11 @@ public static class KonsolLink
         r.CpuTempMax is { } c ? Math.Round(c) : null, r.GpuTempMax, r.Bottleneck, r.Severity, r.Findings.Take(3).ToList());
 
     public static PulseFeed BuildFeed(string pulseVersion, bool running, string? modeKey, bool applying, bool autoGameMode, GameSessionReport? last, long? now = null,
-        bool acceptsCommands = false, PulseFeedLive? live = null, PulseFeedCommand? lastCommand = null) =>
+        bool acceptsCommands = false, PulseFeedLive? live = null, PulseFeedCommand? lastCommand = null, int? heatTarget = null) =>
         new(FeedSchema, now ?? UnixNow(), pulseVersion, running, new PulseFeedMode(modeKey, applying), autoGameMode, acceptsCommands, ToFeedReport(last),
             modeKey is null ? null : Pulse.Core.Modes.Modes.Get(modeKey) is { } d ? Pulse.Core.Localization.Loc.T(d.Title) : modeKey,
             acceptsCommands ? Pulse.Core.Modes.Modes.All.Select(m => new PulseFeedModeInfo(m.Key, Pulse.Core.Localization.Loc.T(m.Title))).ToList() : null,
-            live, lastCommand);
+            live, lastCommand, heatTarget);
 
     private static readonly JsonSerializerOptions FeedJson = new() { PropertyNamingPolicy = JsonNamingPolicy.CamelCase, WriteIndented = true };
 
