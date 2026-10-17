@@ -4,7 +4,7 @@ using Pulse.Core.Monitoring;
 
 namespace Pulse.Core.Hardware;
 
-public sealed record GpuCapResult(bool Ok, bool Verified, string Message);
+public sealed record GpuCapResult(bool Ok, bool Verified, string Message, bool Transient = false);
 
 /// <summary>
 /// Ekran kartı hız sınırı (G-Helper'ın "GPU saat sınırı"nın karşılığı). NVIDIA'nın resmi NVML arayüzüyle çekirdek
@@ -17,8 +17,10 @@ public static class GpuClocks
     {
         var nvml = Nvml.TryOpen();
         if (nvml is null) return new(false, false, Loc.T("NVIDIA sürücüsü bulunamadı."));
+        // Ekran kartı uykudayken / sürücü meşgulken liste ilk denemede boş dönebiliyor (gerçek kullanımda görüldü): kısa aralıkla yeniden dene
         var supported = nvml.SupportedCoreClocks();
-        if (supported.Count == 0) return new(false, false, Loc.T("Desteklenen saat listesi okunamadı."));
+        for (var i = 0; i < 4 && supported.Count == 0; i++) { Thread.Sleep(500); supported = nvml.SupportedCoreClocks(); }
+        if (supported.Count == 0) return new(false, false, Loc.T("Desteklenen saat listesi şu an okunamadı (ekran kartı uykuda olabilir); sonraki mod değişiminde yeniden denenir."), Transient: true);
 
         var floor = supported.Min();
         var cap = supported.Where(c => c <= maxMhz).DefaultIfEmpty(supported.Min()).Max();   // desteklenen en yakın alt değer

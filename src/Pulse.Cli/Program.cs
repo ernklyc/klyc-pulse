@@ -9,6 +9,7 @@ using Pulse.Core.Health;
 using Pulse.Core.Modes;
 using Pulse.Core.Platform;
 
+Environment.SetEnvironmentVariable("KLYC_PULSE_LOGDIR", Path.Combine(Path.GetTempPath(), "pulse-cli-logs"));   // test günlükleri gerçek günlük klasörüne karışmasın
 // Motoru arayüzsüz sınamak için: pulse-cli status | apply <mod> | all
 Environment.SetEnvironmentVariable("KLYC_PULSE_TEST", "1");   // testlerin geçici klasördeki sahte oyunları algılanabilsin (uygulamada kapalıdır)
 var cmd = args.Length > 0 ? args[0] : "status";
@@ -1237,6 +1238,17 @@ if (cmd == "guard-test")
     Check(Run(g4, 60, 92, 0, 12) == Pulse.Core.Monitoring.GuardEvent.Cool, "Ekran kartı 92°C ise de serinletir");
     var g5 = new Pulse.Core.Monitoring.ThermalGuard();
     Check(Run(g5, null, 60, 0, 100) == Pulse.Core.Monitoring.GuardEvent.None, "İşlemci sıcaklığı okunamıyorsa (null) hata vermez");
+    // Uzun süre sıcak kalınca uyarılar seyrekleşir (gerçek kullanımda 15 uyarı birikmişti), serinleyince sıfırlanır
+    var g6 = new Pulse.Core.Monitoring.ThermalGuard();
+    var warns = 0; var firstGaps = new List<int>(); var lastAt = 0;
+    for (var s = 0; s <= 3 * 3600; s++) if (g6.Feed(92, 60, t0.AddSeconds(s)) == Pulse.Core.Monitoring.GuardEvent.Warn) { warns++; firstGaps.Add(s - lastAt); lastAt = s; }
+    Check(warns >= 4 && warns <= 6, $"3 saat sürekli sıcakta uyarı sayısı azaldı (eskiden 18; şimdi {warns})");
+    Check(firstGaps.Count >= 4 && firstGaps[2] > firstGaps[1] && firstGaps[3] > firstGaps[2], $"Aralar giderek açılıyor: {string.Join(", ", firstGaps.Select(x => x / 60 + " dk"))}");
+    Check(firstGaps.All(x => x <= 3600 + 60), "Bekleme 60 dk'yı aşmaz");
+    var g7 = new Pulse.Core.Monitoring.ThermalGuard();
+    Run(g7, 92, 60, 0, 40);                                  // 1. uyarı
+    Run(g7, 70, 60, 41, 130);                                // 90 sn güvenli: sıfırlanır
+    Check(Run(g7, 92, 60, 131, 170) == Pulse.Core.Monitoring.GuardEvent.Warn, "Serinledikten sonra yeni sıcak dönem yine hemen uyarır (cooldown sıfırlandı)");
     Console.WriteLine(fails == 0 ? "ISI BEKÇİSİ TESTİ GEÇTİ" : $"{fails} TEST KALDI");
     return fails == 0 ? 0 : 1;
 }

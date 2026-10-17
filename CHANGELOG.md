@@ -8,6 +8,12 @@ Biçim [Keep a Changelog](https://keepachangelog.com/tr/) esaslıdır; sürümle
 - **Konsol'dan daha fazlasını yönet (izin açıksa):** mod ve Hızlandır'a ek olarak **Temizlik** (zararsız geçici dosyalar), **oyun açılınca otomatik mod** (aç/kapat), **ısı hedefi** (Kapalı / 75 / 80 / 85 / 90 °C) ve **fan desteği** (aç/kapat). Her eylemin değer listesi dardır (`on`/`off`, sabit sıcaklık listesi); başka değer ya da eylem reddedilir. Reddedilen komutun sonucu artık kendi kimliğiyle Konsol'a döner (gerçek ret nedeni görünür, "yanıt yok" değil). Özete `heatTarget` eklendi. `konsol-cmd-test` 46 → 59 denetim.
 - Not: bu ayar KAPALI başlar (Ayarlar → "Konsol'dan mod değiştirmeye izin ver").
 
+### Düzeltilenler (gerçek kullanım günlüklerinden)
+- **Ekran kartı saat listesi bazen okunamıyordu** (açılışta ve Boşta moduna geçişte "Failed"): kart uykudayken / sürücü meşgulken ilk okuma boş dönüyordu. Artık yarım saniye arayla 4 kez yeniden denenir; yine okunamazsa kırmızı hata değil, "şu an okunamadı, sonraki mod değişiminde yeniden denenir" uyarısı olur.
+- **Yenileme hızı doğrulaması:** ekran yeni uyandığında 180 Hz yerine 60 Hz okunup adım "Failed" oluyordu; artık bekleyip yeniden yazar ve yeniden okur (3 tur).
+- **Isı uyarıları seyrekleşir:** uzun süre sıcak kalınca aynı uyarı 10 dk'da bir tekrarlanıyordu (kayıtlarda 15 uyarı); şimdi aralık her uyarıdan sonra iki katına çıkar (10, 20, 40, 60 dk; 3 saatte 5 uyarı, eskiden 18) ve gerçekten serinleyince sıfırlanır. Uyarı, Sıcaklık sınırı kapalıysa bunu önerir.
+- **CLI testleri artık gerçek günlüğü kirletmiyor** (`Ayarlar okunamadı…` satırları test gürültüsüydü): test günlükleri geçici klasöre yazılır (`KLYC_PULSE_LOGDIR`).
+
 ## [1.11.0] — 2026-10-12
 
 ### Eklenenler

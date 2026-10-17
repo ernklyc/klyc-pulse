@@ -27,8 +27,11 @@ public sealed class ThermalGuard
     public TimeSpan CoolAfter { get; init; } = TimeSpan.FromSeconds(10);
     public TimeSpan SafeFor { get; init; } = TimeSpan.FromSeconds(60);
     public TimeSpan WarnCooldown { get; init; } = TimeSpan.FromMinutes(10);
+    /// <summary>Aynı sıcak oturumda tekrarlayan uyarılar seyrekleşir: her uyarıdan sonra bekleme iki katına çıkar (en çok bu süreye kadar). Güvenli sıcaklığa inince sıfırlanır.</summary>
+    public TimeSpan WarnCooldownMax { get; init; } = TimeSpan.FromMinutes(60);
 
     private DateTime? _warnSince, _coolSince, _safeSince, _lastWarn;
+    private int _warnCount;
     private bool _cooling;
 
     /// <summary>Serinletme şu an etkin mi (bekçi modu düşürdü ve henüz geri vermedi)?</summary>
@@ -45,6 +48,7 @@ public sealed class ThermalGuard
         _coolSince = cool ? _coolSince ?? now : null;
         _warnSince = warn ? _warnSince ?? now : null;
         _safeSince = safe ? _safeSince ?? now : null;
+        if (_safeSince is { } ss && now - ss >= SafeFor) { _warnCount = 0; _lastWarn = null; }   // gerçekten serinledi: sonraki sıcak dönem yine hemen uyarsın
 
         if (_cooling)
         {
@@ -60,9 +64,10 @@ public sealed class ThermalGuard
             return GuardEvent.Cool;
         }
 
-        if (_warnSince is { } w && now - w >= WarnAfter && (_lastWarn is null || now - _lastWarn >= WarnCooldown))
+        var cooldown = TimeSpan.FromTicks(Math.Min(WarnCooldownMax.Ticks, WarnCooldown.Ticks * (1L << Math.Min(Math.Max(0, _warnCount - 1), 6))));
+        if (_warnSince is { } w && now - w >= WarnAfter && (_lastWarn is null || now - _lastWarn >= cooldown))
         {
-            _lastWarn = now;
+            _lastWarn = now; _warnCount++;
             return GuardEvent.Warn;
         }
         return GuardEvent.None;

@@ -55,7 +55,7 @@ public sealed class ThermalGuardService : IDisposable
             {
                 case GuardEvent.Warn:
                     Journal.Write($"Isı bekçisi: uyarı ({hot}).");
-                    Notice?.Invoke(Loc.F("Isı yüksek: {0}.", hot), true);
+                    Notice?.Invoke(Loc.F("Isı yüksek: {0}.", hot) + (AppServices.Settings.Current.HeatTarget is null ? Loc.T(" İstersen Ayarlar → Sıcaklık sınırı ile işlemciyi otomatik kısabilirsin.") : ""), true);
                     break;
                 case GuardEvent.Cool:
                     if (AppServices.Modes.CurrentKey == Modes.Game)

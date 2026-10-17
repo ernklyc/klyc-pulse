@@ -183,7 +183,19 @@ public sealed class ModeEngine : IDisposable
 
         DisplayService.SetRefreshRate(target);
         Thread.Sleep(900);
-        return Verify(name, target, DisplayService.GetRefreshRate(), v => $"{v} Hz");
+        var now = DisplayService.GetRefreshRate();
+        // Ekran yeni uyandıysa ya da sürücü geç kabul ediyorsa ilk okuma eski değeri verebilir (gerçek kullanımda 180 yerine 60 okundu):
+        // yeniden yaz ve biraz bekleyip tekrar oku.
+        for (var i = 0; i < 3 && now != target; i++)
+        {
+            Thread.Sleep(1500);
+            now = DisplayService.GetRefreshRate();
+            if (now == target) break;
+            DisplayService.SetRefreshRate(target);
+            Thread.Sleep(1200);
+            now = DisplayService.GetRefreshRate();
+        }
+        return Verify(name, target, now, v => $"{v} Hz");
     }
 
     private static StepResult ApplyBrightness(ModeDefinition mode)
@@ -231,7 +243,7 @@ public sealed class ModeEngine : IDisposable
             return r.Ok ? new(name, StepStatus.Verified, Loc.T("Sınırsız (sürücü varsayılanı).")) : new(name, StepStatus.Warning, r.Message);
         }
         var c = Hardware.GpuClocks.Cap(cap);
-        return !c.Ok ? new(name, StepStatus.Failed, c.Message) : new(name, c.Verified ? StepStatus.Verified : StepStatus.Applied, c.Message);
+        return !c.Ok ? new(name, c.Transient ? StepStatus.Warning : StepStatus.Failed, c.Message) : new(name, c.Verified ? StepStatus.Verified : StepStatus.Applied, c.Message);
     }
 
     /// <summary>Boşta modunda (fişteyken) ekranın kapanma ve uykuya geçme süresi (30 dk, kullanıcının isteği). Eskiden 1 dk ekran / uyku kapalıydı; bilgisayar başındayken ekran kararıyordu.</summary>

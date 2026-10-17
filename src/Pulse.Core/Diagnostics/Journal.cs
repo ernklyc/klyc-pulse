@@ -5,7 +5,8 @@ public static class Journal
 {
     private static readonly object Gate = new();
 
-    public static string Directory { get; } = System.IO.Path.Combine(
+    /// <summary>Günlük klasörü. KLYC_PULSE_LOGDIR verilirse oraya yazılır (CLI testleri gerçek günlüğü kirletmesin).</summary>
+    public static string Directory { get; } = Environment.GetEnvironmentVariable("KLYC_PULSE_LOGDIR") is { Length: > 0 } custom ? custom : System.IO.Path.Combine(
         Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Pulse", "logs");
 
     public static void Write(string message)

@@ -1078,3 +1078,5 @@ Isı hedefi kapatıldı.	Heat target turned off.
 Oyun açılınca otomatik mod: açık.	Automatic game mode: on.
 Oyun açılınca otomatik mod: kapalı.	Automatic game mode: off.
 Temizlik tamam: {0} temizlendi.	Cleanup done: {0} cleaned.
+ İstersen Ayarlar → Sıcaklık sınırı ile işlemciyi otomatik kısabilirsin.	 If you like, Settings → Heat limit can lower the CPU speed automatically.
+Desteklenen saat listesi şu an okunamadı (ekran kartı uykuda olabilir); sonraki mod değişiminde yeniden denenir.	The supported clock list could not be read right now (the graphics card may be asleep); it will be retried at the next mode change.
