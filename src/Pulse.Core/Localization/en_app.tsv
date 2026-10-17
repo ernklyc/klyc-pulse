@@ -1087,3 +1087,7 @@ Arka plandaki işlemci yükü ölçülüyor…	Measuring background CPU load…
 Arka plan yükü	Background load
 Arka planda dikkat çekecek işlemci yükü yok.	No notable background CPU load.
 Arka planda en çok işlemci kullananlar: {0}. Gerekmiyorsa Süreçler sayfasından kapatabilirsin (Hızlandır bunları kapatmaz).	The biggest background CPU users: {0}. If you do not need them you can close them from the Processes page (Boost does not close them).
+Pulse bu oyunu henüz tanımıyor: oyunu bir kez oynayınca profili kendiliğinden oluşur.	Pulse does not know this game yet: its profile is created automatically after you play it once.
+{0}: bu oyunda otomatik mod geçişi kapatıldı.	{0}: automatic mode switching is turned off for this game.
+Bilinmeyen mod.	Unknown mode.
+{0}: bu oyun için {1} modu seçildi.	{0}: {1} mode selected for this game.

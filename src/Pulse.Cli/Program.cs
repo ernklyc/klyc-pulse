@@ -338,6 +338,26 @@ if (cmd == "konsol-cmd-test")
         File.WriteAllText(path, CmdV("heat", "250", "peek-id-0001"));
         Check(await runner3.ProcessAsync(path, now) is { Ok: false, Id: "peek-id-0001" }, "Reddedilen komutun sonucu kendi kimliğiyle döner (Konsol gerçek nedeni görür)");
 
+        // ---- Oyun başına profil (gamemode): doğrulama, var olan profili değiştirme, olmayanı uydurmama ----
+        string GmCmd(string mode, string? title, string id = "gm-0000001") => "{\"schema\":1,\"id\":\"" + id + "\",\"action\":\"gamemode\",\"mode\":\"" + mode + "\"" + (title is null ? "" : ",\"value\":\"" + title + "\"") + ",\"at\":" + now + "}";
+        Check(KonsolCommands.Parse(GmCmd("sessiz", "Hades II"), now).Command is { Action: "gamemode", Mode: "sessiz", Value: "Hades II" } && KonsolCommands.Parse(GmCmd("off", "Hades II"), now).Ok, "gamemode: bilinen mod ya da 'off' + oyun adı kabul edilir");
+        Check(KonsolCommands.Parse(GmCmd("turbo", "Hades II"), now).Rejected == "mod" && KonsolCommands.Parse(GmCmd("oyun", null), now).Rejected == "değer" && KonsolCommands.Parse(GmCmd("oyun", new string('a', 81)), now).Rejected == "değer" && KonsolCommands.Parse(GmCmd("oyun", "a\\nb"), now).Rejected == "değer", "gamemode: bilinmeyen mod, oyun adı yok/çok uzun/denetim karakteri reddedilir");
+        var gset = new Pulse.Core.Settings.AppSettings();
+        gset.GameProfiles.Add(new Pulse.Core.Settings.GameProfile { ExeName = "hades2", DisplayName = "Hades II", ModeKey = "oyun" });
+        Check(KonsolGameProfiles.Apply(gset, "hades ii", "sessiz") is { Ok: true } && gset.GameProfiles[0].ModeKey == "sessiz" && gset.GameProfiles[0].Enabled, "Var olan profilin modu değişir (ad büyük/küçük harf ve boşluktan bağımsız eşleşir)");
+        Check(KonsolGameProfiles.Apply(gset, "Hades II", "off") is { Ok: true } && !gset.GameProfiles[0].Enabled && gset.GameProfiles[0].ModeKey == "sessiz", "'off' otomatik geçişi kapatır, modu silmez");
+        Check(KonsolGameProfiles.Apply(gset, "Hades II", "oyun") is { Ok: true } && gset.GameProfiles[0].Enabled, "Mod seçmek profili yeniden açar");
+        Check(KonsolGameProfiles.Apply(gset, "Bilinmeyen Oyun", "oyun") is { Ok: false } && gset.GameProfiles.Count == 1, "Profili olmayan oyun için yeni profil UYDURULMAZ");
+        var gcalls = new List<string>();
+        var runner5 = new KonsolCommandRunner(new FakeSwitch("gunluk"), () => Task.FromResult("b"), () => true, () => true, new KonsolExtraActions { GameMode = (t, m) => { gcalls.Add(t + ":" + m); return KonsolGameProfiles.Apply(gset, t, m); } });
+        File.WriteAllText(path, GmCmd("sessiz", "Hades II", "gm-run-0001"));
+        Check(await runner5.ProcessAsync(path, now) is { Ok: true } && gcalls.SequenceEqual(new[] { "Hades II:sessiz" }) && gset.GameProfiles[0].ModeKey == "sessiz", "Çalıştırıcı gamemode'u temsilciye (oyun, mod) olarak iletir");
+        await Task.Delay(2100);
+        File.WriteAllText(path, GmCmd("sessiz", "Yok Oyun", "gm-run-0002"));
+        Check(await runner5.ProcessAsync(path, now) is { Ok: false, Id: "gm-run-0002" }, "Profil yoksa Konsol'a dürüst başarısızlık döner");
+        var gf = KonsolLink.BuildFeed("1.12.0", true, "oyun", false, true, null, now: now, acceptsCommands: true, gameProfiles: KonsolGameProfiles.ToFeed(gset.GameProfiles));
+        Check(gf.GameProfiles is { Count: 1 } && gf.GameProfiles[0] is { Name: "Hades II", Mode: "sessiz", Enabled: true } && KonsolLink.BuildFeed("1.12.0", true, "oyun", false, true, null, now: now, gameProfiles: KonsolGameProfiles.ToFeed(gset.GameProfiles)).GameProfiles is null, "Özet profilleri yalnızca komutlar kabul ediliyorsa taşır");
+
         // ---- Özet (feed): komutlar kapalı/açık, mod listesi, canlı değerler, son komut ----
         var off = KonsolLink.BuildFeed("1.11.0", true, "oyun", false, true, null, now: now);
         Check(!off.AcceptsCommands && off.Modes is null && off.ModeTitle == "Oyun" && off.Live is null && off.LastCommand is null, "Varsayılan özet: komut kabul etmiyor, mod listesi yok, mod adı var");
