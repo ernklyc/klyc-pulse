@@ -10,6 +10,7 @@ Biçim [Keep a Changelog](https://keepachangelog.com/tr/) esaslıdır; sürümle
 - **Mod koruyucu artık süreç başlatmıyor:** güç planı okumaları (etkin plan, prizde/pilde değerler) her seferinde ayrı bir `powercfg.exe` süreci açıyordu (~39 ms ve bir süreç) ve "Modu koru" ayarı (varsayılan açık) bunu dakikada bir birkaç kez yapıyordu; oyun sırasında bile. Artık doğrudan `powrprof.dll` ile okunur (0,12 ms, ~300 kat hızlı; `powercfg-native-test` çıktıyı `powercfg.exe` ile karşılaştırır). Yazma yolları değişmedi; yerel okuma başarısız olursa eski yönteme düşer.
 - **Windows ile başlat görevi kendini onarır:** görev, artık var olmayan bir exe'yi gösteriyorsa (taşınabilir exe silinip Velopack kurulumuna geçilince bu olmuştu ve Pulse Windows ile hiç açılmıyordu) yönetici olarak ilk açılışta görev çalışan exe'ye yönlendirilir. Exe hâlâ varsa dokunulmaz.
 - **Riot başlatıcısı oyun sayılmıyor:** `RiotClientServices` "oyun" diye algılanınca asıl oyun (VALORANT-Win64-Shipping) arka plan yükü görünüyor ve raporlar yanlış oyuna yazılıyordu.
+- **Konsol'dan başlatılan Steam/Epic oyunlarında mod gidip geliyordu:** Konsol oyunu bekçiye devredince hemen "oynuyor" der; Pulse bu ipucuyla "süreç gelsin" bekleme süresini siliyordu, oyun süreci ~25–30 sn sonra gelince mod önce Günlük'e dönüp sonra yeniden Oyun'a geçiyordu. Gerçek Hades denemesinde görüldü ve düzeltildi (testle).
 
 ### Eklenenler
 - `pulse-cli sensor-bench`: sensör okumasının işlemci maliyetini parça parça ölçer (salt okunur).
