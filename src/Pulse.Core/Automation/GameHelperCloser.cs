@@ -7,20 +7,20 @@ using Pulse.Core.Platform;
 namespace Pulse.Core.Automation;
 
 /// <summary>Oyun için geçici olarak durdurulan şey: bir Windows servisi ya da bir program (yolu bilinirse oyun bitince yeniden başlatılır).</summary>
-public sealed record ClosedHelper(string Name, string Kind, string Target, string? Path);
+public sealed record ClosedHelper(string Name, string Kind, string Target, string? Path, string? Args = null);
 
 /// <summary>Sistem tarafı (testlerde sahte): çalışan süreçler, servisler, durdurma/başlatma.</summary>
 public interface IHelperHost
 {
     /// <summary>Verilen adda çalışan süreçler (pid, tam yol ya da null, pencere var mı, oturum 0 mı).</summary>
-    IReadOnlyList<(int Pid, string? Path, bool HasWindow, bool InSession0)> Processes(string name);
+    IReadOnlyList<(int Pid, string? Path, bool HasWindow, bool InSession0, string? Args)> Processes(string name);
     /// <summary>Bu program adıyla ilişkili ÇALIŞAN servisler (servis adı ya da yolu program adını içerir). Servis varsa program onu yeniden başlatır; bu yüzden servis durdurulur.</summary>
     IReadOnlyList<string> RunningServicesFor(string name);
     bool StopService(string service);
     bool StartService(string service);
     /// <summary>Programa nazikçe kapat der; kapanmayanı zorla sonlandırır. Hepsi kapandıysa true.</summary>
     bool CloseProcess(int pid);
-    bool Launch(string path);
+    bool Launch(string path, string? args);
 }
 
 /// <summary>
@@ -80,7 +80,7 @@ public sealed class GameHelperCloser
                 foreach (var p in procs.Where(p => !p.InSession0))
                 {
                     if (Pulse.Core.Processes.ProcessInspector.Protection(name, p.Path, p.HasWindow, p.InSession0).Item1) continue;
-                    if (_host.CloseProcess(p.Pid)) done.Add(new ClosedHelper(name, "process", p.Pid.ToString(), p.Path)); else Journal.Write($"Program kapatılamadı: {name} ({p.Pid})");
+                    if (_host.CloseProcess(p.Pid)) done.Add(new ClosedHelper(name, "process", p.Pid.ToString(), p.Path, p.Args)); else Journal.Write($"Program kapatılamadı: {name} ({p.Pid})");
                 }
             }
             catch (Exception ex) { Journal.Write($"Oyun sırasında kapatma hatası ({name}): {ex.Message}"); }
@@ -105,7 +105,7 @@ public sealed class GameHelperCloser
         {
             try
             {
-                var ok = c.Kind == "service" ? _host.StartService(c.Target) : c.Path is { Length: > 0 } && _host.Launch(c.Path);
+                var ok = c.Kind == "service" ? _host.StartService(c.Target) : c.Path is { Length: > 0 } && _host.Launch(c.Path, c.Args);
                 if (ok) restored.Add(c.Name); else Journal.Write($"Oyun sonrası geri getirilemedi: {c.Name}");
             }
             catch (Exception ex) { Journal.Write($"Geri getirme hatası ({c.Name}): {ex.Message}"); }
@@ -135,20 +135,42 @@ public sealed class GameHelperCloser
 /// <summary>Gerçek sistem uygulaması.</summary>
 public sealed class SystemHelperHost : IHelperHost
 {
-    public IReadOnlyList<(int, string?, bool, bool)> Processes(string name)
+    public IReadOnlyList<(int, string?, bool, bool, string?)> Processes(string name)
     {
-        var list = new List<(int, string?, bool, bool)>();
+        var list = new List<(int, string?, bool, bool, string?)>();
         foreach (var p in Process.GetProcessesByName(name))
         {
             try
             {
                 string? path = null; try { path = p.MainModule?.FileName; } catch { }
-                list.Add((p.Id, path, p.MainWindowHandle != IntPtr.Zero, p.SessionId == 0));
+                list.Add((p.Id, path, p.MainWindowHandle != IntPtr.Zero, p.SessionId == 0, ArgsOf(p.Id)));
             }
             catch { }
             finally { p.Dispose(); }
         }
         return list;
+    }
+
+    /// <summary>Sürecin komut satırından çalıştırılabilir dosya kısmını atıp bağımsız değişkenleri döner (yoksa null).</summary>
+    public static string? SplitArgs(string? commandLine)
+    {
+        if (string.IsNullOrWhiteSpace(commandLine)) return null;
+        var s = commandLine.TrimStart();
+        int end;
+        if (s.StartsWith('"')) { end = s.IndexOf('"', 1); if (end < 0) return null; end++; }
+        else { end = s.IndexOf(' '); if (end < 0) return null; }
+        var rest = s[end..].Trim();
+        return rest.Length == 0 ? null : rest;
+    }
+
+    private static string? ArgsOf(int pid)
+    {
+        try
+        {
+            var rows = Pulse.Core.Health.WmiReader.Query(@"root\cimv2", $"SELECT CommandLine FROM Win32_Process WHERE ProcessId={pid}");
+            return rows.Count > 0 && rows[0].TryGetValue("CommandLine", out var c) ? SplitArgs(c as string) : null;
+        }
+        catch { return null; }
     }
 
     public IReadOnlyList<string> RunningServicesFor(string name)
@@ -184,9 +206,9 @@ public sealed class SystemHelperHost : IHelperHost
         catch { return false; }
     }
 
-    public bool Launch(string path)
+    public bool Launch(string path, string? args)
     {
-        try { Process.Start(new ProcessStartInfo(path) { UseShellExecute = true, WorkingDirectory = Path.GetDirectoryName(path) ?? "" }); return true; }
+        try { Process.Start(new ProcessStartInfo(path, args ?? "") { UseShellExecute = true, WorkingDirectory = Path.GetDirectoryName(path) ?? "" }); return true; }
         catch { return false; }
     }
 }

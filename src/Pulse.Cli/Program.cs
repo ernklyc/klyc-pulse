@@ -2671,14 +2671,15 @@ if (cmd == "helper-test")
     Check(!Pulse.Core.Automation.GameHelperCloser.Validate("klyc-pulse").Ok && !Pulse.Core.Automation.GameHelperCloser.Validate("msmpeng").Ok && !Pulse.Core.Automation.GameHelperCloser.Validate("explorer").Ok, "Korumalı programlar (Pulse, Defender, explorer) eklenemez");
     Check(!Pulse.Core.Automation.GameHelperCloser.Validate("a;b").Ok && !Pulse.Core.Automation.GameHelperCloser.Validate("../x").Ok && !Pulse.Core.Automation.GameHelperCloser.Validate("").Ok && !Pulse.Core.Automation.GameHelperCloser.Validate(new string('a', 65)).Ok, "Geçersiz adlar (noktalı virgül, yol, boş, çok uzun) reddedilir");
     Check(Pulse.Core.Automation.GameHelperCloser.Validate("sunshine").Ok && Pulse.Core.Automation.GameHelperCloser.Validate("Some App-2").Ok, "Sıradan program adları kabul edilir");
+    Check(Pulse.Core.Automation.SystemHelperHost.SplitArgs("\"C:/Program Files/X/x.exe\" --tray -a \"b c\"") == "--tray -a \"b c\"" && Pulse.Core.Automation.SystemHelperHost.SplitArgs("C:/x.exe -t") == "-t" && Pulse.Core.Automation.SystemHelperHost.SplitArgs("\"C:/x.exe\"") is null && Pulse.Core.Automation.SystemHelperHost.SplitArgs("") is null, "Komut satırından bağımsız değişkenler ayrılır (tırnaklı yol, yolsuz, boş)");
     var state = Path.Combine(Path.GetTempPath(), "helper-test-" + Guid.NewGuid().ToString("N")[..6] + ".json");
     try
     {
         var host = new FakeHelperHost();
         host.Services["sunshine"] = new[] { "SunshineService" };
-        host.Procs["sunshine"] = new[] { (100, (string?)"C:/Sunshine/sunshine.exe", false, false) };
-        host.Procs["foo"] = new[] { (200, (string?)"C:/Apps/foo.exe", true, false), (201, (string?)"C:/Apps/foo.exe", false, false) };
-        host.Procs["bar"] = new[] { (300, (string?)"C:/Apps/bar.exe", false, true) };
+        host.Procs["sunshine"] = new[] { (100, (string?)"C:/Sunshine/sunshine.exe", false, false, (string?)null) };
+        host.Procs["foo"] = new[] { (200, (string?)"C:/Apps/foo.exe", true, false, (string?)"--tray"), (201, (string?)"C:/Apps/foo.exe", false, false, (string?)"--tray") };
+        host.Procs["bar"] = new[] { (300, (string?)"C:/Apps/bar.exe", false, true, (string?)null) };
         var closer = new Pulse.Core.Automation.GameHelperCloser(host, state);
         var closed = closer.CloseListed(new[] { "sunshine", "foo", "bar", "klyc-pulse", "SUNSHINE" });
         Check(host.StoppedServices.SequenceEqual(new[] { "SunshineService" }) && !host.ClosedPids.Contains(100), "Servisle çalışan program için servis durdurulur (süreç ayrıca öldürülmez)");
@@ -2688,7 +2689,7 @@ if (cmd == "helper-test")
         var again = new Pulse.Core.Automation.GameHelperCloser(host, state);
         Check(again.Closed.Count == 2, "Kapatılanlar diske yazılır; Pulse yeniden açılınca bilinir");
         var restored = again.RestoreAll();
-        Check(host.StartedServices.SequenceEqual(new[] { "SunshineService" }) && host.Launched.SequenceEqual(new[] { "C:/Apps/foo.exe" }) && restored.Count == 2, "Oyun bitince servis başlatılır, program yoluyla yeniden açılır");
+        Check(host.StartedServices.SequenceEqual(new[] { "SunshineService" }) && host.Launched.SequenceEqual(new[] { "C:/Apps/foo.exe --tray" }) && restored.Count == 2, "Oyun bitince servis başlatılır, program yoluyla yeniden açılır");
         Check(again.Closed.Count == 0 && !File.Exists(state), "Geri getirdikten sonra kayıt temizlenir");
     }
     finally { try { File.Delete(state); } catch { } }
@@ -2712,6 +2713,39 @@ if (cmd == "helper-test")
     var fed = Pulse.Core.Companion.KonsolLink.BuildFeed("1.13.1", true, "oyun", false, true, null, now: now, acceptsCommands: true, bgClose: feed);
     Check(fed.BgClose is not null && Pulse.Core.Companion.KonsolLink.BuildFeed("1.13.1", true, "oyun", false, true, null, now: now, bgClose: feed).BgClose is null, "Özet bgClose'u yalnızca komutlara izin açıkken taşır");
     Console.WriteLine(fails == 0 ? "OYUN YARDIMCISI TESTİ GEÇTİ" : $"{fails} TEST KALDI");
+    return fails == 0 ? 0 : 1;
+}
+
+if (cmd == "helper-real-test")
+{
+    // Gerçek süreçle: sahte bir "arka plan programı" başlatır, GameHelperCloser gerçek sistem uygulamasıyla kapatır, geri getirir. Yalnızca kendi sahte programına dokunur.
+    var fails = 0;
+    void Check(bool ok, string what) { Console.WriteLine($"  [{(ok ? "GEÇTİ" : "KALDI")}] {what}"); if (!ok) fails++; }
+    var dir = Path.Combine(Path.GetTempPath(), "helper-real-" + Guid.NewGuid().ToString("N")[..6]);
+    Directory.CreateDirectory(dir);
+    var exe = Path.Combine(dir, "FakeBgApp.exe");
+    foreach (var f0 in Directory.GetFiles(AppContext.BaseDirectory)) File.Copy(f0, Path.Combine(dir, Path.GetFileName(f0)), true);
+    File.Move(Path.Combine(dir, "pulse-cli.exe"), exe, true);
+    var state = Path.Combine(dir, "state.json");
+    try
+    {
+        var p = System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(exe, "fake-game") { UseShellExecute = false, CreateNoWindow = true })!;
+        await Task.Delay(1500);
+        var closer = new Pulse.Core.Automation.GameHelperCloser(new Pulse.Core.Automation.SystemHelperHost(), state);
+        Check(System.Diagnostics.Process.GetProcessesByName("FakeBgApp").Length == 1, "Sahte program çalışıyor");
+        var closed = closer.CloseListed(new[] { "FakeBgApp" });
+        await Task.Delay(1000);
+        Check(closed.Count == 1 && closed[0].Kind == "process" && closed[0].Path is { Length: > 0 } && closed[0].Args == "fake-game" && System.Diagnostics.Process.GetProcessesByName("FakeBgApp").Length == 0, "Gerçek kapatma: program kapandı, yolu ve bağımsız değişkenleri kaydedildi");
+        var restored = closer.RestoreAll();
+        await Task.Delay(2000);
+        Check(restored.Count == 1 && System.Diagnostics.Process.GetProcessesByName("FakeBgApp").Length >= 1, "Gerçek geri getirme: program yeniden açıldı");
+    }
+    finally
+    {
+        foreach (var q in System.Diagnostics.Process.GetProcessesByName("FakeBgApp")) { try { q.Kill(); q.WaitForExit(2000); } catch { } }
+        await Task.Delay(500); try { Directory.Delete(dir, true); } catch { }
+    }
+    Console.WriteLine(fails == 0 ? "GERÇEK YARDIMCI TESTİ GEÇTİ" : $"{fails} TEST KALDI");
     return fails == 0 ? 0 : 1;
 }
 
@@ -3155,15 +3189,15 @@ static class NvProbe
 sealed class FakeHelperHost : Pulse.Core.Automation.IHelperHost
 {
     public Dictionary<string, string[]> Services { get; } = new();
-    public Dictionary<string, (int, string?, bool, bool)[]> Procs { get; } = new();
+    public Dictionary<string, (int, string?, bool, bool, string?)[]> Procs { get; } = new();
     public List<string> StoppedServices { get; } = new();
     public List<string> StartedServices { get; } = new();
     public List<string> Launched { get; } = new();
     public List<int> ClosedPids { get; } = new();
-    public IReadOnlyList<(int Pid, string? Path, bool HasWindow, bool InSession0)> Processes(string name) => Procs.TryGetValue(name.ToLowerInvariant(), out var p) ? p : Array.Empty<(int, string?, bool, bool)>();
+    public IReadOnlyList<(int Pid, string? Path, bool HasWindow, bool InSession0, string? Args)> Processes(string name) => Procs.TryGetValue(name.ToLowerInvariant(), out var p) ? p : Array.Empty<(int, string?, bool, bool, string?)>();
     public IReadOnlyList<string> RunningServicesFor(string name) => Services.TryGetValue(name.ToLowerInvariant(), out var s) ? s : Array.Empty<string>();
     public bool StopService(string service) { StoppedServices.Add(service); return true; }
     public bool StartService(string service) { StartedServices.Add(service); return true; }
     public bool CloseProcess(int pid) { ClosedPids.Add(pid); return true; }
-    public bool Launch(string path) { Launched.Add(path); return true; }
+    public bool Launch(string path, string? args) { Launched.Add(path + (args is null ? "" : " " + args)); return true; }
 }
