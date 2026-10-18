@@ -2,6 +2,11 @@
 
 Biçim [Keep a Changelog](https://keepachangelog.com/tr/) esaslıdır; sürümleme [SemVer](https://semver.org/lang/tr/).
 
+## [1.14.1] — 2026-10-18
+
+### Düzeltilenler
+- **Sürüm numarası 1.12.0 görünüyordu:** derleme sürümü (`AssemblyVersion`/`FileVersion`) 1.12.0.0'da sabit kalmıştı; 1.13.0 ve 1.14.0 kendini "1.12.0" sanıyordu, bu yüzden güncelleme denetimi "Yeni sürüm var: 1.14.0 (şu an 1.12.0)" diye durmadan uyarırdı ve Konsol'a giden özette sürüm yanlıştı. Sürüm artık `<Version>` ile aynı.
+
 ## [1.14.0] — 2026-10-18
 
 ### Düzeltilenler (oyun performansı ve hafiflik)
