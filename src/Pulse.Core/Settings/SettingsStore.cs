@@ -43,6 +43,8 @@ public sealed class AppSettings
     public double CpuSustainedMhz { get; set; }
     public bool AutoQuietOnBattery { get; set; } = false;
     public bool CloseConflictingApps { get; set; } = false;
+    /// <summary>Oyun açılınca geçici durdurulacak arka plan programları (süreç adı); oyun bitince geri getirilir. Varsayılan BOŞ: kullanıcı açıkça seçer.</summary>
+    public List<string> GameCloseApps { get; set; } = new();
     public bool MinimizeToTray { get; set; } = true;
     public bool StartWithWindows { get; set; } = false;
     public bool OnboardingDone { get; set; } = false;

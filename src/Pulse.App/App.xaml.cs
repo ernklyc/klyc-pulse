@@ -153,11 +153,13 @@ public partial class App : Application
         AppServices.Auto.GameStarted += game =>
         {
             AppServices.GameReport.Start(game);
+            if (AppServices.Settings.Current.GameCloseApps.Count > 0) { var list = AppServices.Settings.Current.GameCloseApps.ToList(); _ = Task.Run(() => AppServices.Helpers.CloseListed(list)); }
             if (AppServices.Settings.Current.AutoOverlay && !AppServices.Overlay.IsOn) { overlayAutoOn = true; AppServices.Overlay.Set(true); }
         };
-        AppServices.Auto.GameStopped += _ =>
+        AppServices.Auto.GameStopped += stoppedGame =>
         {
             AppServices.GameReport.Stop();
+            _ = Task.Run(() => AppServices.Helpers.RestoreAll());
             if (overlayAutoOn) { overlayAutoOn = false; AppServices.Overlay.Set(false); }
         };
         AppServices.GameReport.Ready += r => Dispatcher.Invoke(() =>
@@ -165,6 +167,8 @@ public partial class App : Application
                 : r.Severity == 0 ? Loc.T("Oyun raporu hazır: sorun görülmedi.") : Loc.T("Oyun raporu hazır: dikkat edilecek şeyler var."), r.Severity > 0 && !r.AutoTuneChanged,
             () => OpenPage(typeof(Pages.GamesPage))));
         AppServices.Companion.Start();
+        // Pulse oyun sırasında kapandıysa/çöktüyse durdurulmuş programları geri getir (oyun yoksa)
+        _ = Task.Run(async () => { await Task.Delay(8000); if (AppServices.Auto.DetectedGame is null && AppServices.Helpers.Closed.Count > 0) AppServices.Helpers.RestoreAll(); });
         AppServices.Keeper.Notice += text => Dispatcher.Invoke(() => _tray?.ShowBalloonTip(4000, "KLYC-Pulse", text, System.Windows.Forms.ToolTipIcon.Info));
         _ = Task.Run(async () => { await Task.Delay(4000); await AppServices.Modes.ReapplyGpuAsync(); });
 

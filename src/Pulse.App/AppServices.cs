@@ -10,6 +10,8 @@ public static class AppServices
     public static SettingsStore Settings { get; } = SettingsStore.Load();
     public static ModeController Modes { get; } = new(Settings);
     public static AutoModeService Auto { get; } = new(Modes, Settings);
+    /// <summary>"Oyunda kapatılacak programlar": oyun açılınca durdurur, bitince geri getirir (liste kullanıcının seçimi, varsayılan boş).</summary>
+    public static Pulse.Core.Automation.GameHelperCloser Helpers { get; } = new();
     public static Pulse.Core.Cleanup.AutoCleanService AutoClean { get; } = new(Settings, Modes);
 
     private static SensorService? _sensors;

@@ -2664,6 +2664,57 @@ if (cmd == "startup-task-test")
     return fails == 0 ? 0 : 1;
 }
 
+if (cmd == "helper-test")
+{
+    var fails = 0;
+    void Check(bool ok, string what) { Console.WriteLine($"  [{(ok ? "GEÇTİ" : "KALDI")}] {what}"); if (!ok) fails++; }
+    Check(!Pulse.Core.Automation.GameHelperCloser.Validate("klyc-pulse").Ok && !Pulse.Core.Automation.GameHelperCloser.Validate("msmpeng").Ok && !Pulse.Core.Automation.GameHelperCloser.Validate("explorer").Ok, "Korumalı programlar (Pulse, Defender, explorer) eklenemez");
+    Check(!Pulse.Core.Automation.GameHelperCloser.Validate("a;b").Ok && !Pulse.Core.Automation.GameHelperCloser.Validate("../x").Ok && !Pulse.Core.Automation.GameHelperCloser.Validate("").Ok && !Pulse.Core.Automation.GameHelperCloser.Validate(new string('a', 65)).Ok, "Geçersiz adlar (noktalı virgül, yol, boş, çok uzun) reddedilir");
+    Check(Pulse.Core.Automation.GameHelperCloser.Validate("sunshine").Ok && Pulse.Core.Automation.GameHelperCloser.Validate("Some App-2").Ok, "Sıradan program adları kabul edilir");
+    var state = Path.Combine(Path.GetTempPath(), "helper-test-" + Guid.NewGuid().ToString("N")[..6] + ".json");
+    try
+    {
+        var host = new FakeHelperHost();
+        host.Services["sunshine"] = new[] { "SunshineService" };
+        host.Procs["sunshine"] = new[] { (100, (string?)"C:/Sunshine/sunshine.exe", false, false) };
+        host.Procs["foo"] = new[] { (200, (string?)"C:/Apps/foo.exe", true, false), (201, (string?)"C:/Apps/foo.exe", false, false) };
+        host.Procs["bar"] = new[] { (300, (string?)"C:/Apps/bar.exe", false, true) };
+        var closer = new Pulse.Core.Automation.GameHelperCloser(host, state);
+        var closed = closer.CloseListed(new[] { "sunshine", "foo", "bar", "klyc-pulse", "SUNSHINE" });
+        Check(host.StoppedServices.SequenceEqual(new[] { "SunshineService" }) && !host.ClosedPids.Contains(100), "Servisle çalışan program için servis durdurulur (süreç ayrıca öldürülmez)");
+        Check(host.ClosedPids.OrderBy(x => x).SequenceEqual(new[] { 200, 201 }), "Servis olmayan program nazikçe kapatılır; oturum 0 ve korumalı olanlara dokunulmaz");
+        Check(closed.Count == 2 && closed.Any(c => c.Name == "sunshine" && c.Kind == "service") && closed.Any(c => c.Name == "foo" && c.Kind == "process" && c.Path == "C:/Apps/foo.exe"), "Aynı programın iki süreci tek geri getirme kaydı olur; yinelenen ad (büyük/küçük harf) iki kez işlenmez");
+        Check(closer.CloseListed(new[] { "foo" }).Count == 0 && host.ClosedPids.Count == 2, "Aynı oyun içinde ikinci çağrı tekrar kapatmaz");
+        var again = new Pulse.Core.Automation.GameHelperCloser(host, state);
+        Check(again.Closed.Count == 2, "Kapatılanlar diske yazılır; Pulse yeniden açılınca bilinir");
+        var restored = again.RestoreAll();
+        Check(host.StartedServices.SequenceEqual(new[] { "SunshineService" }) && host.Launched.SequenceEqual(new[] { "C:/Apps/foo.exe" }) && restored.Count == 2, "Oyun bitince servis başlatılır, program yoluyla yeniden açılır");
+        Check(again.Closed.Count == 0 && !File.Exists(state), "Geri getirdikten sonra kayıt temizlenir");
+    }
+    finally { try { File.Delete(state); } catch { } }
+
+    var set = new Pulse.Core.Settings.AppSettings();
+    Check(Pulse.Core.Companion.KonsolBgClose.Apply(set, "add", "sunshine").Ok && set.GameCloseApps.SequenceEqual(new[] { "sunshine" }), "Listeye ekleme");
+    Check(Pulse.Core.Companion.KonsolBgClose.Apply(set, "add", "SUNSHINE").Ok && set.GameCloseApps.Count == 1, "Aynı ad (büyük harf) ikinci kez eklenmez");
+    Check(!Pulse.Core.Companion.KonsolBgClose.Apply(set, "add", "msmpeng").Ok && !Pulse.Core.Companion.KonsolBgClose.Apply(set, "add", "klyc-pulse").Ok && set.GameCloseApps.Count == 1, "Korumalı program eklenemez");
+    Check(Pulse.Core.Companion.KonsolBgClose.Apply(set, "remove", "Sunshine").Ok && set.GameCloseApps.Count == 0 && !Pulse.Core.Companion.KonsolBgClose.Apply(set, "remove", "yok").Ok, "Çıkarma (olmayanı çıkarma başarısız bildirilir)");
+    for (var i = 0; i < Pulse.Core.Companion.KonsolBgClose.MaxSelected; i++) Pulse.Core.Companion.KonsolBgClose.Apply(set, "add", "app" + i);
+    Check(!Pulse.Core.Companion.KonsolBgClose.Apply(set, "add", "fazla").Ok && set.GameCloseApps.Count == Pulse.Core.Companion.KonsolBgClose.MaxSelected, "Liste en çok 12 program");
+    var hist = new List<Pulse.Core.Diagnostics.GameSessionReport> { new() { Game = "FC25", Background = new() {
+        new() { Name = "sunshine", Display = "sunshine", Kind = "other", CpuAvgPercent = 2.6 }, new() { Name = "svchost", Display = "Windows hizmetleri", Kind = "system", CpuAvgPercent = 5 },
+        new() { Name = "EADesktop", Display = "EA", Kind = "launcher", CpuAvgPercent = 3 }, new() { Name = "FC25", Display = "FC25", Kind = "other", CpuAvgPercent = 40 }, new() { Name = "chrome", Display = "Chrome", Kind = "app", CpuAvgPercent = 4 } } } };
+    var feed = Pulse.Core.Companion.KonsolBgClose.Feed(new Pulse.Core.Settings.AppSettings(), hist);
+    Check(feed.Candidates.SequenceEqual(new[] { "chrome", "sunshine" }) && feed.Selected.Count == 0, $"Adaylar: sistem/başlatıcı/oyunun kendisi hariç, yüke göre: {string.Join(",", feed.Candidates)}");
+    long now = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
+    string Cmd(string mode, string value) => "{\"schema\":1,\"id\":\"bg-test-0001\",\"action\":\"bgclose\",\"mode\":\"" + mode + "\",\"value\":\"" + value + "\",\"at\":" + now + "}";
+    Check(Pulse.Core.Companion.KonsolCommands.Parse(Cmd("add", "sunshine"), now).Command is { Action: "bgclose", Mode: "add", Value: "sunshine" }, "bgclose komutu: add + program adı kabul edilir");
+    Check(Pulse.Core.Companion.KonsolCommands.Parse(Cmd("kill", "sunshine"), now).Rejected == "mod" && Pulse.Core.Companion.KonsolCommands.Parse(Cmd("add", "a;calc"), now).Rejected == "değer", "bgclose: bilinmeyen mod ve tehlikeli adlar reddedilir");
+    var fed = Pulse.Core.Companion.KonsolLink.BuildFeed("1.13.1", true, "oyun", false, true, null, now: now, acceptsCommands: true, bgClose: feed);
+    Check(fed.BgClose is not null && Pulse.Core.Companion.KonsolLink.BuildFeed("1.13.1", true, "oyun", false, true, null, now: now, bgClose: feed).BgClose is null, "Özet bgClose'u yalnızca komutlara izin açıkken taşır");
+    Console.WriteLine(fails == 0 ? "OYUN YARDIMCISI TESTİ GEÇTİ" : $"{fails} TEST KALDI");
+    return fails == 0 ? 0 : 1;
+}
+
 if (cmd == "sensor-bench") { SensorBenchRun(); return 0; }
 // Ayrı yöntem: PerformanceCounter gibi türler Main JIT'lenirken yüklenmesin (testler exe'yi tek başına kopyalayıp çalıştırıyor)
 static void SensorBenchRun()
@@ -3099,4 +3150,20 @@ static class NvProbe
     [System.Runtime.InteropServices.DllImport("nvml.dll")] public static extern int nvmlDeviceGetPowerUsage(IntPtr d, out uint mw);
     [System.Runtime.InteropServices.DllImport("nvml.dll")] public static extern int nvmlDeviceGetMemoryInfo(IntPtr d, out MI i);
     [System.Runtime.InteropServices.DllImport("nvml.dll")] public static extern int nvmlDeviceGetCurrentClocksThrottleReasons(IntPtr d, out ulong r);
+}
+
+sealed class FakeHelperHost : Pulse.Core.Automation.IHelperHost
+{
+    public Dictionary<string, string[]> Services { get; } = new();
+    public Dictionary<string, (int, string?, bool, bool)[]> Procs { get; } = new();
+    public List<string> StoppedServices { get; } = new();
+    public List<string> StartedServices { get; } = new();
+    public List<string> Launched { get; } = new();
+    public List<int> ClosedPids { get; } = new();
+    public IReadOnlyList<(int Pid, string? Path, bool HasWindow, bool InSession0)> Processes(string name) => Procs.TryGetValue(name.ToLowerInvariant(), out var p) ? p : Array.Empty<(int, string?, bool, bool)>();
+    public IReadOnlyList<string> RunningServicesFor(string name) => Services.TryGetValue(name.ToLowerInvariant(), out var s) ? s : Array.Empty<string>();
+    public bool StopService(string service) { StoppedServices.Add(service); return true; }
+    public bool StartService(string service) { StartedServices.Add(service); return true; }
+    public bool CloseProcess(int pid) { ClosedPids.Add(pid); return true; }
+    public bool Launch(string path) { Launched.Add(path); return true; }
 }

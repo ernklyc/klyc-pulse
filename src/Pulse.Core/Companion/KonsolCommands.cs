@@ -31,7 +31,7 @@ public static class KonsolCommands
     public const int MaxBytes = 1024;
     public static readonly TimeSpan MaxAge = TimeSpan.FromSeconds(20);
     /// <summary>mode: mod uygula · boost: Hızlandır · clean: zararsız temizlik · autogame: oyun açılınca otomatik mod · fan: fan desteği · heat: ısı hedefi.</summary>
-    public static readonly string[] Actions = { "mode", "boost", "clean", "autogame", "fan", "heat", "gamemode" };
+    public static readonly string[] Actions = { "mode", "boost", "clean", "autogame", "fan", "heat", "gamemode", "bgclose" };
     public const int MaxGameTitle = 80;
     public static readonly string[] HeatValues = { "0", "75", "80", "85", "90" };
 
@@ -80,6 +80,14 @@ public static class KonsolCommands
                 if (mode is null || (mode != "off" && Modes.Modes.Get(mode) is null)) return Reject("mod");
                 value = Str(r, "value")?.Trim();
                 if (string.IsNullOrEmpty(value) || value.Length > MaxGameTitle || value.Any(char.IsControl)) return Reject("değer");
+            }
+            else if (action == "bgclose")
+            {
+                // Oyunda kapatılacak programlar listesi: mode = add | remove, value = süreç adı (harf/rakam . _ - boşluk; yol/komut karakteri yok)
+                mode = Str(r, "mode")?.Trim().ToLowerInvariant();
+                if (mode is not ("add" or "remove")) return Reject("mod");
+                value = Str(r, "value")?.Trim();
+                if (string.IsNullOrEmpty(value) || !System.Text.RegularExpressions.Regex.IsMatch(value, @"^[A-Za-z0-9._ \-]{1,64}$")) return Reject("değer");
             }
             return new KonsolCommandCheck(new KonsolCommand(id, action, mode, at, value), null);
         }
@@ -213,6 +221,12 @@ public sealed class KonsolCommandRunner
                         if (!gm.Ok) return Fail(c.Id, c.Action, gm.Message, t, "oyun yok");
                         summary = gm.Message;
                         break;
+                    case "bgclose":
+                        if (_extra.BgClose is null) return Fail(c.Id, c.Action, Loc.T("Bu işlem bu sürümde yok."), t, "yok");
+                        var bg = _extra.BgClose(c.Mode!, c.Value!);
+                        if (!bg.Ok) return Fail(c.Id, c.Action, bg.Message, t, "olmadı");
+                        summary = bg.Message;
+                        break;
                     case "heat":
                         if (_extra.Heat is null) return Fail(c.Id, c.Action, Loc.T("Bu işlem bu sürümde yok."), t, "yok");
                         summary = _extra.Heat(int.Parse(c.Value!));
@@ -253,4 +267,6 @@ public sealed class KonsolExtraActions
     public Func<int, string>? Heat { get; init; }
     /// <summary>(oyun adı, mod anahtarı ya da "off") → var olan oyun profilinin modunu değiştirir; profil yoksa Ok=false (yeni profil UYDURULMAZ: yanlış exe adı algılamayı bozardı).</summary>
     public Func<string, string, (bool Ok, string Message)>? GameMode { get; init; }
+    /// <summary>(mod "add"/"remove", program adı) → "Oyunda kapatılacak programlar" listesini değiştirir.</summary>
+    public Func<string, string, (bool Ok, string Message)>? BgClose { get; init; }
 }

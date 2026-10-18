@@ -1113,3 +1113,11 @@ Sistem denetleniyor…	Checking the system…
 Gösterge (overlay) karşılaştırması: açıkken ort. {0:0} FPS, kapalıyken {1:0} FPS{2}. Belirgin bir fark görülmedi ({3} oturumla).	Overlay comparison: {0:0} FPS average with it on, {1:0} FPS with it off{2}. No noticeable difference (over {3} sessions).
 Gösterge (overlay) karşılaştırması: açıkken ort. {0:0} FPS, kapalıyken {1:0} FPS{2}: yaklaşık %{3:0} fark. Göstergeyi kapatmak bu oyunda FPS kazandırabilir (tek oturum kesin kanıt değildir).	Overlay comparison: {0:0} FPS average with it on, {1:0} FPS with it off{2}: about a {3:0}% difference. Turning the overlay off may gain FPS in this game (a single session is not conclusive proof).
 Gösterge (overlay) karşılaştırması: açıkken ort. {0:0} FPS, kapalıyken {1:0} FPS{2}. Gösterge FPS'i düşürmüyor gibi görünüyor (fark başka etkenlerden olabilir).	Overlay comparison: {0:0} FPS average with it on, {1:0} FPS with it off{2}. The overlay does not seem to lower FPS (the difference may come from other factors).
+{0} eklenemedi: {1}	Could not add {0}: {1}
+{0} listede yok.	{0} is not in the list.
+{0} zaten listede.	{0} is already in the list.
+{0}: oyun açılınca kapatılacak, oyun bitince geri açılacak.	{0}: will be closed when a game starts and reopened when it ends.
+{0}: oyun sırasında artık kapatılmayacak.	{0}: will no longer be closed during games.
+Liste dolu (en çok 12 program).	The list is full (up to 12 programs).
+Geçersiz program adı.	Invalid program name.
+Korumalı program.	Protected program.
