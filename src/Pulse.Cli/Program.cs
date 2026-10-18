@@ -2531,6 +2531,44 @@ if (cmd == "boostbg-test")
     return fails == 0 ? 0 : 1;
 }
 
+if (cmd == "powercfg-native-test")
+{
+    // Yerel (powrprof) okuma, powercfg.exe çıktısıyla birebir aynı mı? Salt okunur; hiçbir güç ayarı değişmez.
+    var fails = 0;
+    void Check(bool ok, string what) { Console.WriteLine($"  [{(ok ? "GEÇTİ" : "KALDI")}] {what}"); if (!ok) fails++; }
+    var P = typeof(Pulse.Core.Platform.Powercfg);
+    var viaProc = Pulse.Core.Platform.Powercfg.ActiveSchemeViaProcess();
+    var native = Pulse.Core.Platform.Powercfg.ActiveScheme();
+    Check(viaProc is not null && string.Equals(viaProc, native, StringComparison.OrdinalIgnoreCase), $"Etkin plan aynı ({native})");
+    var sch = viaProc!;
+    (string Sub, string Set, string Name)[] sets =
+    [
+        (Pulse.Core.Platform.Powercfg.SubProcessor, Pulse.Core.Platform.Powercfg.BoostMode, "turbo modu"),
+        (Pulse.Core.Platform.Powercfg.SubProcessor, Pulse.Core.Platform.Powercfg.MaxProcessorState, "işlemci üst sınırı"),
+        (Pulse.Core.Platform.Powercfg.SubProcessor, Pulse.Core.Platform.Powercfg.MaxFrequency, "en yüksek frekans"),
+        (Pulse.Core.Platform.Powercfg.SubProcessor, Pulse.Core.Platform.Powercfg.MaxFrequencyClass1, "frekans sınıf 1"),
+        (Pulse.Core.Platform.Powercfg.SubProcessor, Pulse.Core.Platform.Powercfg.EnergyPerformancePref, "EPP"),
+        (Pulse.Core.Platform.Powercfg.SubProcessor, Pulse.Core.Platform.Powercfg.SystemCoolingPolicy, "soğutma ilkesi"),
+        (Pulse.Core.Platform.Powercfg.SubVideo, Pulse.Core.Platform.Powercfg.VideoIdle, "ekran kapanma"),
+        (Pulse.Core.Platform.Powercfg.SubSleep, Pulse.Core.Platform.Powercfg.StandbyIdle, "uyku"),
+    ];
+    foreach (var (sub, set, name) in sets)
+    {
+        var a1 = Pulse.Core.Platform.Powercfg.GetAcViaProcess(sch, sub, set); var a2 = Pulse.Core.Platform.Powercfg.GetAc(sch, sub, set);
+        var d1 = Pulse.Core.Platform.Powercfg.GetDcViaProcess(sch, sub, set); var d2 = Pulse.Core.Platform.Powercfg.GetDc(sch, sub, set);
+        Check((a1 is null || a1 == a2) && (d1 is null || d1 == d2), $"{name} (powercfg /q gizli ayarı göstermeyebilir; yerel okuma onu da okur): prizde {a1?.ToString() ?? "yok"}/{a2?.ToString() ?? "yok"}, pilde {d1?.ToString() ?? "yok"}/{d2?.ToString() ?? "yok"}");
+    }
+    var sw = System.Diagnostics.Stopwatch.StartNew();
+    for (var i = 0; i < 40; i++) Pulse.Core.Platform.Powercfg.GetAc(sch, sets[1].Sub, sets[1].Set);
+    var nativeMs = sw.Elapsed.TotalMilliseconds / 40; sw.Restart();
+    for (var i = 0; i < 5; i++) Pulse.Core.Platform.Powercfg.GetAcViaProcess(sch, sets[1].Sub, sets[1].Set);
+    var procMs = sw.Elapsed.TotalMilliseconds / 5;
+    Console.WriteLine($"  okuma başına: yerel {nativeMs:0.00} ms, powercfg.exe {procMs:0} ms");
+    Check(nativeMs < procMs / 5, "Yerel okuma süreç başlatmaktan en az 5 kat hızlı");
+    Console.WriteLine(fails == 0 ? "POWERCFG YEREL OKUMA TESTİ GEÇTİ" : $"{fails} TEST KALDI");
+    return fails == 0 ? 0 : 1;
+}
+
 if (cmd == "sensor-bench") { SensorBenchRun(); return 0; }
 // Ayrı yöntem: PerformanceCounter gibi türler Main JIT'lenirken yüklenmesin (testler exe'yi tek başına kopyalayıp çalıştırıyor)
 static void SensorBenchRun()
@@ -2542,6 +2580,7 @@ static void SensorBenchRun()
     Console.WriteLine($"  Read(sıcaklıksız): {Time(() => hub.Read(false), 30):0.00} ms CPU/okuma");
     Console.WriteLine($"  Read(sıcaklıkla): {Time(() => hub.Read(true), 30):0.00} ms CPU/okuma");
     Console.WriteLine($"  yalnız WMI sıcaklık sorgusu: {Time(() => Pulse.Core.Health.WmiReader.Query(@"root\wmi", "SELECT CurrentTemperature FROM MSAcpi_ThermalZoneTemperature"), 30):0.00} ms CPU/sorgu");
+    Console.WriteLine($"  oyun algılama taraması (FindRunningGameInfo, Pulse 5 sn'de bir yapar): {Time(() => Pulse.Core.Automation.GameDetector.FindRunningGameInfo(), 10):0.00} ms CPU/tarama");
     using var acpi = Pulse.Core.Hardware.AsusAcpi.TryOpen();
     if (acpi is not null) Console.WriteLine($"  yalnız ASUS ACPI fan okuması (2 çağrı): {Time(() => (acpi.GetCpuFanRpm(), acpi.GetGpuFanRpm()), 30):0.00} ms CPU/okuma");
     using var pc1 = new System.Diagnostics.PerformanceCounter("Processor Information", "% Processor Utility", "_Total"); using var pc2 = new System.Diagnostics.PerformanceCounter("Processor Information", "% Processor Performance", "_Total"); using var pc3 = new System.Diagnostics.PerformanceCounter("Processor Information", "Processor Frequency", "_Total");

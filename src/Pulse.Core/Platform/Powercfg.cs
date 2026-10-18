@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.RegularExpressions;
 
@@ -43,17 +44,53 @@ public static class Powercfg
         return output;
     }
 
-    public static string? ActiveScheme()
+    /// <summary>
+    /// Etkin plan. Okuma yolları (ActiveScheme/GetAc/GetDc) doğrudan powrprof.dll'den yapılır: eskiden her okuma ayrı bir powercfg.exe süreci
+    /// başlatıyordu ve Mod koruyucu dakikada bir bunu birkaç kez yapıyordu (oyun sırasında bile → periyodik küçük takılmalar). Yazma yolları aynı kaldı.
+    /// Yerel çağrı başarısız olursa eski süreç yöntemine düşülür.
+    /// </summary>
+    public static string? ActiveScheme() => NativeActiveScheme() ?? ActiveSchemeViaProcess();
+
+    public static string? ActiveSchemeViaProcess()
     {
         var m = GuidRx.Match(Run("/getactivescheme"));
         return m.Success ? m.Value : null;
     }
 
+    private static string? NativeActiveScheme()
+    {
+        try
+        {
+            if (PowerGetActiveScheme(IntPtr.Zero, out var p) != 0 || p == IntPtr.Zero) return null;
+            try { return Marshal.PtrToStructure<Guid>(p).ToString(); }
+            finally { LocalFree(p); }
+        }
+        catch { return null; }
+    }
+
+    private static int? NativeRead(string scheme, string sub, string setting, bool ac)
+    {
+        try
+        {
+            var s = Guid.Parse(scheme); var g = Guid.Parse(sub); var st = Guid.Parse(setting);
+            var rc = ac ? PowerReadACValueIndex(IntPtr.Zero, ref s, ref g, ref st, out var v) : PowerReadDCValueIndex(IntPtr.Zero, ref s, ref g, ref st, out v);
+            return rc == 0 ? (int)v : null;
+        }
+        catch { return null; }
+    }
+
+    [DllImport("powrprof.dll")] private static extern uint PowerGetActiveScheme(IntPtr userRootPowerKey, out IntPtr activePolicyGuid);
+    [DllImport("powrprof.dll")] private static extern uint PowerReadACValueIndex(IntPtr root, ref Guid scheme, ref Guid sub, ref Guid setting, out uint value);
+    [DllImport("powrprof.dll")] private static extern uint PowerReadDCValueIndex(IntPtr root, ref Guid scheme, ref Guid sub, ref Guid setting, out uint value);
+    [DllImport("kernel32.dll")] private static extern IntPtr LocalFree(IntPtr hMem);
+
     public static IReadOnlyList<string> AllSchemes() =>
         GuidRx.Matches(Run("/list")).Select(m => m.Value).Distinct().ToList();
 
     /// <summary>Prize takılıyken (AC) geçerli değer. Okunamazsa null.</summary>
-    public static int? GetAc(string scheme, string sub, string setting)
+    public static int? GetAc(string scheme, string sub, string setting) => NativeRead(scheme, sub, setting, ac: true) ?? GetAcViaProcess(scheme, sub, setting);
+
+    public static int? GetAcViaProcess(string scheme, string sub, string setting)
     {
         var hex = HexRx.Matches(Run("/q", scheme, sub, setting));
         // Çıktının son iki değeri sırasıyla AC ve DC geçerli değerleridir.
@@ -62,7 +99,9 @@ public static class Powercfg
     }
 
     /// <summary>Pildayken (DC) geçerli değer. Okunamazsa null.</summary>
-    public static int? GetDc(string scheme, string sub, string setting)
+    public static int? GetDc(string scheme, string sub, string setting) => NativeRead(scheme, sub, setting, ac: false) ?? GetDcViaProcess(scheme, sub, setting);
+
+    public static int? GetDcViaProcess(string scheme, string sub, string setting)
     {
         var hex = HexRx.Matches(Run("/q", scheme, sub, setting));
         return hex.Count < 2 ? null : Convert.ToInt32(hex[^1].Value, 16);
