@@ -83,7 +83,14 @@ public sealed class AutoModeService : IDisposable
     /// <summary>Konsol oyunun sürdüğünü söylüyor (Pulse sonradan açılmış olabilir): yalnızca algılamaya yardım eder, mod uygulamaz.</summary>
     public void NotifyGamePlaying(KonsolGameHint hint)
     {
-        lock (_hintLock) { _hint = hint; _launchDeadline = null; _launchSeen = true; }
+        lock (_hintLock)
+        {
+            _hint = hint;
+            // "Başlatılıyor" bekleme süresi sürerken ve süreç henüz görünmediyse SİLME: Konsol oyunu bekçiye devredince hemen "oynuyor" der, oysa Steam/Epic
+            // oyunlarının süreci ~25-30 sn sonra gelir; bekleme silinirse mod boşuna geri alınıp süreç gelince yeniden uygulanıyordu (gerçek Hades denemesinde görüldü).
+            if (_launchDeadline is not null && !_launchSeen) return;
+            _launchDeadline = null; _launchSeen = true;
+        }
     }
 
     /// <summary>Konsol oyun dışında bir durumda (kütüphane, masaüstü, arka plan): ipucu geçersiz.</summary>

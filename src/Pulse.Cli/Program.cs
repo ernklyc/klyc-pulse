@@ -538,6 +538,19 @@ if (cmd == "konsol-link-test")
         await auto5.NotifyGameLaunching(hint);
         Check(sw.Calls.SequenceEqual(new[] { "sessiz" }), "Oyunun profili (ad/klasör eşleşmesi) kendi modunu uygular");
 
+        // Gerçek Steam oyunu: Konsol "başlatılıyor" der, 2 sn sonra bekçiye devredip "oynuyor" der, oyun süreci ise ~30 sn sonra gelir.
+        // "Oynuyor" ipucu bekleme süresini silmemeli: mod boşuna geri alınıp süreç gelince yeniden uygulanmamalı.
+        sw.Reset("gunluk"); knownSeen = null; running = null;
+        var s5b = NewSettings(); var auto5b = NewAuto(s5b);
+        await auto5b.NotifyGameLaunching(hint);
+        auto5b.NotifyGamePlaying(hint);
+        now = now.AddSeconds(30); await auto5b.TickOnceAsync();
+        Check(sw.CurrentKey == "oyun" && sw.Calls.SequenceEqual(new[] { "oyun" }), "'Oynuyor' ipucu bekleme süresini silmez: süreç gelmeden mod geri alınmaz");
+        running = new Pulse.Core.Automation.GameDetector.DetectedGame("Hades", gamePath, 4243);
+        await auto5b.TickOnceAsync();
+        running = null; now = now.AddSeconds(5); await auto5b.TickOnceAsync();
+        Check(sw.Calls.SequenceEqual(new[] { "oyun", "gunluk" }), "Süreç görünüp kapanınca yine tek geri dönüş (Oyun → Günlük)");
+
         // Oyun sürüyor ipucu mod uygulamaz; Konsol boşa çıkınca ipucu silinir
         sw.Reset("gunluk"); knownSeen = null;
         var s6 = NewSettings(); var auto6 = NewAuto(s6);
