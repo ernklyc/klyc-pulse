@@ -31,7 +31,7 @@ Yorum: bu bir **ısı ve güç bütçesi sınırlı** dizüstü. Fanlar zaten ta
 | 7 | HAGS / Oyun Modu | GPU'ya bağlı sahnede ≈0, CPU'ya bağlıda %1–3, bazen artefakt | [zayıf] | Düşük | Mevcut açık hali iyi; Hızlandır yanlışsa düzeltir |
 | 8 | **Overlay** (Pulse FPS/ısı göstergesi) | Flip-model oyunda Windows "bağımsız flip"i bırakıp kompozisyona dönebilir (üstte içerik varsa); MPO desteğiyle korunabilir | [belge] Microsoft DXGI flip-model rehberi; **FPS maliyeti ölçülmedi** | Küçük gecikme/FPS bedeli olabilir | Ayar mevcut; **A/B ölçüm aracı önerisi** (aşağıda) |
 | 9 | Güç planı / EPP / çekirdek park | Nihai Performans zaten park etmez | [zayıf] | — | Modlar yönetiyor |
-| 10 | **Undervolt** (ThrottleStop FIVR) | Aynı sıcaklıkta daha yüksek sürekli saat = gerçek FPS; en iyi kanıtlı yazılım kazancı | [zayıf] | Kararsızlık; 10. nesil bazı laptoplarda kilitli | Pulse ThrottleStop profillerini yönetebiliyor (Araçlar); **undervolt (FIVR) kilidi bu makinede doğrulanmadı** |
+| 10 | **Undervolt** (ThrottleStop FIVR) | Aynı sıcaklıkta daha yüksek sürekli saat = gerçek FPS; en iyi kanıtlı yazılım kazancı | [zayıf] | Kararsızlık; 10. nesil bazı laptoplarda kilitli | Pulse ThrottleStop profillerini yönetebiliyor (Araçlar); **undervolt (FIVR) bu makinede KİLİTLİ** (7 Ekim ThrottleStop denetimi, PLAN.md: gerilim kaydırıcıları ve PL1/PL2 devre dışı; BIOS/mikrokod Plundervolt kilidi) → yapılamaz |
 | 11 | **Soğutma bakımı** (toz, termal macun, taban) | 5–15 °C | [zayıf] | Donanıma müdahale (kullanıcı) | Yazılım yapamaz; Pulse "fan tam hızda ama 95 °C" teşhisini söyleyebilir |
 | 12 | Zamanlayıcı çözünürlüğü, "RAM temizleyici", servis kapatma, ağ kısma anahtarları, güvenlik önlemlerini kapatma | Ölçülebilir kazanç yok / zararlı olabilir | [yok] / [zayıf] | Orta–yüksek | **Yapmıyoruz** |
 
@@ -53,7 +53,7 @@ Yorum: bu bir **ısı ve güç bütçesi sınırlı** dizüstü. Fanlar zaten ta
 2. **Overlay A/B ölçümü:** oyun raporu overlay'in açık/kapalı olduğunu kaydeder; aynı oyunun oturumlarını ortalama FPS ve %1 low olarak yan yana gösterir. Gerçek maliyet ölçülmeden overlay'i kapatmıyoruz.
 3. **FPS sınırı önerisini Konsol'a taşı:** oyun özeti panelinde "işlemci sınırlı ve 95 °C: 90 FPS sınırı daha akıcı olabilir".
 4. **Ödünç alınmış kapasite:** Hızlandır'ın "arka plan yükü" adımına "oyun sırasında kapatılabilir" listesi (Sunshine, EA hizmetleri…) — yalnızca kullanıcı onayıyla, geri alınabilir.
-5. **ThrottleStop/undervolt yolu:** önce bu makinede FIVR kilidi var mı (salt okunur kontrol), sonra karar.
+5. ~~ThrottleStop/undervolt~~: bu BIOS’ta kilitli (PLAN.md, 7 Ekim); GPU ofseti (NvAPI) düzenlenebilir ve Pulse’ta GpuTuner olarak hazır.
 
 ## 6. Kaynaklar
 
