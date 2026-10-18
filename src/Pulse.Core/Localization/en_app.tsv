@@ -1091,3 +1091,21 @@ Pulse bu oyunu henüz tanımıyor: oyunu bir kez oynayınca profili kendiliğind
 {0}: bu oyunda otomatik mod geçişi kapatıldı.	{0}: automatic mode switching is turned off for this game.
 Bilinmeyen mod.	Unknown mode.
 {0}: bu oyun için {1} modu seçildi.	{0}: {1} mode selected for this game.
+Sayfa dosyası çok küçük	Paging file is too small
+Sayfa dosyası en çok {0:0.#} GB, bellek {1:0} GB. Büyük oyunlar (GTA V, RDR2…) bellek ayırırken hata verebilir. Gelişmiş sistem ayarları → Performans → Sanal bellek → "Sayfa dosyası boyutunu otomatik yönet" önerilir. (Pulse bu ayara dokunmaz.)	The paging file is at most {0:0.#} GB with {1:0} GB of RAM. Large games (GTA V, RDR2…) may fail when allocating memory. Advanced system settings → Performance → Virtual memory → "Automatically manage paging file size" is recommended. (Pulse does not touch this setting.)
+Ekran kartı belleği doluyor	Graphics memory is filling up
+{0}: ekran kartı belleği %97'nin üstüne çıktı. Dolunca dokular sistem belleğine taşar ve oyun takılır. Oyunda doku kalitesini bir kademe düşürmek en ucuz akıcılık kazancıdır.	{0}: graphics memory went above 97%. When it is full, textures spill into system memory and the game stutters. Lowering texture quality one notch is the cheapest smoothness gain.
+İşlemci sık 95 °C'nin üstüne çıkıyor	The CPU often goes above 95 °C
+{0}: işlemci oyunun %{1}'ine kadar 95 °C üstünde kaldı. Fanlar zaten tam hızdaysa en büyük kazanç yazılımda değil: toz temizliği, termal macun yenileme, dizüstü altlığı. Ayrıca FPS'i ekran hızına sınırlamak ısıyı ve kısılmayı azaltır.	{0}: the CPU stayed above 95 °C for up to {1}% of the game. If the fans are already at full speed, the biggest gain is not in software: dust cleaning, fresh thermal paste, a laptop stand. Capping FPS to the display rate also reduces heat and throttling.
+Oyun sırasında arka plan işlemciyi tutuyor	Background programs are using the CPU during games
+Oyun boyunca arka planda ortalama %{0:0} işlemci kullanıldı{1}. 4 çekirdekli bir işlemcide bu fark eder; gerekmiyorsa oyun sırasında kapat.	On average {0:0}% of the CPU was used in the background during the game{1}. On a 4-core CPU this matters; close them while gaming if not needed.
+FPS sınırı önerisi	FPS cap suggestion
+{0}: oyun ekranın gösterebileceğinden fazla kare üretiyor. Oyun içinde FPS'i {1}'e sınırlamak ısıyı ve gücü düşürür, akıcılığı korur.	{0}: the game renders more frames than the display can show. Capping FPS to {1} in the game lowers heat and power and keeps it smooth.
+Windows oyun ayarları düzeltilebilir	Windows game settings can be fixed
+{0}. Hızlandır bunları güvenli biçimde düzeltir (her değişiklik doğrulanır).	{0}. Boost fixes these safely (every change is verified).
+Sanallaştırma tabanlı güvenlik (VBS) açık	Virtualization-based security (VBS) is on
+Oyunlarda %0–5 kadar maliyeti olabilir (kaynaklar tutarsız, bu bilgisayarda ölçülmedi). Bir güvenlik özelliğidir; kapatmayı önermiyoruz, karar senin.	It may cost 0–5% in games (sources disagree, not measured on this PC). It is a security feature; we do not recommend turning it off, the decision is yours.
+Sistem denetimi: dikkat edilecek bir şey bulunmadı.	System check: nothing needing attention was found.
+Sistem denetimi: {0} bulgu ({1} dikkat). 	System check: {0} findings ({1} need attention).
+Sistem denetimi	System check
+Sistem denetleniyor…	Checking the system…

@@ -19,6 +19,7 @@ public static class GameDetector
     [
         "crash", "report", "setup", "install", "redist", "vc_", "dxsetup", "unins", "launcher", "easyanticheat",
         "beservice", "battleye", "vgc", "vgtray", "epicwebhelper", "eosoverlay", "ue4prereq", "dotnet", "updater",
+        "riotclient", "eabackground", "eadesktop",   // Riot başlatıcısı oyun sayılınca asıl oyun (VALORANT-Win64-Shipping) arka plan görünüyordu
     ];
 
     private static bool AllowTemp => Environment.GetEnvironmentVariable("KLYC_PULSE_TEST") == "1";

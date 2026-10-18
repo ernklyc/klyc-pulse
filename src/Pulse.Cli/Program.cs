@@ -357,6 +357,8 @@ if (cmd == "konsol-cmd-test")
         Check(await runner5.ProcessAsync(path, now) is { Ok: false, Id: "gm-run-0002" }, "Profil yoksa Konsol'a dürüst başarısızlık döner");
         var gf = KonsolLink.BuildFeed("1.12.0", true, "oyun", false, true, null, now: now, acceptsCommands: true, gameProfiles: KonsolGameProfiles.ToFeed(gset.GameProfiles));
         Check(gf.GameProfiles is { Count: 1 } && gf.GameProfiles[0] is { Name: "Hades II", Mode: "sessiz", Enabled: true } && KonsolLink.BuildFeed("1.12.0", true, "oyun", false, true, null, now: now, gameProfiles: KonsolGameProfiles.ToFeed(gset.GameProfiles)).GameProfiles is null, "Özet profilleri yalnızca komutlar kabul ediliyorsa taşır");
+        var auditList = new List<PulseFeedAudit> { new("vram", 1, "VRAM", "detay") };
+        Check(KonsolLink.BuildFeed("1.12.1", true, "oyun", false, true, null, now: now, acceptsCommands: true, audit: auditList).Audit is { Count: 1 } && KonsolLink.BuildFeed("1.12.1", true, "oyun", false, true, null, now: now, audit: auditList).Audit is null, "Özet sistem denetimini yalnızca komutlara izin açıkken taşır");
 
         // ---- Özet (feed): komutlar kapalı/açık, mod listesi, canlı değerler, son komut ----
         var off = KonsolLink.BuildFeed("1.11.0", true, "oyun", false, true, null, now: now);
@@ -2566,6 +2568,45 @@ if (cmd == "powercfg-native-test")
     Console.WriteLine($"  okuma başına: yerel {nativeMs:0.00} ms, powercfg.exe {procMs:0} ms");
     Check(nativeMs < procMs / 5, "Yerel okuma süreç başlatmaktan en az 5 kat hızlı");
     Console.WriteLine(fails == 0 ? "POWERCFG YEREL OKUMA TESTİ GEÇTİ" : $"{fails} TEST KALDI");
+    return fails == 0 ? 0 : 1;
+}
+
+if (cmd == "system-audit")
+{
+    // Gerçek makinede denetimi salt okunur çalıştırır (hiçbir ayar değişmez).
+    foreach (var f in Pulse.Core.Optimize.SystemAudit.Run()) Console.WriteLine($"  [{(f.Severity > 0 ? "DİKKAT" : "BİLGİ")}] {f.Title}: {f.Detail}");
+    return 0;
+}
+if (cmd == "audit-test")
+{
+    var fails = 0;
+    void Check(bool ok, string what) { Console.WriteLine($"  [{(ok ? "GEÇTİ" : "KALDI")}] {what}"); if (!ok) fails++; }
+    const long Gb = 1073741824;
+    GameSessionReport Rep(string game, double? vram = null, int above95 = 0, double? bgCpu = null, int? fpsCap = null, params (string, double)[] bg) => new()
+    {
+        Game = game, Start = DateTime.Now, Minutes = 20, VramPeakPercent = vram, CpuAbove95Percent = above95, BackgroundCpuAvgPercent = bgCpu, SuggestedFpsCap = fpsCap,
+        Background = bg.Select(b => new Pulse.Core.Diagnostics.BackgroundItem { Name = b.Item1, Display = b.Item1, CpuAvgPercent = b.Item2 }).ToList(),
+    };
+    var none = new List<GameSessionReport>();
+    var ok16 = new Pulse.Core.Optimize.AuditFacts(16 * Gb, true, 8192, false);
+    Check(Pulse.Core.Optimize.SystemAudit.Evaluate(ok16, none).Count == 0, "Sağlıklı sistem + rapor yok: bulgu yok");
+    Check(Pulse.Core.Optimize.SystemAudit.Describe(none.Select(_ => new Pulse.Core.Optimize.AuditFinding("x", 0, "", "")).ToList()).Length > 0, "Bulgu yokken olumlu özet cümlesi");
+    var small = Pulse.Core.Optimize.SystemAudit.Evaluate(new(16 * Gb, false, 1024, null), none);
+    Check(small.Count == 1 && small[0].Id == "pagefile" && small[0].Severity == 1, "Elle sabit 1 GB sayfa dosyası + 16 GB RAM → uyarı");
+    Check(Pulse.Core.Optimize.SystemAudit.Evaluate(new(16 * Gb, true, 1024, null), none).Count == 0, "Otomatik yönetilen sayfa dosyası uyarı vermez");
+    Check(Pulse.Core.Optimize.SystemAudit.Evaluate(new(16 * Gb, false, 16384, null), none).Count == 0, "Büyük sabit sayfa dosyası uyarı vermez");
+    Check(Pulse.Core.Optimize.SystemAudit.Evaluate(new(16 * Gb, null, null, null), none).Count == 0, "Okunamayan değer kuralı atlar (uydurma bulgu yok)");
+    var vb = Pulse.Core.Optimize.SystemAudit.Evaluate(new(16 * Gb, true, 8192, true), none);
+    Check(vb.Count == 1 && vb[0].Id == "vbs" && vb[0].Severity == 0, "VBS açık: yalnızca bilgi (dikkat değil)");
+    var hist = new List<GameSessionReport> { Rep("FC25", vram: 99, above95: 25, bgCpu: 6.2, bg: [("sunshine", 2.6), ("EAAntiCheat", 3.4)]), Rep("Hades", vram: 40, above95: 0, bgCpu: 1), Rep("FH4", vram: 99, above95: 12, fpsCap: 90) };
+    var all = Pulse.Core.Optimize.SystemAudit.Evaluate(ok16, hist);
+    var ids = all.Select(f => f.Id).ToHashSet();
+    Check(ids.SetEquals(new[] { "vram", "heat", "background", "fpscap" }), $"Raporlardan 4 bulgu: {string.Join(",", ids)}");
+    Check(all.First(f => f.Id == "vram").Detail.Contains("FC25") && all.First(f => f.Id == "vram").Detail.Contains("FH4") && !all.First(f => f.Id == "vram").Detail.Contains("Hades"), "VRAM bulgusu yalnızca taşan oyunları sayar");
+    Check(all.First(f => f.Id == "background").Detail.Contains("sunshine") && all.First(f => f.Id == "background").Detail.Contains("EAAntiCheat"), "Arka plan bulgusu en yük bindirenlerin adını söyler");
+    Check(Pulse.Core.Optimize.SystemAudit.Evaluate(ok16, Enumerable.Range(0, 30).Select(i => i < 20 ? Rep("Eski", vram: 99) : Rep("Yeni", vram: 10)).ToList()).Count == 0, "Yalnızca son 10 rapora bakılır (eski taşmalar sayılmaz)");
+    Check(Pulse.Core.Optimize.SystemAudit.Describe(all).Contains(all.Count.ToString()), "Özet bulgu sayısını söyler");
+    Console.WriteLine(fails == 0 ? "SİSTEM DENETİMİ TESTİ GEÇTİ" : $"{fails} TEST KALDI");
     return fails == 0 ? 0 : 1;
 }
 

@@ -24,7 +24,7 @@ public sealed record OptimizeReport(OptSnapshot Before, OptSnapshot After, IRead
 /// </summary>
 public sealed class Optimizer
 {
-    public const int StepCount = 8;
+    public const int StepCount = 9;
 
     private readonly ModeController? _modes;
     private readonly CleanupEngine _engine = new();
@@ -126,6 +126,20 @@ public sealed class Optimizer
             try { var info = BootAnalyzer.Read(out var err); boot = " " + BootAnalyzer.Describe(info, err); } catch { boot = ""; }
             return new OptStep(Loc.T("Açılış öğeleri"), true,
                 Loc.F("{0} uygulama Windows ile başlıyor. Gereksiz olanları Uygulamalar > Başlangıç'tan kapatabilirsin.", enabled.Count) + boot);
+        }, ct));
+
+        // 7) Sistem denetimi (salt okunur): sayfa dosyası, VRAM taşması, ısı, arka plan, VBS bilgisi…; nedenini söyler, hiçbir şeyi değiştirmez
+        progress?.Report(Loc.T("Sistem denetleniyor…"));
+        steps.Add(await Task.Run(() =>
+        {
+            try
+            {
+                var findings = SystemAudit.Run();
+                var detail = SystemAudit.Describe(findings);
+                if (findings.Any(f => f.Severity > 0)) detail += " " + string.Join(" ", findings.Where(f => f.Severity > 0).Select(f => "• " + f.Title + ": " + f.Detail));
+                return new OptStep(Loc.T("Sistem denetimi"), true, detail);
+            }
+            catch (Exception ex) { return new OptStep(Loc.T("Sistem denetimi"), true, ex.Message); }
         }, ct));
 
         progress?.Report(Loc.T("Sonra ölçüm alınıyor…"));

@@ -287,13 +287,31 @@ public sealed class KonsolLinkService : IDisposable
         KonsolLink.WriteFeed(Feed(running: true));
     }
 
+    private List<PulseFeedAudit>? _audit;
+    private DateTime _auditAt = DateTime.MinValue;
+
+    /// <summary>Sistem denetimi sonucu, en çok 10 dakikada bir yenilenir (WMI/kayıt okuması her kalp atışında yapılmasın). Hata olursa eski sonuç ya da boş kalır.</summary>
+    private List<PulseFeedAudit>? CachedAudit()
+    {
+        try
+        {
+            if (_audit is null || DateTime.UtcNow - _auditAt > TimeSpan.FromMinutes(10))
+            {
+                _audit = Pulse.Core.Optimize.SystemAudit.Run().Select(f => new PulseFeedAudit(f.Id, f.Severity, f.Title, f.Detail)).ToList();
+                _auditAt = DateTime.UtcNow;
+            }
+        }
+        catch (Exception ex) { Journal.Write("Sistem denetimi (Konsol özeti) okunamadı: " + ex.Message); _auditAt = DateTime.UtcNow; }
+        return _audit;
+    }
+
     private PulseFeed Feed(bool running)
     {
         PulseFeedCommand? cmd; lock (_lock) cmd = _lastCommand;
         if (cmd is not null && KonsolLink.UnixNow() - cmd.At > 600) cmd = null;   // eski sonuç Konsol'da tekrar tekrar görünmesin
         var accepts = _settings.Current.LinkWithKonsol && _settings.Current.AllowKonsolCommands;
         return KonsolLink.BuildFeed(_version, running, _modes.CurrentKey, _modes.IsBusy, _settings.Current.AutoGameMode, _report.Last ?? LastStoredReport(),
-            acceptsCommands: accepts, live: running ? Live() : null, lastCommand: cmd, heatTarget: _settings.Current.HeatTarget, gameProfiles: accepts ? KonsolGameProfiles.ToFeed(_settings.Current.GameProfiles) : null);
+            acceptsCommands: accepts, live: running ? Live() : null, lastCommand: cmd, heatTarget: _settings.Current.HeatTarget, gameProfiles: accepts ? KonsolGameProfiles.ToFeed(_settings.Current.GameProfiles) : null, audit: accepts ? CachedAudit() : null);
     }
 
     private static GameSessionReport? LastStoredReport()
