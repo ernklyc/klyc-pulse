@@ -45,7 +45,7 @@ public sealed class GameReportService : IDisposable
 
     private void OnSensors(SensorSnapshot s)
     {
-        lock (_gate) _recorder?.Add(s, AppServices.Sensors.LatestFps, PowerSource.IsOnAc());
+        lock (_gate) _recorder?.Add(s, AppServices.Sensors.LatestFps, PowerSource.IsOnAc(), overlayOn: AppServices.Overlay.IsOn);
     }
 
     private void SampleBackground()
@@ -90,6 +90,7 @@ public sealed class GameReportService : IDisposable
             var report = rec.Build(AppServices.Sensors.BaseMhz, displayHz: hz, cpuCapMhz: cap, previous: previous, suggestCap: !auto,
                 storage: DriveKindDetector.Detect(profile?.ExePath), suggestMhz: AppServices.GameLadder() is { Length: > 1 } lad ? lad[1] : null, background: background);
             if (report is null) { Journal.Write($"Oyun raporu: oturum çok kısa ({rec.Count} sn), rapor yok."); return; }
+            if (OverlayCompare.Describe(report, GameReportStore.LoadHistory()) is { } overlayNote) report.Findings.Add(overlayNote);
 
             // Yük altı tepe hızı öğren (sınırsız oturumlardan): kademeler bu bilgisayarın gerçek hızına göre kurulur
             if (cap is null && report.CpuMhzPeak is { } pk && pk > s.CpuPeakMhz) { s.CpuPeakMhz = pk; settings.Save(); }

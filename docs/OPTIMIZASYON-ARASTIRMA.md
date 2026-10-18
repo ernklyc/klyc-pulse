@@ -6,7 +6,7 @@ Amaç: KLYC Pulse + KLYC Konsol bu bilgisayarda **gerçekten** neyi hızlandıra
 ## 1. Makine
 
 ASUS TUF Gaming F15 (FX506LI) · Intel Core i5-10300H (4 çekirdek / 8 iş parçacığı, TjMax 100 °C) · GeForce GTX 1650 Ti **4 GB** + Intel UHD 630 (hibrit) · 15,8 GB RAM · 1 TB NVMe · Windows 11.
-Şu anki ayarlar **[ölçüldü]**: güç planı "Nihai Performans" · HAGS açık · Oyun Modu açık · Game DVR kapalı · VBS açık (bellek bütünlüğü/HVCI kapalı) · sayfa dosyası yalnızca **1 GB** · oyunların çoğunda "yüksek performanslı GPU" tercihi tanımlı (Pulse yazmış).
+Şu anki ayarlar **[ölçüldü]**: güç planı "Nihai Performans" · HAGS açık · Oyun Modu açık · Game DVR kapalı · VBS açık (bellek bütünlüğü/HVCI kapalı) · sayfa dosyası otomatik yönetiliyor (şu an 1 GB tahsisli) · oyunların çoğunda "yüksek performanslı GPU" tercihi tanımlı (Pulse yazmış).
 
 ## 2. Kendi verimiz (oyun raporları + günlükler, 14 Ekim)
 
@@ -25,7 +25,7 @@ Yorum: bu bir **ısı ve güç bütçesi sınırlı** dizüstü. Fanlar zaten ta
 | 1 | **Oyunda işlemci frenini geç devreye sok** (95 → 98 °C, 15 sn) | İşlemciyi sınırlayan oyunlarda %5–13 FPS geri kazanımı (3,3 → 3,8 GHz fark) | [ölçüldü] kayıtlarda fren + Pulse'un kendi raporu "işlemci sınırlıyor" | Donanım 100 °C'de kendi kısar; frenin yokluğunda kısa süreli tepe olabilir | **Yapıldı (1.12.1)**; gerçek oyunda doğrulanmadı |
 | 2 | **Arka plan süreçlerini söyle / azalt** (Sunshine %2,6, EAAntiCheat %3,4) | 4 çekirdekli işlemcide %3–6 ek pay | [ölçüldü] raporlar | Sunshine kullanıcının uzaktan oynatması; otomatik kapatmak istenmeyebilir | Hızlandır adıyla söylüyor (1.12.0); otomatik kapatma yok |
 | 3 | **FPS sınırı önerisi** (CPU'ya bağlı + sıcak oyunda 90/120'ye sınırla) | Daha az ısı → daha yüksek sürekli saat, daha az kısılma; ortalama FPS biraz düşer, 1% low iyileşir | [zayıf] tüm kaynaklar "güç düşünce saat artar" der | Düşük | Pulse'ta `SuggestedFpsCap` var; Konsol'dan görünmüyor |
-| 4 | **Sayfa dosyası 1 GB** → sistem yönetimli | RDR2/GTA V gibi büyük oyunlarda çökme/bellek hatası riskini azaltır | [belge] Windows commit modeli; [ölçüldü] ayar 1 GB | Düşük (Windows ayarı; kullanıcı onaylı) | **Yapılmadı**: Pulse yalnızca uyarabilir; sistem ayarı kullanıcının |
+| 4 | **Sayfa dosyası** | Elle sabit ve küçükse büyük oyunlarda bellek hatası riski | [belge] Windows commit modeli. **Düzeltme:** bu makinede sayfa dosyası *otomatik yönetiliyor* (şu anki 1 GB yalnızca tahsis edilen taban; Windows gerektikçe büyütür) → sorun yok | Düşük | Denetim yalnızca elle sabit ve küçük ayarda uyarır |
 | 5 | **VRAM %99 uyarısı → doku kalitesini bir kademe düşür** | Dokuların sisteme taşması kalkar; takılma azalır. En büyük "ücretsiz" kazanç | [zayıf] forumlar; [ölçüldü] %99 | Yok | Pulse raporunda söylüyor; oyuna özel öneri yok |
 | 6 | **VBS (sanallaştırma tabanlı güvenlik)** | Oyunlarda %0–5 (kaynaklar arasında 1–10 arası değişiyor) | [zayıf] | Güvenlik özelliğini kapatmak: karar kullanıcının | **Yalnızca bilgi** verilebilir; değiştirmiyoruz |
 | 7 | HAGS / Oyun Modu | GPU'ya bağlı sahnede ≈0, CPU'ya bağlıda %1–3, bazen artefakt | [zayıf] | Düşük | Mevcut açık hali iyi; Hızlandır yanlışsa düzeltir |

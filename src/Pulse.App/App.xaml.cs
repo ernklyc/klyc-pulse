@@ -115,6 +115,16 @@ public partial class App : Application
         AppServices.Update.Start();
         AppServices.Heat.Configure(AppServices.Settings.Current.HeatTarget);
         AppServices.Konsol.Start();
+        // Açılış görevi var ama gösterdiği exe yoksa (Velopack kurulumuna geçince taşınabilir exe silinmişti → Pulse Windows ile açılmıyordu) bu exe'ye yönlendir
+        _ = Task.Run(() =>
+        {
+            try
+            {
+                var admin = new System.Security.Principal.WindowsPrincipal(System.Security.Principal.WindowsIdentity.GetCurrent()).IsInRole(System.Security.Principal.WindowsBuiltInRole.Administrator);
+                if (admin && System.Diagnostics.Process.GetCurrentProcess().MainModule?.FileName is { Length: > 0 } me) Pulse.Core.Platform.StartupTask.EnsureCurrent(me);
+            }
+            catch (Exception ex) { Pulse.Core.Diagnostics.Journal.Write("Açılış görevi denetlenemedi: " + ex.Message); }
+        });
         // Haftada en çok bir kez: son 7 günde oyun oturumu varsa kısa özet bildirimi (tıklayınca Sağlık sayfası)
         _ = Task.Delay(TimeSpan.FromSeconds(20)).ContinueWith(_ =>
         {

@@ -43,6 +43,35 @@ public static class StartupTask
         finally { try { File.Delete(tmp); } catch { } }
     }
 
+    /// <summary>Görev XML'inden çalıştırılacak program yolunu okur (bozuk/boşsa null).</summary>
+    public static string? ParseCommand(string xml)
+    {
+        try
+        {
+            var doc = System.Xml.Linq.XDocument.Parse(xml);
+            var cmd = doc.Descendants().FirstOrDefault(e => e.Name.LocalName == "Command")?.Value;
+            return string.IsNullOrWhiteSpace(cmd) ? null : cmd.Trim().Trim('"');
+        }
+        catch { return null; }
+    }
+
+    /// <summary>
+    /// Kendi kendini onarma: görev var ama gösterdiği program artık yoksa (taşınabilir exe silinmiş ya da kurulum klasörü değişmiş; Velopack kurulumuna geçince oldu)
+    /// görevi bu çalışan exe'ye yönlendirir. Program hâlâ varsa dokunmaz (bilerek başka bir yol seçilmiş olabilir). Yönetici gerekir; yoksa sessizce atlar.
+    /// <paramref name="read"/>/<paramref name="enable"/>/<paramref name="exists"/> testlerde sahtelenir. Dönüş: görev yeniden yazıldıysa true.
+    /// </summary>
+    public static bool EnsureCurrent(string currentExe, Func<string?>? read = null, Func<string, (bool Ok, string Message)>? enable = null, Func<string, bool>? exists = null)
+    {
+        read ??= () => { var r = Run("/Query", "/TN", TaskName, "/XML"); return r.Code == 0 ? ParseCommand(r.Output) : null; };
+        enable ??= Enable; exists ??= File.Exists;
+        var cmd = read();
+        if (cmd is null) return false;                                  // görev yok (ya da okunamadı): açılışta başlatma kapalı, dokunma
+        if (string.Equals(cmd, currentExe, StringComparison.OrdinalIgnoreCase) || exists(cmd)) return false;
+        var (ok, msg) = enable(currentExe);
+        Pulse.Core.Diagnostics.Journal.Write($"Açılış görevi onarıldı: {cmd} (yok) → {currentExe}: {(ok ? "tamam" : msg)}");
+        return ok;
+    }
+
     public static (bool Ok, string Message) Disable()
     {
         var r = Run("/Delete", "/TN", TaskName, "/F");

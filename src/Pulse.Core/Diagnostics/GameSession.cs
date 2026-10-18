@@ -24,6 +24,9 @@ public sealed class GameSessionReport
     public double? VramPeakPercent { get; init; }
     public int OnBatteryPercent { get; init; }
 
+    /// <summary>Oturumun çoğunda oyun üstü gösterge (overlay) açıktı mı? (Göstergenin FPS maliyetini ölçmek için.)</summary>
+    public bool OverlayOn { get; init; }
+
     /// <summary>Oturum sırasında uygulanan işlemci hızı sınırı (MHz); null = sınırsızdı.</summary>
     public int? CpuCapMhz { get; init; }
 
@@ -72,9 +75,12 @@ public sealed class GameSessionRecorder
     public int Count => _samples.Count;
     public string Game => _game;
 
-    public void Add(SensorSnapshot s, FpsReading? fps, bool? onAc = null)
+    private int _overlayCount;
+
+    public void Add(SensorSnapshot s, FpsReading? fps, bool? onAc = null, bool overlayOn = false)
     {
         if (_samples.Count >= MaxSamples) return;
+        if (overlayOn) _overlayCount++;
         // Ekran kartı kullanımı: NVML varsa o, yoksa (AMD/Intel) Windows'un GPU Engine sayaçları
         var gpuUtil = s.Gpu?.UtilPercent ?? (s.GpuEnginePercent is { } e ? (int?)Math.Round(e) : null);
         double? vram = s.Gpu is { VramTotalBytes: > 0, VramUsedBytes: { } used } g ? 100.0 * used / g.VramTotalBytes!.Value : null;
@@ -283,6 +289,7 @@ public sealed class GameSessionRecorder
             RamPeakPercent = Math.Round(ramPeak, 0),
             VramPeakPercent = vramPeak > 0 ? Math.Round(vramPeak, 0) : null,
             OnBatteryPercent = onBatteryPct,
+            OverlayOn = _overlayCount * 2 > n,
             Background = background?.Items ?? new(),
             BackgroundCpuAvgPercent = background is { Items.Count: > 0 } ? background.TotalCpuAvgPercent : null,
             CpuCapMhz = cpuCapMhz,

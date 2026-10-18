@@ -2,15 +2,19 @@
 
 Biçim [Keep a Changelog](https://keepachangelog.com/tr/) esaslıdır; sürümleme [SemVer](https://semver.org/lang/tr/).
 
-## [1.12.1] — 2026-10-18
+## [1.13.0] — 2026-10-18
 
 ### Düzeltilenler (oyun performansı ve hafiflik)
 - **Oyunda işlemci frenlemesi artık FPS öncelikli:** gerçek kayıtlarda (FC25, Forza Horizon 4) oyun sırasında işlemci 95 °C'yi 10 sn geçince hız 3,8 → 3,3 GHz'e kısılıyordu; işlemciyi sınırlayan oyunlarda bu doğrudan FPS kaybıydı. Soğutma önceliğinin oyun içi "acil freni" şimdi yalnızca donanımın kendi kısmasına (~100 °C) çok yakınken devreye girer: **98 °C ve 15 sn**, hedef 96 °C, bırakma 93 °C. Isı bekçisi oyunda zaten yalnızca uyarıyordu (mod değiştirmez).
 - **Arka plan sensör okuması ~%60 daha ucuz:** NVIDIA sürücüsünün "kısılma nedeni" çağrısı okuma başına ~16 ms işlemci harcıyordu (diğer 6 çağrının ~4 katı). Artık 5 okumada bir sorulur (nedenler saniyelerce sürer; oyun raporu etkilenmez). Ölçüm (`pulse-cli sensor-bench`): okuma başına 26 ms → ~9–14 ms; Pulse arka planda saniyede bir okuduğu için sürekli yük aynı oranda düşer.
 - **Mod koruyucu artık süreç başlatmıyor:** güç planı okumaları (etkin plan, prizde/pilde değerler) her seferinde ayrı bir `powercfg.exe` süreci açıyordu (~39 ms ve bir süreç) ve "Modu koru" ayarı (varsayılan açık) bunu dakikada bir birkaç kez yapıyordu; oyun sırasında bile. Artık doğrudan `powrprof.dll` ile okunur (0,12 ms, ~300 kat hızlı; `powercfg-native-test` çıktıyı `powercfg.exe` ile karşılaştırır). Yazma yolları değişmedi; yerel okuma başarısız olursa eski yönteme düşer.
+- **Windows ile başlat görevi kendini onarır:** görev, artık var olmayan bir exe'yi gösteriyorsa (taşınabilir exe silinip Velopack kurulumuna geçilince bu olmuştu ve Pulse Windows ile hiç açılmıyordu) yönetici olarak ilk açılışta görev çalışan exe'ye yönlendirilir. Exe hâlâ varsa dokunulmaz.
+- **Riot başlatıcısı oyun sayılmıyor:** `RiotClientServices` "oyun" diye algılanınca asıl oyun (VALORANT-Win64-Shipping) arka plan yükü görünüyor ve raporlar yanlış oyuna yazılıyordu.
 
 ### Eklenenler
 - `pulse-cli sensor-bench`: sensör okumasının işlemci maliyetini parça parça ölçer (salt okunur).
+- **Sistem denetimi (salt okunur, Hızlandır'ın 9. adımı ve `pulse-cli system-audit`):** sayfa dosyası (elle sabitlenmiş ve küçükse), ekran kartı belleği taşması, işlemcinin sık 95 °C üstüne çıkması (toz/macun/altlık önerisi), oyun sırasında arka plan işlemci yükü (oyunun kendi süreçleri ve başlatıcılar sayılmaz), FPS sınırı önerisi, yanlış Windows oyun ayarları ve VBS bilgisi. Hiçbir ayarı değiştirmez; nedenini söyler. Konsol'un Ayarlar → PULSE → "Sistem denetimi" satırında da görünür (`konsol-feed.json` → `audit`).
+- **Gösterge (overlay) A/B ölçümü:** oyun raporu göstergenin açık olup olmadığını kaydeder; aynı oyunun göstergeli/göstergesiz oturumları (≥ 8 dk, karşı durumdan son 3'ün ortalaması) ortalama FPS ve %1 low olarak karşılaştırılıp rapora yazılır (fark %3'ün altındaysa "belirgin fark yok"). Göstergeyi kendisi kapatmaz.
 
 ## [1.12.0] — 2026-10-18
 

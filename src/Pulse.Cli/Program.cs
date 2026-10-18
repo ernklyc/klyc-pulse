@@ -2610,6 +2610,47 @@ if (cmd == "audit-test")
     return fails == 0 ? 0 : 1;
 }
 
+if (cmd == "overlay-ab-test")
+{
+    var fails = 0;
+    void Check(bool ok, string what) { Console.WriteLine($"  [{(ok ? "GEÇTİ" : "KALDI")}] {what}"); if (!ok) fails++; }
+    var t0 = new DateTime(2026, 10, 1, 20, 0, 0);
+    GameSessionReport R(string g, bool ov, double min, double? fps, double? low = null, int day = 0) => new() { Game = g, OverlayOn = ov, Minutes = min, AvgFps = fps, AvgLowFps = low, Start = t0.AddDays(day) };
+    Check(OverlayCompare.Describe(R("FC25", true, 20, 100), new List<GameSessionReport>()) is null, "Karşılaştıracak oturum yokken sessiz");
+    Check(OverlayCompare.Describe(R("FC25", true, 5, 100), new[] { R("FC25", false, 20, 120) }) is null, "Kısa (8 dk altı) güncel oturum karşılaştırılmaz");
+    Check(OverlayCompare.Describe(R("FC25", true, 20, 100), new[] { R("FC25", false, 6, 120) }) is null, "Kısa eski oturum karşılaştırılmaz");
+    Check(OverlayCompare.Describe(R("FC25", true, 20, 100), new[] { R("FC25", true, 20, 120) }) is null, "Aynı gösterge durumundaki oturum karşılaştırılmaz");
+    Check(OverlayCompare.Describe(R("FC25", true, 20, 100), new[] { R("Hades", false, 20, 120) }) is null, "Başka oyunla karşılaştırılmaz");
+    var drop = OverlayCompare.Describe(R("FC25", true, 20, 100, 70), new[] { R("FC25", false, 20, 120, 90, 1) });
+    Check(drop is not null && drop.Contains("100") && drop.Contains("120") && drop.Contains("%17") && drop.Contains("kapatmak"), $"Gösterge FPS'i düşürüyorsa söyler (≈%17): {drop}");
+    var same = OverlayCompare.Describe(R("FC25", false, 20, 119), new[] { R("FC25", true, 20, 120, 90, 1) });
+    Check(same is not null && same.Contains("Belirgin bir fark görülmedi"), "Fark %3'ün altındaysa belirgin fark yok der");
+    var odd = OverlayCompare.Describe(R("FC25", true, 20, 130), new[] { R("FC25", false, 20, 120, null, 1) });
+    Check(odd is not null && odd.Contains("düşürmüyor"), "Göstergeli oturum daha hızlıysa göstergenin düşürmediğini söyler");
+    var avg3 = OverlayCompare.Describe(R("FC25", true, 20, 100), new[] { R("FC25", false, 20, 200, null, 1), R("FC25", false, 20, 100, null, 2), R("FC25", false, 20, 100, null, 3), R("FC25", false, 20, 100, null, 4) });
+    Check(avg3 is not null && avg3.Contains("100 FPS, kapalıyken 100") , $"Karşı durumdan yalnızca son 3 oturumun ortalaması alınır: {avg3}");
+    Console.WriteLine(fails == 0 ? "OVERLAY A/B TESTİ GEÇTİ" : $"{fails} TEST KALDI");
+    return fails == 0 ? 0 : 1;
+}
+
+if (cmd == "startup-task-test")
+{
+    var fails = 0;
+    void Check(bool ok, string what) { Console.WriteLine($"  [{(ok ? "GEÇTİ" : "KALDI")}] {what}"); if (!ok) fails++; }
+    var xml = """<?xml version="1.0" encoding="UTF-16"?><Task xmlns="http://schemas.microsoft.com/windows/2004/02/mit/task"><Actions Context="Author"><Exec><Command>C:\Users\x\Desktop\KLYC-Pulse.exe</Command><Arguments>--tray</Arguments></Exec></Actions></Task>""";
+    Check(Pulse.Core.Platform.StartupTask.ParseCommand(xml) == @"C:\Users\x\Desktop\KLYC-Pulse.exe", "Görev XML'inden program yolu okunur");
+    Check(Pulse.Core.Platform.StartupTask.ParseCommand("bozuk") is null && Pulse.Core.Platform.StartupTask.ParseCommand("<a/>") is null, "Bozuk/komutsuz XML null döner");
+    var wrote = new List<string>();
+    (bool, string) En(string p) { wrote.Add(p); return (true, "ok"); }
+    Check(Pulse.Core.Platform.StartupTask.EnsureCurrent(@"C:\P\current\KLYC-Pulse.exe", () => @"C:\Eski\KLYC-Pulse.exe", En, _ => false) && wrote.SequenceEqual(new[] { @"C:\P\current\KLYC-Pulse.exe" }), "Görev var olmayan exe'yi gösteriyorsa bu exe'ye yönlendirilir");
+    wrote.Clear();
+    Check(!Pulse.Core.Platform.StartupTask.EnsureCurrent(@"C:\P\KLYC-Pulse.exe", () => @"C:\Baska\KLYC-Pulse.exe", En, _ => true) && wrote.Count == 0, "Gösterilen exe hâlâ varsa dokunulmaz (bilerek başka yol olabilir)");
+    Check(!Pulse.Core.Platform.StartupTask.EnsureCurrent(@"C:\P\KLYC-Pulse.exe", () => @"c:\p\klyc-pulse.EXE", En, _ => false) && wrote.Count == 0, "Aynı yol (büyük/küçük harf farkıyla) ise dokunulmaz");
+    Check(!Pulse.Core.Platform.StartupTask.EnsureCurrent(@"C:\P\KLYC-Pulse.exe", () => null, En, _ => false) && wrote.Count == 0, "Görev yoksa (açılışta başlatma kapalı) hiçbir şey yazılmaz");
+    Console.WriteLine(fails == 0 ? "AÇILIŞ GÖREVİ TESTİ GEÇTİ" : $"{fails} TEST KALDI");
+    return fails == 0 ? 0 : 1;
+}
+
 if (cmd == "sensor-bench") { SensorBenchRun(); return 0; }
 // Ayrı yöntem: PerformanceCounter gibi türler Main JIT'lenirken yüklenmesin (testler exe'yi tek başına kopyalayıp çalıştırıyor)
 static void SensorBenchRun()
