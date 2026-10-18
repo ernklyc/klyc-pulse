@@ -1618,13 +1618,13 @@ if (cmd == "cooling-test")
     var g3 = new Pulse.Core.Monitoring.CoolingGovernor();
     Check(Run(g3, 93, 0, 14, inGame: true).Action == A, "Oyunda 93 °C'de henüz bir şey yok (fan eşiği 88, 15 sn dolmadı)");
     Check(Run(g3, 93, 15, 15, inGame: true).Action == Pulse.Core.Monitoring.CoolingAction.FanOn && g3.Stage == 1, "Oyunda da önce fan desteği");
-    Check(Run(g3, 94.5, 16, 600, inGame: true).Action == A && g3.Stage == 1, "Oyunda 95 altında (94,5) yavaşlatma yok: oyuncunun FPS'ine dokunulmaz");
-    var gb = Run(g3, 96, 601, 640, inGame: true);
-    Check(gb.Action == Pulse.Core.Monitoring.CoolingAction.ThrottleOn && gb.Sec == 601 + 10 && g3.Stage == 2, $"Oyunda 95+ 10 sn sürünce yumuşak acil fren devreye girer (sn {gb.Sec - 601})");
+    Check(Run(g3, 97.5, 16, 600, inGame: true).Action == A && g3.Stage == 1, "Oyunda 98 altında (97,5) yavaşlatma yok: oyuncunun FPS'ine dokunulmaz");
+    var gb = Run(g3, 99, 601, 640, inGame: true);
+    Check(gb.Action == Pulse.Core.Monitoring.CoolingAction.ThrottleOn && gb.Sec == 601 + 15 && g3.Stage == 2, $"Oyunda 98+ 15 sn sürünce yumuşak acil fren devreye girer (sn {gb.Sec - 601})");
     // serinledi ama kademeler henüz geri verilmedi (settled=false): bırakılmaz
     Check(Run(g3, 80, 641, 800, inGame: true, settled: false).Action == A && g3.Stage == 2, "Isı hedefi kademeleri geri vermeden yavaşlatma bırakılmaz (hız bir anda tamamen dönmez)");
     var gr = Run(g3, 80, 801, 900, inGame: true, settled: true);
-    Check(gr.Action == Pulse.Core.Monitoring.CoolingAction.ThrottleOff && gr.Sec == 801 + 40 && g3.Stage == 1, $"Kademeler bitince (settled) 88 altında 40 sn sonra bırakılır (sn {gr.Sec - 801})");
+    Check(gr.Action == Pulse.Core.Monitoring.CoolingAction.ThrottleOff && gr.Sec == 801 + 40 && g3.Stage == 1, $"Kademeler bitince (settled) 93 altında 40 sn sonra bırakılır (sn {gr.Sec - 801})");
     // oyun dışı eşikler değişmedi
     var g4 = new Pulse.Core.Monitoring.CoolingGovernor();
     Run(g4, 94, 0, 15);
@@ -2531,6 +2531,36 @@ if (cmd == "boostbg-test")
     return fails == 0 ? 0 : 1;
 }
 
+if (cmd == "sensor-bench") { SensorBenchRun(); return 0; }
+// Ayrı yöntem: PerformanceCounter gibi türler Main JIT'lenirken yüklenmesin (testler exe'yi tek başına kopyalayıp çalıştırıyor)
+static void SensorBenchRun()
+{
+    // Sensör okumasının maliyeti (Pulse arka planda saniyede bir okur): salt okunur, hiçbir ayar değişmez.
+    using var hub = new Pulse.Core.Monitoring.SensorHub();
+    for (var i = 0; i < 3; i++) hub.Read(true);
+    double Time(Func<object?> f, int n) { var sw = System.Diagnostics.Stopwatch.StartNew(); var c0 = System.Diagnostics.Process.GetCurrentProcess().TotalProcessorTime; for (var i = 0; i < n; i++) f(); return (System.Diagnostics.Process.GetCurrentProcess().TotalProcessorTime - c0).TotalMilliseconds / n; }
+    Console.WriteLine($"  Read(sıcaklıksız): {Time(() => hub.Read(false), 30):0.00} ms CPU/okuma");
+    Console.WriteLine($"  Read(sıcaklıkla): {Time(() => hub.Read(true), 30):0.00} ms CPU/okuma");
+    Console.WriteLine($"  yalnız WMI sıcaklık sorgusu: {Time(() => Pulse.Core.Health.WmiReader.Query(@"root\wmi", "SELECT CurrentTemperature FROM MSAcpi_ThermalZoneTemperature"), 30):0.00} ms CPU/sorgu");
+    using var acpi = Pulse.Core.Hardware.AsusAcpi.TryOpen();
+    if (acpi is not null) Console.WriteLine($"  yalnız ASUS ACPI fan okuması (2 çağrı): {Time(() => (acpi.GetCpuFanRpm(), acpi.GetGpuFanRpm()), 30):0.00} ms CPU/okuma");
+    using var pc1 = new System.Diagnostics.PerformanceCounter("Processor Information", "% Processor Utility", "_Total"); using var pc2 = new System.Diagnostics.PerformanceCounter("Processor Information", "% Processor Performance", "_Total"); using var pc3 = new System.Diagnostics.PerformanceCounter("Processor Information", "Processor Frequency", "_Total");
+    pc1.NextValue(); pc2.NextValue(); pc3.NextValue();
+    Console.WriteLine($"  yalnız 3 performans sayacı: {Time(() => (pc1.NextValue(), pc2.NextValue(), pc3.NextValue()), 30):0.00} ms CPU/okuma");
+    var nv = Pulse.Core.Monitoring.Nvml.TryOpen();
+    if (nv is not null) Console.WriteLine($"  yalnız NVML okuması: {Time(() => nv.Read(), 30):0.00} ms CPU/okuma");
+    if (nv is not null)
+    {
+        var dev = (IntPtr)typeof(Pulse.Core.Monitoring.Nvml).GetField("_device", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)!.GetValue(nv)!;
+        Console.WriteLine($"    temp: {Time(() => { NvProbe.nvmlDeviceGetTemperature(dev, 0, out _); return null; }, 50):0.00} ms");
+        Console.WriteLine($"    util: {Time(() => { NvProbe.nvmlDeviceGetUtilizationRates(dev, out _); return null; }, 50):0.00} ms");
+        Console.WriteLine($"    clock: {Time(() => { NvProbe.nvmlDeviceGetClockInfo(dev, 0, out _); return null; }, 50):0.00} ms");
+        Console.WriteLine($"    power: {Time(() => { NvProbe.nvmlDeviceGetPowerUsage(dev, out _); return null; }, 50):0.00} ms");
+        Console.WriteLine($"    meminfo: {Time(() => { NvProbe.nvmlDeviceGetMemoryInfo(dev, out _); return null; }, 50):0.00} ms");
+        Console.WriteLine($"    throttle: {Time(() => { NvProbe.nvmlDeviceGetCurrentClocksThrottleReasons(dev, out _); return null; }, 50):0.00} ms");
+    }
+}
+
 if (cmd == "boost-probe")
 {
     // Hızlandır'ın yeni ölçüm adımlarını SALT OKUNUR çalıştırır (hiçbir ayar değişmez, hiçbir şey temizlenmez/rahatlatılmaz): gerçek makinede ne gösterecek?
@@ -2923,4 +2953,16 @@ sealed class BusySwitch : Pulse.Core.Modes.IModeSwitch
 {
     public string? CurrentKey => null;
     public Task<Pulse.Core.Modes.ModeResult?> ApplyAsync(string key, Pulse.Core.Modes.ModeOverrides? overrides) => Task.FromResult<Pulse.Core.Modes.ModeResult?>(null);
+}
+
+static class NvProbe
+{
+    [System.Runtime.InteropServices.StructLayout(System.Runtime.InteropServices.LayoutKind.Sequential)] public struct U { public uint Gpu; public uint Memory; }
+    [System.Runtime.InteropServices.StructLayout(System.Runtime.InteropServices.LayoutKind.Sequential)] public struct MI { public ulong Total, Free, Used; }
+    [System.Runtime.InteropServices.DllImport("nvml.dll")] public static extern int nvmlDeviceGetTemperature(IntPtr d, int s, out uint t);
+    [System.Runtime.InteropServices.DllImport("nvml.dll")] public static extern int nvmlDeviceGetUtilizationRates(IntPtr d, out U u);
+    [System.Runtime.InteropServices.DllImport("nvml.dll")] public static extern int nvmlDeviceGetClockInfo(IntPtr d, int t, out uint mhz);
+    [System.Runtime.InteropServices.DllImport("nvml.dll")] public static extern int nvmlDeviceGetPowerUsage(IntPtr d, out uint mw);
+    [System.Runtime.InteropServices.DllImport("nvml.dll")] public static extern int nvmlDeviceGetMemoryInfo(IntPtr d, out MI i);
+    [System.Runtime.InteropServices.DllImport("nvml.dll")] public static extern int nvmlDeviceGetCurrentClocksThrottleReasons(IntPtr d, out ulong r);
 }

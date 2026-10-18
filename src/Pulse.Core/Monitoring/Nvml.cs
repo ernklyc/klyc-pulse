@@ -54,7 +54,10 @@ public sealed class Nvml
         catch (EntryPointNotFoundException) { return null; }
     }
 
-    public GpuReading Read()
+    private ulong _lastReasons;
+
+    /// <param name="refreshThrottle">false ise kısılma nedenleri yeniden sorulmaz, son değer kullanılır: sürücü bu çağrıda ölçümde ~16 ms işlemci harcıyor (diğer 6 çağrının toplamından ~4 kat fazla).</param>
+    public GpuReading Read(bool refreshThrottle = true)
     {
         int? temp = null, util = null, memUtil = null, core = null, mem = null;
         double? power = null;
@@ -67,7 +70,8 @@ public sealed class Nvml
         if (nvmlDeviceGetClockInfo(_device, 2, out var m) == 0) mem = (int)m;
         if (nvmlDeviceGetPowerUsage(_device, out var p) == 0) power = p / 1000.0;
         if (nvmlDeviceGetMemoryInfo(_device, out var mi) == 0) { used = (long)mi.Used; total = (long)mi.Total; }
-        nvmlDeviceGetCurrentClocksThrottleReasons(_device, out reasons);
+        if (refreshThrottle) { nvmlDeviceGetCurrentClocksThrottleReasons(_device, out reasons); _lastReasons = reasons; }
+        else reasons = _lastReasons;
 
         return new GpuReading(temp, util, memUtil, core, mem, power, used, total, reasons);
     }

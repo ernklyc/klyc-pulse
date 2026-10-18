@@ -2,6 +2,15 @@
 
 Biçim [Keep a Changelog](https://keepachangelog.com/tr/) esaslıdır; sürümleme [SemVer](https://semver.org/lang/tr/).
 
+## [1.12.1] — 2026-10-18
+
+### Düzeltilenler (oyun performansı ve hafiflik)
+- **Oyunda işlemci frenlemesi artık FPS öncelikli:** gerçek kayıtlarda (FC25, Forza Horizon 4) oyun sırasında işlemci 95 °C'yi 10 sn geçince hız 3,8 → 3,3 GHz'e kısılıyordu; işlemciyi sınırlayan oyunlarda bu doğrudan FPS kaybıydı. Soğutma önceliğinin oyun içi "acil freni" şimdi yalnızca donanımın kendi kısmasına (~100 °C) çok yakınken devreye girer: **98 °C ve 15 sn**, hedef 96 °C, bırakma 93 °C. Isı bekçisi oyunda zaten yalnızca uyarıyordu (mod değiştirmez).
+- **Arka plan sensör okuması ~%60 daha ucuz:** NVIDIA sürücüsünün "kısılma nedeni" çağrısı okuma başına ~16 ms işlemci harcıyordu (diğer 6 çağrının ~4 katı). Artık 5 okumada bir sorulur (nedenler saniyelerce sürer; oyun raporu etkilenmez). Ölçüm (`pulse-cli sensor-bench`): okuma başına 26 ms → ~9–14 ms; Pulse arka planda saniyede bir okuduğu için sürekli yük aynı oranda düşer.
+
+### Eklenenler
+- `pulse-cli sensor-bench`: sensör okumasının işlemci maliyetini parça parça ölçer (salt okunur).
+
 ## [1.12.0] — 2026-10-18
 
 ### Eklenenler

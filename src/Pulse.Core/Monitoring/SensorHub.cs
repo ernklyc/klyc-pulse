@@ -41,6 +41,9 @@ public sealed class SensorHub : IDisposable
     private readonly PerformanceCounter? _cpuUtility;
     private readonly PerformanceCounter? _cpuPerf;
     private readonly PerformanceCounter? _cpuFreq;
+    private int _reads;
+    /// <summary>GPU kısılma nedenleri her okumada değil, bu kadar okumada bir sorulur (NVML bu çağrıda diğerlerinden çok daha pahalı; nedenler saniyelerce sürer).</summary>
+    private const int ThrottleEvery = 5;
 
     public SensorHub()
     {
@@ -76,7 +79,7 @@ public sealed class SensorHub : IDisposable
             util is null ? null : Math.Round(util.Value, 0),
             mhz is null ? null : Math.Round(mhz.Value, 0),
             cpuTemp ? ReadCpuTemp() : null,
-            _nvml?.Read(),
+            _nvml?.Read(refreshThrottle: _reads++ % ThrottleEvery == 0),
             total - Optimizer.AvailableRamBytes(), total,
             _acpi?.GetCpuFanRpm(), _acpi?.GetGpuFanRpm(),
             _nvml is null ? (_gpuEngine ??= new GpuEngineReader()).ReadMaxAdapterPercent() : null);

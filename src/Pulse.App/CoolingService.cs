@@ -8,7 +8,7 @@ namespace Pulse.App;
 /// <summary>
 /// Soğutma önceliği: "önce soğut, sonra yavaşlat". Sıcaklık uzun süre yüksek kalırsa önce <b>fan desteği</b> (ASUS Turbo profili, fan devri
 /// artar; ölçüldü: aynı yükte ~%14 fazla), fan yetmezse işlemci hızını kademeli düşürür (Isı hedefiyle aynı yöntem),
-/// serinleyince aynı yoldan geri döner. Oyunda yalnızca yumuşak bir acil fren olarak, daha yüksek sıcaklıkta (95 °C üstü, 10 sn) ve küçük
+/// serinleyince aynı yoldan geri döner. Oyunda FPS öncelikli: yalnızca son çare bir acil fren olarak, donanımın kısmasına çok yakın sıcaklıkta (98 °C üstü, 15 sn) ve küçük
 /// adımlarla devreye girer (donanımın ~100 °C'deki ani kısmasından önce). En son çare olan Isı bekçisi (97 °C) ayrıca çalışmaya devam eder.
 /// İşlemci sıcaklığı için yönetici yetkisi gerekir. Ayarlardan kapatılabilir.
 /// </summary>
@@ -96,7 +96,7 @@ public sealed class CoolingService : IDisposable
                 break;
 
             case CoolingAction.ThrottleOn:
-                var target = inGame ? 92 : 90;
+                var target = inGame ? 96 : 90;
                 if (!AppServices.Heat.Enabled) { AppServices.Heat.Configure(target); _heatOwned = true; }
                 if (inGame) Interlocked.Increment(ref _gameThrottles);
                 Journal.Write($"Soğutma önceliği: {(inGame ? "oyunda " : "")}fan yetmedi ({t}); işlemci hızı kademeli düşürülüyor (hedef {target} °C).");

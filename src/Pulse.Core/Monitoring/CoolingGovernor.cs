@@ -19,10 +19,10 @@ public sealed class CoolingGovernor
     public double ThrottleOffC { get; init; } = 85;
     public TimeSpan ThrottleOnAfter { get; init; } = TimeSpan.FromSeconds(40);
 
-    // Oyun içi (yumuşak acil fren)
-    public double GameThrottleOnC { get; init; } = 95;
-    public double GameThrottleOffC { get; init; } = 88;
-    public TimeSpan GameThrottleOnAfter { get; init; } = TimeSpan.FromSeconds(10);
+    // Oyun içi: FPS ÖNCELİKLİ. Gerçek kullanımda 95 °C'de frenlemek (3,8 → 3,3 GHz) oyunu belirgin yavaşlattı; artık yalnızca donanımın ~100 °C kısmasına çok yakınken (98 °C, 15 sn) devreye girer
+    public double GameThrottleOnC { get; init; } = 98;
+    public double GameThrottleOffC { get; init; } = 93;
+    public TimeSpan GameThrottleOnAfter { get; init; } = TimeSpan.FromSeconds(15);
 
     public TimeSpan FanOnAfter { get; init; } = TimeSpan.FromSeconds(15);
     public TimeSpan ThrottleOffAfter { get; init; } = TimeSpan.FromSeconds(40);
